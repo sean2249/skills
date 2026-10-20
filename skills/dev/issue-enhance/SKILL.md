@@ -33,13 +33,7 @@ Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, 
 
 ## Prerequisite — gh version
 
-Splitting and dependencies use native sub-issues and issue dependencies. Check that the local `gh` supports them:
-
-```bash
-gh issue create --help | grep -q -- --parent && echo native || echo old
-```
-
-If it prints `old`, tell the author a newer `gh` adds `--parent` / `--blocked-by` and suggest upgrading. Don't upgrade it for them. Until then, use the GraphQL fallback in "Older gh" at the end.
+`gh issue create --help | grep -q -- --parent || echo "gh too old: upgrade gh for --parent / --blocked-by"`. If it's too old, ask the author to upgrade `gh` (don't do it for them) and stop.
 
 ## Step 1 — Check the code first
 
@@ -198,6 +192,7 @@ gh issue create --parent <original> --blocked-by <slice1> --title "<slice 2>" --
 # existing issues: attach / add a dependency after the fact
 gh issue edit <original> --add-sub-issue <A>,<B>
 gh issue edit <B> --add-blocked-by <A>
+# undo: --remove-sub-issue <A> / --remove-blocked-by <A>
 # check
 gh issue view <N> --json parent,subIssuesSummary,blockedBy,blocking
 ```
@@ -215,26 +210,6 @@ gh issue close <N> --reason "not planned" --comment "🤖 AI <YYYY-MM-DD>
 
 Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 ```
-
-## Older gh (no `--parent`)
-
-Use GraphQL. Both mutations take node IDs:
-
-```bash
-id() { gh issue view "$1" --json id --jq .id; }
-# sub-issue
-gh api graphql -f query='mutation($p:ID!,$c:ID!){addSubIssue(input:{issueId:$p,subIssueId:$c}){issue{number}}}' \
-  -f p="$(id <parent>)" -f c="$(id <child>)"
-# <blocked> is blocked by <blocker>
-gh api graphql -f query='mutation($i:ID!,$b:ID!){addBlockedBy(input:{issueId:$i,blockingIssueId:$b}){issue{number}}}' \
-  -f i="$(id <blocked>)" -f b="$(id <blocker>)"
-# read dependencies and sub-issues
-gh api graphql -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){issue(number:$n){
-  blockedBy(first:50){nodes{number state}} subIssuesSummary{total completed} parent{number}}}}' \
-  -f o=<owner> -f r=<repo> -F n=<N>
-```
-
-Create the issue first with plain `gh issue create`, then link it.
 
 ## Done when (per issue)
 

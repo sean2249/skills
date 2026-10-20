@@ -15,7 +15,7 @@ gh issue view <N> --json number,title,body,labels,state,comments,blockedBy,subIs
 gh issue view <M> --json state --jq .state
 ```
 
-On a `gh` without these JSON fields (`gh issue create --help | grep -q -- --parent` fails), use the GraphQL read query in `issue-enhance` → "Older gh", and suggest upgrading `gh`.
+If `gh` rejects these JSON fields, it's too old: ask the author to upgrade `gh` and stop.
 
 Refuse and explain if any of these hold:
 

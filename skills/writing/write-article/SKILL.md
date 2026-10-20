@@ -29,7 +29,7 @@ Refuse and explain if:
 | An issue in `blockedBy` is still open (`gh issue view <M> --json state`) | Blocked by #M. |
 | Neither or both of `article: devlog` / `article: intro` | Ask the author which mode. |
 
-On a gh without `blockedBy` / `subIssuesSummary` fields, see "Older gh" in `issue-enhance`.
+If `gh` rejects the `blockedBy` / `subIssuesSummary` fields, it's too old: ask the author to upgrade `gh` and stop.
 
 ## Step 1 — Read the repo's conventions
 
