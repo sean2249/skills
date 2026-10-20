@@ -24,6 +24,8 @@ Refuse and explain if any of these hold:
 
 Never add `status: approved` yourself, even if asked.
 
+Every comment you post on the PR or the issue starts with the line `🤖 AI <YYYY-MM-DD>`. The AI posts with the author's `gh` login, so GitHub's author field can't tell AI from author; only this marker can. Implement from the issue body (the author's text plus the AI plan section), not from comments.
+
 Read `CLAUDE.md` `## Workflow`: verify command, preview URL, low-risk paths file, merge mode.
 
 ## Step 1 — Branch
@@ -106,7 +108,7 @@ Don't merge through a GitHub Action using `GITHUB_TOKEN`: merges made with that 
 
 ## Step 6b — Author asks for changes
 
-When the author asks for changes after reviewing the PR, push the fix to the same branch, update **Behaviour summary** and evidence, and re-classify risk if the file set changed.
+When the author asks for changes after reviewing the PR, push the fix to the same branch, comment `🤖 AI <YYYY-MM-DD>` with what changed and why, update **Behaviour summary** and evidence, and re-classify risk if the file set changed.
 
 ## Step 7 — After merge
 

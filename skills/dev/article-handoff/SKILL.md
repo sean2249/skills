@@ -54,7 +54,7 @@ Extract `## 文章素材` from the PR body: from that heading to the next `## ` 
 Body:
 
 ```markdown
-> 🤖 AI-generated (Claude Code) by article-handoff.
+🤖 AI <YYYY-MM-DD> (article-handoff)
 
 **Before writing, read the source PR:** `gh pr view <PR url>` and `gh pr diff <PR url>`.
 
@@ -75,7 +75,7 @@ gh issue create -R <target> --title "Article: <PR title>" --body-file <body.md> 
 ## Step 5 — Link back
 
 ```bash
-gh pr comment <PR> --body "> 🤖 AI-generated (Claude Code)
+gh pr comment <PR> --body "🤖 AI <YYYY-MM-DD>
 
 Article handoff: <new issue url>"
 ```
