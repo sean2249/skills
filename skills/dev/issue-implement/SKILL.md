@@ -106,12 +106,7 @@ Don't merge through a GitHub Action using `GITHUB_TOKEN`: merges made with that 
 
 ## Step 6b — Author asks for changes
 
-When the author asks for changes after reviewing the PR, start your reply by tagging the round:
-
-- **`Round type: missing condition`**: a condition the issue's first description didn't state.
-- **`Round type: persuasion`**: a compromise the author only accepts after seeing it with their own eyes.
-
-Then push the fix to the same branch, update **Behaviour summary** and evidence, and re-classify risk if the file set changed.
+When the author asks for changes after reviewing the PR, push the fix to the same branch, update **Behaviour summary** and evidence, and re-classify risk if the file set changed.
 
 ## Step 7 — After merge
 

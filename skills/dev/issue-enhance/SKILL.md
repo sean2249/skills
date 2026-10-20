@@ -126,12 +126,13 @@ gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-inf
 
 ## Step 5b — Author asks for changes
 
-When the author asks for changes after seeing mockups or the enhanced issue, start your reply by tagging the round:
+When the author asks for changes after seeing mockups or the enhanced issue:
 
-- **`Round type: missing condition`**: a condition the first description didn't state. Also add it to **Conditions the description left out**.
-- **`Round type: persuasion`**: a compromise the author only accepts after seeing it with their own eyes.
-
-Then revise (new options side by side if it's a choice) and update the body.
+1. Revise the plan.
+2. If it's a choice, show a new set of options side by side (Step 4).
+3. Add any new condition the author supplied this time to **Conditions the description left out**.
+4. Update the issue body (`gh issue edit <N> --body-file <body.md>`).
+5. Keep the label at `status: ai-enhanced`.
 
 ## Step 6 — Splitting
 
