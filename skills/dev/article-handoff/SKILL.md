@@ -21,7 +21,7 @@ Stop and explain if:
 
 ## Step 1 — Find the target
 
-Read `Article target: <owner>/<repo>` from the repo's `CLAUDE.md` `## Workflow` section. Missing, placeholder, or `none` → ask the author. Never guess a repo name.
+Read `Article target: <owner>/<repo>` from the repo's `CLAUDE.md` `## Issue workflow` section. Missing, placeholder, or `none` → ask the author. Never guess a repo name.
 
 Check access with the local login (`gh auth status` must be the account that can write to the target):
 

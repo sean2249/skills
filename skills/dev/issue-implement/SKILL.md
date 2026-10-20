@@ -26,7 +26,7 @@ Never add `status: approved` yourself, even if asked.
 
 Every comment you post on the PR or the issue starts with the line `🤖 AI <YYYY-MM-DD>`. The AI posts with the author's `gh` login, so GitHub's author field can't tell AI from author; only this marker can. Implement from the issue body (the author's text plus the AI plan section), not from comments.
 
-Read `CLAUDE.md` `## Workflow`: verify command, preview URL, low-risk paths file, merge mode.
+Read `CLAUDE.md` `## Issue workflow`: verify command, preview URL, low-risk paths file, merge mode.
 
 ## Step 1 — Branch
 
@@ -89,18 +89,26 @@ gh pr edit <PR> --add-label article   # only if the issue has `article`
 
 `risk: medium` and `risk: high` → stop. Tell the author the PR is ready for their review.
 
-`risk: low`, by `Merge mode` in `CLAUDE.md`:
+`risk: low`: first pick a merge method the repo allows. Don't assume merge commits are on:
+
+```bash
+gh api repos/<owner>/<repo> --jq '{merge: .allow_merge_commit, squash: .allow_squash_merge, rebase: .allow_rebase_merge}'
+```
+
+Use the first allowed one in this order: `--merge`, `--squash`, `--rebase`. That flag is `<method>` below.
+
+Then, by `Merge mode` in `CLAUDE.md`:
 
 - **auto**: let GitHub merge once required checks pass.
   ```bash
-  gh pr merge <PR> --auto --merge
+  gh pr merge <PR> --auto <method>
   ```
 - **session**: no native auto-merge (free private repo). Wait, re-check, then merge:
   ```bash
   gh pr checks <PR> --watch --fail-fast
   gh pr view <PR> --json labels --jq '[.labels[].name | select(startswith("risk: "))]'
   # must print exactly ["risk: low"]; otherwise stop
-  gh pr merge <PR> --merge
+  gh pr merge <PR> <method>
   ```
   If any check fails, stop and report; don't merge.
 
