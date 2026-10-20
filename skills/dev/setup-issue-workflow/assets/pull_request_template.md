@@ -1,8 +1,26 @@
 Closes #<!-- issue number -->
 
-## Summary
+## Behaviour summary
 
-<!-- What changed and why, in two or three sentences. -->
+<!-- Read this first to decide whether to let the PR through, before the diff. -->
+
+**Run output**
+
+```
+<!-- What running the change prints or shows (or link a screenshot). -->
+```
+
+**What it does**
+
+<!-- One short paragraph. -->
+
+**What it deliberately doesn't do**
+
+<!-- One short paragraph. -->
+
+**Mapped to acceptance criteria**
+
+- <criterion> → <the behaviour above that meets it>
 
 ## Acceptance criteria — evidence
 

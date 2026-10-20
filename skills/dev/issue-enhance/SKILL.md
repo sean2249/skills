@@ -10,8 +10,10 @@ Turns a raw issue into a plan a fresh session can implement without this convers
 ## Hard rules
 
 - **Never add `status: approved`.** Only the author sets it — even if asked to "finish" or "complete" the issue. Say so and stop.
-- **Keep the author's original text verbatim.** Add to it; never rewrite or delete it.
-- **Every comment you post starts with** `> 🤖 AI-generated (Claude Code)` on its own line.
+- **Keep the author's original text verbatim.** Never rewrite or delete it.
+- **One AI section in the body, always overwritten.** Everything you write goes below `---` and the `> 🤖 AI-enhanced (Claude Code), <YYYY-MM-DD>` header. It is the latest complete plan: each revision replaces that whole section; never stack a second one. The implementing session reads only the body.
+- **One AI comment per body change.** Every time you change the body (Step 5 first enhancement, each Step 5b revision, Step 6 split, Step 7 rejection) or ask needs-info questions (Step 3), post a `gh issue comment` whose first line is `🤖 AI <YYYY-MM-DD>`, followed by what changed this round and why. Other AI comments (e.g. already-done evidence) use the same first line. The author's comments have no prefix, so any comment not starting with 🤖 is the author's.
+- **Why markers:** the AI posts with the author's `gh` login, so GitHub's author field can't tell AI from author; only these fixed markers can.
 - **Don't close issues on your own judgement.** Closing happens only when the author has rejected an idea in this session (see Step 7).
 
 ## Step 0 — Pick the issues
@@ -30,7 +32,7 @@ Read the repo's `CLAUDE.md` `## Workflow` section for the verify command, previe
 
 ## Step 1 — Check the code first
 
-Search the codebase for what the issue asks for. If it is **already done**, comment with the evidence (file:line, commit) and tell the author it can be closed. Leave the labels and the closing to them. Stop.
+Search the codebase for what the issue asks for. If it is **already done**, comment (first line `🤖 AI <YYYY-MM-DD>`) with the evidence (file:line, commit) and tell the author it can be closed. Leave the labels and the closing to them. Stop.
 
 ## Step 2 — Is it one vertical slice?
 
@@ -48,11 +50,11 @@ gh issue comment <N> --body-file <questions.md>
 gh issue edit <N> --remove-label "status: raw" --add-label "status: needs-info"
 ```
 
-Questions must be specific and answerable: numbered, each with the options you see and your recommendation. "Please provide more information" is not allowed. Stop here for this issue.
+The comment starts with `🤖 AI <YYYY-MM-DD>`. Questions must be specific and answerable: numbered, each with the options you see and your recommendation. "Please provide more information" is not allowed. Stop here for this issue.
 
-## Step 4 — UI work: mockups before writing
+## Step 4 — UI work and open choices: options side by side
 
-For any UI change, draw 2–3 mockup options and ask the author to pick one (multiple choice) **before** writing the plan. Only the chosen option goes into the issue.
+For any UI change, or any choice that isn't settled yet, show **2–3 versions side by side in the same round** and ask the author to pick one (multiple choice) **before** writing the plan. Never one version per round: the author should see the failures and the compromises together. For UI, attach a 375px-wide screenshot of each version. Only the chosen option goes into the issue.
 
 Store images on the repo's `issue-assets` branch: never merged, never on a public CDN.
 
@@ -71,7 +73,7 @@ Reference them as `https://github.com/<owner>/<repo>/blob/issue-assets/<N>/<file
 
 ## Step 5 — Write the enhanced body
 
-Append below the original text. Write prose in the issue's language; keep the headings as-is so other skills can find them.
+Write the AI section below the original text; on later revisions, replace the existing AI section (from `---` + the 🤖 header to the end) instead of adding another. Write prose in the issue's language; keep the headings as-is so other skills can find them.
 
 ````markdown
 <original author text, untouched>
@@ -82,6 +84,9 @@ Append below the original text. Write prose in the issue's language; keep the he
 
 ## Current state
 - What exists today, each point with `path/to/file.ext:123`.
+
+## Conditions the description left out
+- Conditions this enhancement added that the author's original text didn't state (edge cases, constraints, defaults). The author uses this list to practise writing a more complete first description.
 
 ## Decisions
 - <YYYY-MM-DD> — <decision> — <why>. (Mark which ones the author made vs. AI defaults.)
@@ -119,7 +124,21 @@ Then:
 ```bash
 gh issue edit <N> --body-file <body.md>
 gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-info" --add-label "status: ai-enhanced"
+gh issue comment <N> --body "🤖 AI <YYYY-MM-DD>
+
+<what this round added or changed, and why>"
 ```
+
+## Step 5b — Author asks for changes
+
+When the author asks for changes after seeing mockups or the enhanced issue:
+
+1. Revise the plan.
+2. If it's a choice, show a new set of options side by side (Step 4).
+3. Add any new condition the author supplied this time to **Conditions the description left out**.
+4. Overwrite the AI section of the body with the full revised plan (`gh issue edit <N> --body-file <body.md>`); the author's text stays untouched.
+5. Post a comment starting `🤖 AI <YYYY-MM-DD>`: what changed this round and why.
+6. Keep the label at `status: ai-enhanced`.
 
 ## Step 6 — Splitting
 
@@ -129,14 +148,14 @@ For each new slice or idea:
 gh issue create --title "<slice title>" --body-file <slice.md> --label "status: ai-enhanced"
 ```
 
-Each child body links back (`Part of #<original>`) and follows the Step 5 template. Turn the original into an overview: keep the author's text, add a `## Slices` checklist (`- [ ] #<child>`), label it `status: ai-enhanced`. Overviews have no acceptance criteria of their own and are not implemented directly.
+Each child body is all AI-written, so it starts with the 🤖 header, links back (`Part of #<original>`), and follows the Step 5 template. Turn the original into an overview: keep the author's text, put a `## Slices` checklist (`- [ ] #<child>`) in its AI section, label it `status: ai-enhanced`, and comment `🤖 AI <YYYY-MM-DD>` with the split and the reason. Overviews have no acceptance criteria of their own and are not implemented directly.
 
 ## Step 7 — Author rejects an idea
 
 When the author rejects an idea in the session, record the reason in one comment and close it:
 
 ```bash
-gh issue close <N> --reason "not planned" --comment "> 🤖 AI-generated (Claude Code)
+gh issue close <N> --reason "not planned" --comment "🤖 AI <YYYY-MM-DD>
 
 Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 ```
@@ -144,6 +163,9 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 ## Done when (per issue)
 
 - [ ] Either: already-done evidence posted; or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI).
-- [ ] Original text is intact.
+- [ ] Original text is intact; exactly one AI section, below `---` and the 🤖 header.
+- [ ] Every body change has a matching `🤖 AI <date>` comment saying what changed and why.
+- [ ] **Conditions the description left out** lists every condition you added.
+- [ ] Open choices were shown as 2–3 versions side by side (UI: 375px screenshots).
 - [ ] Mermaid rendered without errors.
 - [ ] No `status: approved` added.
