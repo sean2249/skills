@@ -50,9 +50,9 @@ gh issue edit <N> --remove-label "status: raw" --add-label "status: needs-info"
 
 Questions must be specific and answerable: numbered, each with the options you see and your recommendation. "Please provide more information" is not allowed. Stop here for this issue.
 
-## Step 4 — UI work: mockups before writing
+## Step 4 — UI work and open choices: options side by side
 
-For any UI change, draw 2–3 mockup options and ask the author to pick one (multiple choice) **before** writing the plan. Only the chosen option goes into the issue.
+For any UI change, or any choice that isn't settled yet, show **2–3 versions side by side in the same round** and ask the author to pick one (multiple choice) **before** writing the plan. Never one version per round: the author should see the failures and the compromises together. For UI, attach a 375px-wide screenshot of each version. Only the chosen option goes into the issue.
 
 Store images on the repo's `issue-assets` branch: never merged, never on a public CDN.
 
@@ -82,6 +82,9 @@ Append below the original text. Write prose in the issue's language; keep the he
 
 ## Current state
 - What exists today, each point with `path/to/file.ext:123`.
+
+## Conditions the description left out
+- Conditions this enhancement added that the author's original text didn't state (edge cases, constraints, defaults). The author uses this list to practise writing a more complete first description.
 
 ## Decisions
 - <YYYY-MM-DD> — <decision> — <why>. (Mark which ones the author made vs. AI defaults.)
@@ -121,6 +124,15 @@ gh issue edit <N> --body-file <body.md>
 gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-info" --add-label "status: ai-enhanced"
 ```
 
+## Step 5b — Author asks for changes
+
+When the author asks for changes after seeing mockups or the enhanced issue, start your reply by tagging the round:
+
+- **`Round type: missing condition`**: a condition the first description didn't state. Also add it to **Conditions the description left out**.
+- **`Round type: persuasion`**: a compromise the author only accepts after seeing it with their own eyes.
+
+Then revise (new options side by side if it's a choice) and update the body.
+
 ## Step 6 — Splitting
 
 For each new slice or idea:
@@ -145,5 +157,7 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 
 - [ ] Either: already-done evidence posted; or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI).
 - [ ] Original text is intact.
+- [ ] **Conditions the description left out** lists every condition you added.
+- [ ] Open choices were shown as 2–3 versions side by side (UI: 375px screenshots).
 - [ ] Mermaid rendered without errors.
 - [ ] No `status: approved` added.

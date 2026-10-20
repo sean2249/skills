@@ -58,6 +58,11 @@ Apply in order; the first match wins:
 Fill the repo's PR template:
 
 - `Closes #<N>`.
+- **Behaviour summary** (first section; the author reads this to decide whether to let it through, before looking at the diff):
+  - Run output: what running the change actually prints or shows (command + output excerpt, or screenshot).
+  - What it does: one short paragraph.
+  - What it deliberately doesn't do: one short paragraph.
+  - Mapped to acceptance criteria: one line per criterion → the part of the behaviour that meets it.
 - **Acceptance criteria — evidence**: every criterion from the issue, word for word, each with its evidence (command + output excerpt, screenshot, preview link).
 - **Not verified**: say plainly what wasn't checked and why.
 - **Deviations from the approved plan**: each with its reason, or "None".
@@ -99,6 +104,15 @@ gh pr edit <PR> --add-label article   # only if the issue has `article`
 
 Don't merge through a GitHub Action using `GITHUB_TOKEN`: merges made with that token don't trigger the `push` workflows on the default branch, so deploys silently don't run.
 
+## Step 6b — Author asks for changes
+
+When the author asks for changes after reviewing the PR, start your reply by tagging the round:
+
+- **`Round type: missing condition`**: a condition the issue's first description didn't state.
+- **`Round type: persuasion`**: a compromise the author only accepts after seeing it with their own eyes.
+
+Then push the fix to the same branch, update **Behaviour summary** and evidence, and re-classify risk if the file set changed.
+
 ## Step 7 — After merge
 
 If the PR has `article` and merged during this session, run `article-handoff` for it. If it will merge later (auto mode), tell the author to run `article-handoff <PR>` after it merges.
@@ -106,6 +120,7 @@ If the PR has `article` and merged during this session, run `article-handoff` fo
 ## Done when
 
 - [ ] Verify command ran; output is in the PR.
+- [ ] PR opens with **Behaviour summary**: run output, what it does, what it deliberately doesn't do, mapped to criteria.
 - [ ] Every acceptance criterion has evidence or is listed under **Not verified**.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article` issues: PR has `## 文章素材` and the `article` label.
