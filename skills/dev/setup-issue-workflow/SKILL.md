@@ -1,6 +1,6 @@
 ---
 name: setup-issue-workflow
-description: Use when installing the AI-assisted GitHub issue workflow (raw → needs-info → ai-enhanced → approved, risk-labelled PRs) into a repo for the first time, or when repairing a repo where its labels, workflows, PR template, or CLAUDE.md `## Workflow` section are missing. Runs once per repo; creates labels, writes .github files from bundled assets, and records merge mode.
+description: Use when installing the AI-assisted GitHub issue workflow (raw → needs-info → ai-enhanced → approved, risk-labelled PRs) into a repo for the first time, or when repairing a repo where its labels, workflows, PR template, or CLAUDE.md `## Issue workflow` section are missing. Runs once per repo; creates labels, brings existing issues into the flow, writes .github files from bundled assets, and records merge mode.
 ---
 
 # setup-issue-workflow
@@ -25,13 +25,23 @@ Check what already exists, without changing anything:
 
 | Item | How to check |
 |---|---|
-| Labels | `gh label list --limit 200 --json name --jq '.[].name'` |
+| Labels | `gh label list --limit 200 --json name,description` |
+| Existing labels that overlap in meaning (e.g. `ai-review`, `needs-info`, `approved`, `low-risk`) | read the label list above |
+| Open issues with no `status: ` label | command below the table |
 | `.github/workflows/issue-status.yml` | file exists? |
 | `.github/workflows/risk-guard.yml` | file exists? |
 | `.github/pull_request_template.md` (also `.github/PULL_REQUEST_TEMPLATE/`, root, `docs/`) | file exists? |
 | `.github/low-risk-paths.txt` | file exists? |
-| `CLAUDE.md` `## Workflow` section | `grep -n '^## Workflow' CLAUDE.md` |
-| Existing CI check names (needed for branch protection) | `ls .github/workflows/`, job names in each file |
+| `CLAUDE.md` `## Issue workflow` section | `grep -n '^## Issue workflow' CLAUDE.md` |
+| CI **job** names (needed for branch protection) | `jobs:` keys (or each job's `name:`) in `.github/workflows/*.yml` |
+
+```bash
+# open issues that predate the workflow (no status label yet)
+gh issue list --state open --limit 500 --json number,title,labels \
+  --jq '.[] | select([.labels[].name | startswith("status: ")] | any | not) | "#\(.number) \(.title)"'
+```
+
+The section is `## Issue workflow`, not `## Workflow`: many repos already use `## Workflow` for local dev commands. Leave that one alone.
 
 ## Step 2 — Detect merge mode
 
@@ -45,11 +55,30 @@ Check what already exists, without changing anything:
 
 ## Step 3 — Show the plan and wait
 
-List every label to create, each file to create or merge (with what will be added), the `## Workflow` keys to add, and the merge-mode result. Ask the author to confirm, and ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none"), and which paths count as low risk.
+List, and ask the author to confirm:
 
-## Step 4 — Labels
+- Every label to create.
+- Each overlapping existing label, with a choice per label: **keep** (leave as is), **rename** into one of the workflow labels (keeps its issues), or **delete**.
+- The open issues that will get `status: raw` (Step 6). The author may exclude some.
+- Each file to create or merge, and what will be added.
+- The `## Issue workflow` keys to add, and the merge-mode result.
 
-`--force` makes this idempotent (it updates color/description if the label exists).
+Ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none"), and which paths count as low risk.
+
+## Step 4 — Reconcile overlapping labels
+
+Do this **before** Step 5. Renaming into a name that `gh label create --force` has already created fails because the name is taken.
+
+```bash
+# rename: the label and all its issues move to the workflow name
+gh label edit "<old-name>" --name "<workflow label>"
+# delete: only on the author's explicit choice in Step 3
+gh label delete "<old-name>" --yes
+```
+
+## Step 5 — Labels
+
+`--force` makes this idempotent (it updates color/description if the label exists, including ones just renamed in Step 4).
 
 ```bash
 gh label create "status: raw"         --force --color ededed --description "New issue, not yet enhanced by AI"
@@ -62,7 +91,24 @@ gh label create "risk: high"          --force --color b60205 --description "Auth
 gh label create "article"             --force --color 5319e7 --description "Write a technical article after this ships"
 ```
 
-## Step 5 — Files
+## Step 6 — Bring existing issues into the flow
+
+`issue-status.yml` only labels issues opened after it's installed, and `issue-enhance` only picks up `status: raw`. Label the open issues the author confirmed in Step 3:
+
+```bash
+gh issue edit <N> --add-label "status: raw"   # once per confirmed issue
+```
+
+Verify with JSON and filter locally. `gh issue list --label` uses the search index, which lags right after a bulk edit and undercounts:
+
+```bash
+gh issue list --state open --limit 500 --json number,labels \
+  --jq '[.[] | select([.labels[].name] | index("status: raw"))] | length'
+gh issue list --state open --limit 500 --json number,labels \
+  --jq '.[] | select([.labels[].name | startswith("status: ")] | any | not) | .number'   # should print nothing left over
+```
+
+## Step 7 — Files
 
 Source files live in this skill's `assets/` directory.
 
@@ -72,9 +118,11 @@ Source files live in this skill's `assets/` directory.
 | `assets/risk-guard.yml` | `.github/workflows/risk-guard.yml` | Diff; add the missing behaviour, keep the author's version |
 | `assets/pull_request_template.md` | `.github/pull_request_template.md` (or the existing template's location) | Append only the sections it lacks |
 | `assets/low-risk-paths.txt` | `.github/low-risk-paths.txt` | Keep; append only globs the author asked for |
-| `assets/claude-md-workflow.md` | `CLAUDE.md` | No `## Workflow` → append the section. Section exists → add only missing keys. No `CLAUDE.md` → create it with just this section |
+| `assets/claude-md-workflow.md` | `CLAUDE.md` | No `## Issue workflow` → append the section. Section exists → add only missing keys. No `CLAUDE.md` → create it with just this section |
 
-Fill `CLAUDE.md` `## Workflow` with the values from Step 3 and the merge mode from Step 2. Leave `<fill in>` for anything the author did not give.
+`low-risk-paths.txt`: keep the header comment, and replace the example globs below it with the author's list from Step 3.
+
+Fill `CLAUDE.md` `## Issue workflow` with the values from Step 3 and the merge mode from Step 2. Leave `<fill in>` for anything the author did not give.
 
 When editing workflow YAML, keep `run:` as a block scalar (`run: |`). A plain inline string containing `"status: raw"` is invalid YAML (`: ` inside a plain scalar). Same for step `name:` values: never put `: ` in them unquoted.
 
@@ -85,29 +133,33 @@ python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows
 python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/risk-guard.yml
 ```
 
-## Step 6 — Ship the setup as a PR
+## Step 8 — Ship the setup as a PR
 
 The setup touches `.github/workflows`, so it is `risk: high` and the author merges it.
 
+Branch: if you're already on a non-default branch (e.g. a worktree session's branch), use it. Only when on the default branch, create one:
+
 ```bash
-git switch -c chore/issue-workflow-setup
+[ "$(git branch --show-current)" = "<default>" ] && git switch -c chore/issue-workflow-setup
 git add .github CLAUDE.md
 git commit -m "Set up issue workflow (labels, status/risk-guard workflows, PR template)"
-git push -u origin chore/issue-workflow-setup
+git push -u origin HEAD
 gh pr create --fill --label "risk: high"
 ```
 
-The `issue-status` workflow only runs once it is on the default branch.
+The `issue-status` workflow only runs once it is on the default branch. `risk-guard` runs on this PR itself; with `risk: high` it passes without reading the allowlist.
 
-## Step 7 — Merge settings (after the setup PR is merged)
+## Step 9 — Merge settings (right after the setup PR is opened)
 
-**Merge mode: auto.** Tell the author to run these, or run them after they confirm — they change repo settings:
+No need to wait for the merge. Once the PR exists, `risk-guard` has run once, so it can be named as a required check.
+
+**Merge mode: auto.** These change repo settings, so get the author's OK before running them:
 
 ```bash
 gh api -X PATCH repos/<owner>/<repo> -f allow_auto_merge=true
 ```
 
-Branch protection so CI and `risk-guard` must pass before auto-merge fires. Put the repo's own CI job names in `contexts`:
+Branch protection so CI and `risk-guard` must pass before auto-merge fires. `contexts` takes **job** names (the `jobs:` key, or the job's `name:` if set), e.g. `ci`, not workflow names like `CI`. Check the exact names with `gh pr checks <PR>`.
 
 ```bash
 gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input - <<'JSON'
@@ -120,14 +172,15 @@ gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input - <<'JS
 JSON
 ```
 
-A required check only appears in the list after it has run once, so open a test PR first if the API rejects a context.
-
 **Merge mode: session.** Nothing to configure. `issue-implement` waits for checks with `gh pr checks --watch` and merges in-session. Make sure `CLAUDE.md` says `Merge mode: session`.
 
 ## Done when
 
-- [ ] All 8 labels exist (`gh label list`).
+- [ ] Overlapping labels were kept, renamed, or deleted as the author chose.
+- [ ] All 8 workflow labels exist (`gh label list`).
+- [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
 - [ ] The four `.github` files exist and both YAML files parse.
-- [ ] `CLAUDE.md` has `## Workflow` with merge mode set and the author's values (or `<fill in>` placeholders).
+- [ ] `CLAUDE.md` has `## Issue workflow` with merge mode set and the author's values (or `<fill in>` placeholders).
 - [ ] Setup PR is open with `risk: high`.
-- [ ] The author has been told the Step 7 commands for their merge mode.
+- [ ] `risk-guard` ran on the setup PR and passed (`gh pr checks <PR>`).
+- [ ] Merge mode auto: auto-merge enabled and branch protection set with job names (or the author has the Step 9 commands).

@@ -22,13 +22,14 @@ Turns a raw issue into a plan a fresh session can implement without this convers
 # one issue
 gh issue view <N> --json number,title,body,labels,comments
 # batch: every raw issue, plus needs-info issues where the author replied after the AI's question
-gh issue list --state open --label "status: raw" --json number,title --limit 100
-gh issue list --state open --label "status: needs-info" --json number,title --limit 100
+# (filter --json locally: `--label` goes through the search index, which lags right after label edits)
+gh issue list --state open --limit 500 --json number,title,labels \
+  --jq '.[] | select([.labels[].name] | index("status: raw") or index("status: needs-info")) | "#\(.number) [\(.labels | map(.name) | map(select(startswith("status: "))) | join(","))] \(.title)"'
 ```
 
 In batch mode, list them all first, then enhance one at a time, finishing each (label changed) before starting the next.
 
-Read the repo's `CLAUDE.md` `## Workflow` section for the verify command, preview URL, and issue assets branch.
+Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, preview URL, and issue assets branch.
 
 ## Step 1 — Check the code first
 

@@ -1,4 +1,4 @@
-## Workflow
+## Issue workflow
 
 Issues move `status: raw` → (`status: needs-info`) → `status: ai-enhanced` → `status: approved`.
 Only the author sets `status: approved`. Skills: `issue-enhance`, `issue-implement`, `article-handoff`.
