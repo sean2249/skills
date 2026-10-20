@@ -1,0 +1,8 @@
+{
+  "name": "sean-skills",
+  "description": "Cross-project Claude Code skills: an AI-assisted GitHub issue workflow (setup, enhance, implement, article handoff) and article writing.",
+  "author": { "name": "sean2249" },
+  "homepage": "https://github.com/sean2249/skills",
+  "repository": "https://github.com/sean2249/skills",
+  "skills": ["./skills/dev/", "./skills/writing/"]
+}

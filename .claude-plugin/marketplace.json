@@ -1,0 +1,14 @@
+{
+  "name": "sean-skills",
+  "owner": {
+    "name": "sean2249"
+  },
+  "description": "Cross-project Claude Code skills by sean2249.",
+  "plugins": [
+    {
+      "name": "sean-skills",
+      "source": "./",
+      "description": "Cross-project Claude Code skills: an AI-assisted GitHub issue workflow and article writing."
+    }
+  ]
+}

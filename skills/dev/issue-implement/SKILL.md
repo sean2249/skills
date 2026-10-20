@@ -10,8 +10,12 @@ Implements one approved issue end to end. Requires the repo to have been set up 
 ## Step 0 — Gate
 
 ```bash
-gh issue view <N> --json number,title,body,labels,state,comments
+gh issue view <N> --json number,title,body,labels,state,comments,blockedBy,subIssuesSummary
+# for each issue listed in blockedBy:
+gh issue view <M> --json state --jq .state
 ```
+
+On a `gh` without these JSON fields (`gh issue create --help | grep -q -- --parent` fails), use the GraphQL read query in `issue-enhance` → "Older gh", and suggest upgrading `gh`.
 
 Refuse and explain if any of these hold:
 
@@ -19,8 +23,9 @@ Refuse and explain if any of these hold:
 |---|---|
 | Issue is closed | It's closed; nothing to implement. |
 | No `status: approved` label | Current status is `<label>`; only the author can approve. Suggest `issue-enhance` for `raw` / `needs-info`, or author review for `ai-enhanced`. |
-| Body says `Blocked by #M` and #M is open | Blocked by #M; implement that first. |
-| Issue is an overview (has a `## Slices` checklist, no acceptance criteria) | Implement the child issues instead. |
+| Any issue in `blockedBy` is still open | Blocked by #M (list each open blocker); implement those first. |
+| `subIssuesSummary.total` > 0 (it's a parent) | It's a parent issue; implement its sub-issues instead. |
+| Has `article: devlog` or `article: intro` (an article to write, in the article repo) | Use `write-article`. A plain `article` label in a code repo is fine: it means "write an article after this ships" (Step 5). |
 
 Never add `status: approved` yourself, even if asked.
 
