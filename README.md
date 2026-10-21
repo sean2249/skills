@@ -8,12 +8,24 @@ In a Claude Code session:
 
 ```
 /plugin marketplace add sean2249/skills
-/plugin install sean-skills@sean-skills
+/plugin install kiwi-skills@kiwi-skills
 ```
 
-Then turn on updates: run `/plugin`, open **Marketplaces**, select `sean-skills`, and choose **Enable auto-update**. Third-party marketplaces don't auto-update by default. The plugin has no `version`, so every new commit counts as an update. Without auto-update, pull changes with `/plugin marketplace update sean-skills`.
+Then turn on updates: run `/plugin`, open **Marketplaces**, select `kiwi-skills`, and choose **Enable auto-update**. Third-party marketplaces don't auto-update by default. The plugin has no `version`, so every new commit counts as an update. Without auto-update, pull changes with `/plugin marketplace update kiwi-skills`.
 
-Skills load namespaced, e.g. `sean-skills:issue-enhance`.
+Skills load namespaced, e.g. `kiwi-skills:issue-enhance`.
+
+### Migrating from the old name
+
+The plugin and its marketplace used to be called `sean-skills`. If you installed it under that name, re-add it under the new one (in a shell):
+
+```bash
+claude plugin marketplace remove sean-skills
+claude plugin marketplace add sean2249/skills
+claude plugin install kiwi-skills@kiwi-skills
+```
+
+Then turn on auto-update for `kiwi-skills` as above.
 
 ## Workflow
 
