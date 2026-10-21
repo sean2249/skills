@@ -125,7 +125,7 @@ When the author asks for changes after reviewing the PR, push the fix to the sam
 
 ## Step 7 — After merge
 
-If the PR has `article` and merged during this session, run `article-request` for it. If it will merge later (auto mode), tell the author to run `article-request <PR>` after it merges.
+If the PR has `article` and merged during this session, run `article-request <PR url>` for it. If it merges later (auto mode or the author's review), the `article-pending` workflow labels it `article: pending` on merge and comments to remind the author. Running `article-request` with no argument then lists every pending PR.
 
 ## Done when
 

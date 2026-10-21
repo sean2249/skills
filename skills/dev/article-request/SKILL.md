@@ -11,6 +11,15 @@ Runs from any repo's session. Every comment or body you write starts with `🤖 
 
 ## Step 0 — Identify the source
 
+**No argument**: list every merged PR still waiting for its article, across the current repo's owner, and let the author pick:
+
+```bash
+owner=$(gh repo view --json owner --jq .owner.login)
+gh search prs --owner "$owner" --label "article: pending" --merged --json url,title,repository
+```
+
+`article: pending` is added on merge by the `article-pending` workflow. Nothing listed → say so and stop.
+
 **A PR** (default mode `article: devlog`):
 
 ```bash
@@ -33,7 +42,7 @@ Confirm the mode with the author.
 
 ## Step 1 — Find the target
 
-Read `Article target: <owner>/<repo>` from this repo's `CLAUDE.md` `## Issue workflow` section. Missing, placeholder, or `none` (common in a notes repo) → ask the author. Never guess a repo name.
+Read `Article target: <owner>/<repo>` from the `## Issue workflow` section of the source repo's `CLAUDE.md`. In PR mode that's the PR's repo: read it locally if you're in it, else `gh api -H "Accept: application/vnd.github.raw+json" repos/<o>/<r>/contents/CLAUDE.md`. Missing, placeholder, or `none` (common in a notes repo) → ask the author. Never guess a repo name.
 
 ```bash
 gh repo view <target> --json nameWithOwner,visibility
@@ -47,7 +56,7 @@ gh repo view <target> --json nameWithOwner,visibility
 gh issue list -R <target> --state all --search "<PR url or permalink> in:body" --json number,url
 ```
 
-If one exists, report its URL and stop.
+If one exists, report its URL. In PR mode, still do Step 5 if the PR has `article: pending`. Then stop.
 
 ## Step 3 — Ensure labels exist in the target
 
@@ -86,10 +95,13 @@ gh issue create -R <target> --title "Article: <PR title or file title>" --body-f
   --label article --label "status: raw" --label "article: <devlog|intro>"
 ```
 
-## Step 5 — Link back (PR mode)
+## Step 5 — Mark the PR as requested (PR mode)
 
 ```bash
-gh pr comment <PR> --body "🤖 AI <YYYY-MM-DD>
+gh label create "article: requested" -R <o>/<r> --color 0e8a16 \
+  --description "Article request opened in the article repo" 2>/dev/null || true
+gh pr edit <PR url> --remove-label "article: pending" --add-label "article: requested"
+gh pr comment <PR url> --body "🤖 AI <YYYY-MM-DD>
 
 Article request: <new issue url>"
 ```
@@ -99,4 +111,4 @@ Article request: <new issue url>"
 - [ ] Exactly one issue in the target for this source, labelled `article`, `status: raw`, and one `article:` mode.
 - [ ] Its body lists the sources with read instructions (file sources as commit-pinned permalinks) and, for a PR, the full `## 文章素材`.
 - [ ] If the source is private and the target public, the author confirmed.
-- [ ] PR mode: the source PR has a comment linking to the issue.
+- [ ] PR mode: the source PR has `article: requested` (no longer `article: pending`) and a comment linking to the issue.

@@ -27,7 +27,7 @@ Skills load namespaced, e.g. `sean-skills:issue-enhance`.
 
 ## Shared workflows
 
-`.github/workflows/issue-status.yml` and `risk-guard.yml` are reusable workflows (`on: workflow_call`). Repos set up with `issue-workflow-setup` call them through short callers, for example:
+`.github/workflows/issue-status.yml`, `risk-guard.yml`, and `article-pending.yml` are reusable workflows (`on: workflow_call`). Repos set up with `issue-workflow-setup` call them through short callers, for example:
 
 ```yaml
 jobs:
