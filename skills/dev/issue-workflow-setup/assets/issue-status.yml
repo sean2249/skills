@@ -1,0 +1,14 @@
+# Caller for the shared issue-status workflow. Written by issue-workflow-setup.
+# <skills-repo> is the <owner>/<repo> that hosts the reusable workflows.
+name: issue-status
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  issue-status:
+    uses: <skills-repo>/.github/workflows/issue-status.yml@main

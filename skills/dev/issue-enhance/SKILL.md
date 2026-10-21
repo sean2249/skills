@@ -1,11 +1,11 @@
 ---
 name: issue-enhance
-description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — then moved to `status: ai-enhanced` for the author to review. Handles one issue or every raw issue in the repo.
+description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `article: intro`), an article outline; then moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
 ---
 
 # issue-enhance
 
-Turns a raw issue into a plan a fresh session can implement without this conversation. Requires the repo to have been set up with `setup-issue-workflow`.
+Turns a raw issue into a plan a fresh session can implement without this conversation. Requires the repo to have been set up with `issue-workflow-setup`.
 
 ## Hard rules
 
@@ -31,7 +31,13 @@ In batch mode, list them all first, then enhance one at a time, finishing each (
 
 Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, preview URL, and issue assets branch.
 
+## Prerequisite — gh version
+
+`gh issue create --help | grep -q -- --parent || echo "gh too old: upgrade gh for --parent / --blocked-by"`. If it's too old, ask the author to upgrade `gh` (don't do it for them) and stop.
+
 ## Step 1 — Check the code first
+
+For an **article-writing issue**, skip to Step 5a: one with `article: devlog` or `article: intro`, or with `article` in the repo that is its own `Article target`. A plain `article` label in a code repo only means "write an article after this ships"; that issue gets the normal plan.
 
 Search the codebase for what the issue asks for. If it is **already done**, comment (first line `🤖 AI <YYYY-MM-DD>`) with the evidence (file:line, commit) and tell the author it can be closed. Leave the labels and the closing to them. Stop.
 
@@ -39,8 +45,8 @@ Search the codebase for what the issue asks for. If it is **already done**, comm
 
 One issue = one vertical slice a single fresh session can finish (implement, verify, open PR).
 
-- **Several unrelated ideas in one issue** → open one issue per idea (Step 6) and turn the original into an overview.
-- **One idea, too big for one session** → split into ordered slices. Each later slice says `Blocked by #<N>` in its body.
+- **Several unrelated ideas in one issue** → one sub-issue per idea (Step 6); the original becomes the parent.
+- **One idea, too big for one session** → ordered sub-issues, each later one **blocked by** the one before (native dependency, Step 6). Don't write `Blocked by #N` in the body.
 
 ## Step 3 — Blocked on a specific question?
 
@@ -110,8 +116,6 @@ flowchart TD
 ## Verification
 - Commands: `<verify command from CLAUDE.md>`, plus any targeted test.
 - Manual: <steps on the preview URL or locally>.
-
-Blocked by #<N>   <!-- only if it depends on another slice -->
 ````
 
 **Validate mermaid before posting.** Render it locally and fix errors:
@@ -130,6 +134,41 @@ gh issue comment <N> --body "🤖 AI <YYYY-MM-DD>
 <what this round added or changed, and why>"
 ```
 
+## Step 5a — Article issues: an outline, not an implementation plan
+
+An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has neither `article: devlog` nor `article: intro`, ask which and add it.
+
+Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with this AI section:
+
+````markdown
+---
+
+> 🤖 AI-enhanced (Claude Code), <YYYY-MM-DD>. Waiting for author review.
+
+## Mode
+`article: devlog` (reconstruct the decision path) or `article: intro` (introduce it to new readers).
+
+## Main thread
+- The one thread the article follows, in a sentence or two.
+
+## Sections
+1. <section>: <what it says>. Material: <which source / which part of 文章素材>.
+
+## Not writing
+- What is deliberately left out, and why.
+
+## Conditions the description left out
+- …
+
+## Acceptance criteria
+- [ ] Reader-level outcomes (e.g. "a reader new to X can say what it does after the first section").
+
+## Verification
+- Build/preview per the article repo's `## Article conventions`.
+````
+
+Then move the label to `status: ai-enhanced` and comment, as in Step 5.
+
 ## Step 5b — Author asks for changes
 
 When the author asks for changes after seeing mockups or the enhanced issue:
@@ -141,15 +180,26 @@ When the author asks for changes after seeing mockups or the enhanced issue:
 5. Post a comment starting `🤖 AI <YYYY-MM-DD>`: what changed this round and why.
 6. Keep the label at `status: ai-enhanced`.
 
-## Step 6 — Splitting
+## Step 6 — Splitting into sub-issues
 
-For each new slice or idea:
+Create each slice as a native sub-issue of the original, and express order as native dependencies:
 
 ```bash
-gh issue create --title "<slice title>" --body-file <slice.md> --label "status: ai-enhanced"
+# first slice
+gh issue create --parent <original> --title "<slice 1>" --body-file <slice1.md> --label "status: ai-enhanced"
+# later slice, blocked by the previous one
+gh issue create --parent <original> --blocked-by <slice1> --title "<slice 2>" --body-file <slice2.md> --label "status: ai-enhanced"
+# existing issues: attach / add a dependency after the fact
+gh issue edit <original> --add-sub-issue <A>,<B>
+gh issue edit <B> --add-blocked-by <A>
+# undo: --remove-sub-issue <A> / --remove-blocked-by <A>
+# check
+gh issue view <N> --json parent,subIssuesSummary,blockedBy,blocking
 ```
 
-Each child body is all AI-written, so it starts with the 🤖 header, links back (`Part of #<original>`), and follows the Step 5 template. Turn the original into an overview: keep the author's text, put a `## Slices` checklist (`- [ ] #<child>`) in its AI section, label it `status: ai-enhanced`, and comment `🤖 AI <YYYY-MM-DD>` with the split and the reason. Overviews have no acceptance criteria of their own and are not implemented directly.
+Each child body is all AI-written, so it starts with the 🤖 header and follows the Step 5 template. The parent/child link and the dependencies live in GitHub, not in the text: no `Part of #N`, no `Blocked by #N`, no `## Slices` checklist.
+
+The original becomes the parent: keep the author's text, label it `status: ai-enhanced`, and comment `🤖 AI <YYYY-MM-DD>` with the split and the reason. A parent has no acceptance criteria of its own and isn't implemented directly. Its progress is the sub-issue summary.
 
 ## Step 7 — Author rejects an idea
 
@@ -163,7 +213,8 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 
 ## Done when (per issue)
 
-- [ ] Either: already-done evidence posted; or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI).
+- [ ] Either: already-done evidence posted; or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI; article issues use the Step 5a outline).
+- [ ] Splits are native sub-issues; order is native blocked-by; no `Blocked by #N` / `## Slices` text.
 - [ ] Original text is intact; exactly one AI section, below `---` and the 🤖 header.
 - [ ] Every body change has a matching `🤖 AI <date>` comment saying what changed and why.
 - [ ] **Conditions the description left out** lists every condition you added.

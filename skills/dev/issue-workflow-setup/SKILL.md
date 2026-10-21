@@ -1,11 +1,13 @@
 ---
-name: setup-issue-workflow
-description: Use when installing the AI-assisted GitHub issue workflow (raw → needs-info → ai-enhanced → approved, risk-labelled PRs) into a repo for the first time, or when repairing a repo where its labels, workflows, PR template, or CLAUDE.md `## Issue workflow` section are missing. Runs once per repo; creates labels, brings existing issues into the flow, writes .github files from bundled assets, and records merge mode.
+name: issue-workflow-setup
+description: Use when installing the AI-assisted GitHub issue workflow (raw → needs-info → ai-enhanced → approved, risk-labelled PRs) into a repo for the first time, or when repairing / upgrading a repo where its labels, workflows, PR template, or CLAUDE.md `## Issue workflow` section are missing or outdated (e.g. full copies of the workflows instead of thin callers). Runs once per repo; creates labels, brings existing issues into the flow, writes .github callers for the shared reusable workflows, and records merge mode.
 ---
 
-# setup-issue-workflow
+# issue-workflow-setup
 
-One-time install of the issue workflow used by `issue-enhance`, `issue-implement`, and `article-handoff`.
+One-time install of the issue workflow used by `issue-enhance`, `issue-implement`, `article-request`, and `article-write`.
+
+The workflow logic lives once, as reusable workflows in the skills repo (`.github/workflows/issue-status.yml`, `risk-guard.yml`, and `article-pending.yml`, all `on: workflow_call`). Each repo gets only short callers, so fixes ship to every repo without re-running setup. `<skills-repo>` below is the `<owner>/<repo>` hosting those reusable workflows: the repo this skill came from, or the author's fork. Ask if unsure, and write it into the callers.
 
 **Never overwrite.** Missing files are created; existing files are merged. Show the plan and get the author's OK before changing anything.
 
@@ -28,8 +30,12 @@ Check what already exists, without changing anything:
 | Labels | `gh label list --limit 200 --json name,description` |
 | Existing labels that overlap in meaning (e.g. `ai-review`, `needs-info`, `approved`, `low-risk`) | read the label list above |
 | Open issues with no `status: ` label | command below the table |
-| `.github/workflows/issue-status.yml` | file exists? |
-| `.github/workflows/risk-guard.yml` | file exists? |
+| `.github/workflows/issue-status.yml` | exists? a thin caller (`uses: <skills-repo>/.github/workflows/issue-status.yml@…`) or an old full copy (has `runs-on:` / `steps:`)? |
+| `.github/workflows/risk-guard.yml` | same: caller or old full copy (has `python3 - <<'PY'`)? |
+| `.github/workflows/article-pending.yml` | exists? (repos set up before it existed won't have it) |
+| Branch protection contexts | `gh api repos/<owner>/<repo>/branches/<default>/protection --jq '.required_status_checks.contexts'` |
+| Is this the article repo? | `Article target` in `## Issue workflow` equals this repo (new install: ask in Step 3) |
+| `CLAUDE.md` `## Article conventions` (article repo only) | `grep -n '^## Article conventions' CLAUDE.md` |
 | `.github/pull_request_template.md` (also `.github/PULL_REQUEST_TEMPLATE/`, root, `docs/`) | file exists? |
 | `.github/low-risk-paths.txt` | file exists? |
 | `CLAUDE.md` `## Issue workflow` section | `grep -n '^## Issue workflow' CLAUDE.md` |
@@ -42,6 +48,8 @@ gh issue list --state open --limit 500 --json number,title,labels \
 ```
 
 The section is `## Issue workflow`, not `## Workflow`: many repos already use `## Workflow` for local dev commands. Leave that one alone.
+
+**Repair / upgrade mode.** If either workflow is an old full copy, plan to replace it with the caller (Step 7). If `article-pending.yml` is missing, plan to add it, plus the `article: pending` / `article: requested` labels (Step 5). Also: the required check name changes from `risk-guard` to `risk-guard / check` (Step 9). If the old copy was customized beyond the shipped template, show the diff and ask before replacing. Everything else in an already-set-up repo follows the usual merge-only rules.
 
 ## Step 2 — Detect merge mode
 
@@ -89,6 +97,17 @@ gh label create "risk: low"           --force --color c2e0c6 --description "PR t
 gh label create "risk: medium"        --force --color fef2c0 --description "PR needs author review before merge"
 gh label create "risk: high"          --force --color b60205 --description "Auth, migrations, workflows, secrets or billing; author review required"
 gh label create "article"             --force --color 5319e7 --description "Write a technical article after this ships"
+gh label create "article: pending"    --force --color fbca04 --description "Merged article PR; article-request not run yet"
+gh label create "article: requested"  --force --color 0e8a16 --description "Article request opened in the article repo"
+```
+
+`article-pending` adds `article: pending` when an `article` PR merges; `article-request` swaps it for `article: requested`.
+
+**Article repo only** (its `Article target` is itself), also:
+
+```bash
+gh label create "article: devlog" --force --color d4c5f9 --description "Article reconstructs a decision path"
+gh label create "article: intro"  --force --color c5def5 --description "Article introduces something to new readers"
 ```
 
 ## Step 6 — Bring existing issues into the flow
@@ -114,11 +133,15 @@ Source files live in this skill's `assets/` directory.
 
 | Asset | Target | If target exists |
 |---|---|---|
-| `assets/issue-status.yml` | `.github/workflows/issue-status.yml` | Diff; add the missing behaviour, keep the author's version |
-| `assets/risk-guard.yml` | `.github/workflows/risk-guard.yml` | Diff; add the missing behaviour, keep the author's version |
+| `assets/issue-status.yml` (caller) | `.github/workflows/issue-status.yml` | Old full copy → replace with the caller (repair mode). Already a caller → keep; fix `<skills-repo>` / ref if wrong |
+| `assets/risk-guard.yml` (caller) | `.github/workflows/risk-guard.yml` | Same |
+| `assets/article-pending.yml` (caller) | `.github/workflows/article-pending.yml` | Missing → add. Already a caller → keep; fix `<skills-repo>` / ref if wrong |
 | `assets/pull_request_template.md` | `.github/pull_request_template.md` (or the existing template's location) | Append only the sections it lacks |
 | `assets/low-risk-paths.txt` | `.github/low-risk-paths.txt` | Keep; append only globs the author asked for |
 | `assets/claude-md-workflow.md` | `CLAUDE.md` | No `## Issue workflow` → append the section. Section exists → add only missing keys. No `CLAUDE.md` → create it with just this section |
+| `assets/claude-md-article-conventions.md` (article repo only) | `CLAUDE.md` | No `## Article conventions` → append with `<fill in>` values, then ask the author to fill them (`article-write` won't run until they do). Exists → leave it |
+
+In all three callers, replace `<skills-repo>` with the real `<owner>/<repo>`.
 
 `low-risk-paths.txt`: keep the header comment, and replace the example globs below it with the author's list from Step 3.
 
@@ -131,6 +154,7 @@ Validate every YAML file you wrote or edited:
 ```bash
 python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/issue-status.yml
 python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/risk-guard.yml
+python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/article-pending.yml
 ```
 
 ## Step 8 — Ship the setup as a PR
@@ -147,7 +171,7 @@ git push -u origin HEAD
 gh pr create --fill --label "risk: high"
 ```
 
-The `issue-status` workflow only runs once it is on the default branch. `risk-guard` runs on this PR itself; with `risk: high` it passes without reading the allowlist.
+The `issue-status` workflow only runs once it is on the default branch. `risk-guard` runs on this PR itself; with `risk: high` it passes without reading the allowlist. If the skills repo is private, its reusable workflows can only be called after its Settings → Actions → Access allows this repo.
 
 ## Step 9 — Merge settings (right after the setup PR is opened)
 
@@ -159,12 +183,17 @@ No need to wait for the merge. Once the PR exists, `risk-guard` has run once, so
 gh api -X PATCH repos/<owner>/<repo> -f allow_auto_merge=true
 ```
 
-Branch protection so CI and `risk-guard` must pass before auto-merge fires. `contexts` takes **job** names (the `jobs:` key, or the job's `name:` if set), e.g. `ci`, not workflow names like `CI`. Check the exact names with `gh pr checks <PR>`.
+Branch protection so CI and `risk-guard` must pass before auto-merge fires. `contexts` takes **check** names, which are job names, not workflow names:
+
+- A plain job: its `jobs:` key or `name:`, e.g. `ci` (not the workflow name `CI`).
+- A job that calls a reusable workflow: `<caller job> / <called job>`. For risk-guard that's **`risk-guard / check`**.
+
+Confirm the exact names with `gh pr checks <PR>` on the setup PR. In repair mode, replace an old `risk-guard` context with `risk-guard / check`. Otherwise the old required check never reports and auto-merge stalls.
 
 ```bash
 gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input - <<'JSON'
 {
-  "required_status_checks": { "strict": false, "contexts": ["risk-guard", "<ci-job-name>"] },
+  "required_status_checks": { "strict": false, "contexts": ["risk-guard / check", "<ci-job-name>"] },
   "enforce_admins": false,
   "required_pull_request_reviews": null,
   "restrictions": null
@@ -177,10 +206,11 @@ JSON
 ## Done when
 
 - [ ] Overlapping labels were kept, renamed, or deleted as the author chose.
-- [ ] All 8 workflow labels exist (`gh label list`).
+- [ ] All 10 workflow labels exist (`gh label list`), including `article: pending` / `article: requested`.
 - [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
-- [ ] The four `.github` files exist and both YAML files parse.
+- [ ] The five `.github` files exist, all three workflows are thin callers with the real `<skills-repo>`, and their YAML parses.
+- [ ] Article repo: `article: devlog` / `article: intro` labels exist and `## Article conventions` is in `CLAUDE.md`.
 - [ ] `CLAUDE.md` has `## Issue workflow` with merge mode set and the author's values (or `<fill in>` placeholders).
 - [ ] Setup PR is open with `risk: high`.
-- [ ] `risk-guard` ran on the setup PR and passed (`gh pr checks <PR>`).
+- [ ] `risk-guard / check` ran on the setup PR and passed (`gh pr checks <PR>`).
 - [ ] Merge mode auto: auto-merge enabled and branch protection set with job names (or the author has the Step 9 commands).

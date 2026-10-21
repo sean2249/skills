@@ -1,0 +1,23 @@
+# Caller for the shared risk-guard workflow. Written by issue-workflow-setup.
+# <skills-repo> is the <owner>/<repo> that hosts the reusable workflows.
+# Required status check name: "risk-guard / check" (caller job id / reusable job id).
+name: risk-guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+# `gh pr create --label` fires both `opened` and `labeled`; keep only the latest run per PR.
+concurrency:
+  group: risk-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  risk-guard:
+    uses: <skills-repo>/.github/workflows/risk-guard.yml@main
+    with:
+      allowlist: .github/low-risk-paths.txt
