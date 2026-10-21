@@ -1,7 +1,7 @@
 ## Issue workflow
 
 Issues move `status: raw` → (`status: needs-info`) → `status: ai-enhanced` → `status: approved`.
-Only the author sets `status: approved`. Skills: `issue-enhance`, `issue-implement`, `article-handoff`.
+Only the author sets `status: approved`. Skills: `issue-enhance`, `issue-implement`, `article-request`.
 
 - Verify command: `<fill in, e.g. npm test && npm run build>`
 - Preview URL: `<fill in, or "none">`

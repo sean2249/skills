@@ -1,11 +1,11 @@
 ---
-name: setup-issue-workflow
+name: issue-workflow-setup
 description: Use when installing the AI-assisted GitHub issue workflow (raw → needs-info → ai-enhanced → approved, risk-labelled PRs) into a repo for the first time, or when repairing / upgrading a repo where its labels, workflows, PR template, or CLAUDE.md `## Issue workflow` section are missing or outdated (e.g. full copies of the workflows instead of thin callers). Runs once per repo; creates labels, brings existing issues into the flow, writes .github callers for the shared reusable workflows, and records merge mode.
 ---
 
-# setup-issue-workflow
+# issue-workflow-setup
 
-One-time install of the issue workflow used by `issue-enhance`, `issue-implement`, `article-handoff`, and `write-article`.
+One-time install of the issue workflow used by `issue-enhance`, `issue-implement`, `article-request`, and `article-write`.
 
 The workflow logic lives once, as reusable workflows in the skills repo (`.github/workflows/issue-status.yml` and `risk-guard.yml`, `on: workflow_call`). Each repo gets only short callers, so fixes ship to every repo without re-running setup. `<skills-repo>` below is the `<owner>/<repo>` hosting those reusable workflows: the repo this skill came from, or the author's fork. Ask if unsure, and write it into the callers.
 
@@ -133,7 +133,7 @@ Source files live in this skill's `assets/` directory.
 | `assets/pull_request_template.md` | `.github/pull_request_template.md` (or the existing template's location) | Append only the sections it lacks |
 | `assets/low-risk-paths.txt` | `.github/low-risk-paths.txt` | Keep; append only globs the author asked for |
 | `assets/claude-md-workflow.md` | `CLAUDE.md` | No `## Issue workflow` → append the section. Section exists → add only missing keys. No `CLAUDE.md` → create it with just this section |
-| `assets/claude-md-article-conventions.md` (article repo only) | `CLAUDE.md` | No `## Article conventions` → append with `<fill in>` values, then ask the author to fill them (`write-article` won't run until they do). Exists → leave it |
+| `assets/claude-md-article-conventions.md` (article repo only) | `CLAUDE.md` | No `## Article conventions` → append with `<fill in>` values, then ask the author to fill them (`article-write` won't run until they do). Exists → leave it |
 
 In both callers, replace `<skills-repo>` with the real `<owner>/<repo>`.
 

@@ -1,4 +1,4 @@
-# Caller for the shared risk-guard workflow. Written by setup-issue-workflow.
+# Caller for the shared risk-guard workflow. Written by issue-workflow-setup.
 # <skills-repo> is the <owner>/<repo> that hosts the reusable workflows.
 # Required status check name: "risk-guard / check" (caller job id / reusable job id).
 name: risk-guard

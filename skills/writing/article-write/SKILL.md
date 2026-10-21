@@ -1,11 +1,11 @@
 ---
-name: write-article
+name: article-write
 description: Use when, in an article repo, an issue labelled `article` and `status: approved` should be written up as an article and opened as a PR. Writes a devlog (`article: devlog`, reconstructs the decision path) or an intro (`article: intro`, explains what something is and why it's worth a look), reading only the sources the issue names and following the repo's `## Article conventions`.
 ---
 
-# write-article
+# article-write
 
-Turns an approved article issue into an article PR. The issue usually comes from `article-handoff` and was outlined by `issue-enhance`. Repo-specific rules (paths, frontmatter, series, numbering, images, build) live in the article repo's `CLAUDE.md`, not here.
+Turns an approved article issue into an article PR. The issue usually comes from `article-request` and was outlined by `issue-enhance`. Repo-specific rules (paths, frontmatter, series, numbering, images, build) live in the article repo's `CLAUDE.md`, not here.
 
 ## Hard rules
 
@@ -37,7 +37,7 @@ Read the `## Article conventions` section of this repo's `CLAUDE.md`. It defines
 
 ## Step 2 — Read the sources
 
-Use the issue body: the `## Sources` list (from `article-handoff`) and the approved outline (from `issue-enhance`). Read each source exactly as named:
+Use the issue body: the `## Sources` list (from `article-request`) and the approved outline (from `issue-enhance`). Read each source exactly as named:
 
 | Source | How to read |
 |---|---|

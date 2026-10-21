@@ -5,7 +5,7 @@ description: Use when implementing a GitHub issue labelled `status: approved` �
 
 # issue-implement
 
-Implements one approved issue end to end. Requires the repo to have been set up with `setup-issue-workflow`.
+Implements one approved issue end to end. Requires the repo to have been set up with `issue-workflow-setup`.
 
 ## Step 0 — Gate
 
@@ -25,7 +25,7 @@ Refuse and explain if any of these hold:
 | No `status: approved` label | Current status is `<label>`; only the author can approve. Suggest `issue-enhance` for `raw` / `needs-info`, or author review for `ai-enhanced`. |
 | Any issue in `blockedBy` is still open | Blocked by #M (list each open blocker); implement those first. |
 | `subIssuesSummary.total` > 0 (it's a parent) | It's a parent issue; implement its sub-issues instead. |
-| Has `article: devlog` or `article: intro` (an article to write, in the article repo) | Use `write-article`. A plain `article` label in a code repo is fine: it means "write an article after this ships" (Step 5). |
+| Has `article: devlog` or `article: intro` (an article to write, in the article repo) | Use `article-write`. A plain `article` label in a code repo is fine: it means "write an article after this ships" (Step 5). |
 
 Never add `status: approved` yourself, even if asked.
 
@@ -86,7 +86,7 @@ If the issue has the `article` label, add a `## 文章素材` section **now, in 
 ```bash
 git push -u origin HEAD
 gh pr create --title "<title>" --body-file <pr.md> --label "risk: <level>"
-# carry the article flag onto the PR so article-handoff can find it
+# carry the article flag onto the PR so article-request can find it
 gh pr edit <PR> --add-label article   # only if the issue has `article`
 ```
 
@@ -125,7 +125,7 @@ When the author asks for changes after reviewing the PR, push the fix to the sam
 
 ## Step 7 — After merge
 
-If the PR has `article` and merged during this session, run `article-handoff` for it. If it will merge later (auto mode), tell the author to run `article-handoff <PR>` after it merges.
+If the PR has `article` and merged during this session, run `article-request` for it. If it will merge later (auto mode), tell the author to run `article-request <PR>` after it merges.
 
 ## Done when
 

@@ -1,6 +1,6 @@
 ## Article conventions
 
-Read by `write-article`. It stops and asks while any value is still `<fill in>`.
+Read by `article-write`. It stops and asks while any value is still `<fill in>`.
 
 - Output path: `<fill in, e.g. content/posts/<slug>/index.md>`
 - Frontmatter fields: `<fill in: required keys and their format>`

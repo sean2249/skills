@@ -1,5 +1,5 @@
 # Reusable workflow: adds `status: raw` to a new issue opened without a status label.
-# Called from each repo's .github/workflows/issue-status.yml (written by setup-issue-workflow).
+# Called from each repo's .github/workflows/issue-status.yml (written by issue-workflow-setup).
 name: issue-status
 
 on:

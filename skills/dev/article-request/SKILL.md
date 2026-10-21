@@ -1,11 +1,11 @@
 ---
-name: article-handoff
+name: article-request
 description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `article`, `status: raw`, and `article: devlog` or `article: intro`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
 ---
 
-# article-handoff
+# article-request
 
-Hands material to the article repo as a raw issue. There, `issue-enhance` drafts an outline, the author approves it, and `write-article` writes the article.
+Hands material to the article repo as a raw issue. There, `issue-enhance` drafts an outline, the author approves it, and `article-write` writes the article.
 
 Runs from any repo's session. Every comment or body you write starts with `🤖 AI <YYYY-MM-DD>`. The AI posts with the author's `gh` login, so the author field can't tell AI from author; only this marker can.
 
@@ -63,10 +63,10 @@ gh label create "article: intro"  -R <target> --color c5def5 --description "Arti
 
 ## Step 4 — Open the issue
 
-Body. Keep `## Sources` with its read instructions; `write-article` reads only what's listed there:
+Body. Keep `## Sources` with its read instructions; `article-write` reads only what's listed there:
 
 ````markdown
-🤖 AI <YYYY-MM-DD> (article-handoff)
+🤖 AI <YYYY-MM-DD> (article-request)
 
 ## Sources
 - PR: <PR url>. Read with `gh pr view <PR url>` and `gh pr diff <PR url>`.
@@ -91,7 +91,7 @@ gh issue create -R <target> --title "Article: <PR title or file title>" --body-f
 ```bash
 gh pr comment <PR> --body "🤖 AI <YYYY-MM-DD>
 
-Article handoff: <new issue url>"
+Article request: <new issue url>"
 ```
 
 ## Done when

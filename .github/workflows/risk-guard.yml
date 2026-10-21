@@ -1,7 +1,7 @@
 # Reusable workflow: fails a PR labelled `risk: low` if any changed file is outside
 # the calling repo's low-risk allowlist. PRs with any other risk label (or none) pass,
 # so the caller's job can be a required status check.
-# Called from each repo's .github/workflows/risk-guard.yml (written by setup-issue-workflow).
+# Called from each repo's .github/workflows/risk-guard.yml (written by issue-workflow-setup).
 # The check shows up in the calling repo as "<caller job id> / check", i.e. "risk-guard / check".
 name: risk-guard
 

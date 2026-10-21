@@ -5,7 +5,7 @@ description: Use when a GitHub issue labelled `status: raw` (or `status: needs-i
 
 # issue-enhance
 
-Turns a raw issue into a plan a fresh session can implement without this conversation. Requires the repo to have been set up with `setup-issue-workflow`.
+Turns a raw issue into a plan a fresh session can implement without this conversation. Requires the repo to have been set up with `issue-workflow-setup`.
 
 ## Hard rules
 
@@ -136,7 +136,7 @@ gh issue comment <N> --body "🤖 AI <YYYY-MM-DD>
 
 ## Step 5a — Article issues: an outline, not an implementation plan
 
-An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `write-article` Step 2 for how). Never search a source repo for other files. If it has neither `article: devlog` nor `article: intro`, ask which and add it.
+An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has neither `article: devlog` nor `article: intro`, ask which and add it.
 
 Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with this AI section:
 
