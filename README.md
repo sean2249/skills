@@ -87,6 +87,15 @@ flowchart TD
 
 </details>
 
+### Labels
+
+| Label | Where | Meaning |
+|---|---|---|
+| `status: raw` → `needs-info` → `ai-enhanced` → `approved` | every repo | Issue progress; only the author sets `approved` |
+| `risk: low` / `medium` / `high` | every repo, on PRs | Merge gate; only `low` merges automatically |
+| `article-status: request` → `pending` → `handoff` | project repos (including the article repo's own feature cards) | This work should become an article, and how far the handoff got |
+| `post-type: devlog` / `intro` / `review` / `research` | **article repo only**, on article cards | How the article is written; never used in other repos |
+
 ## Skills
 
 | Skill | Use when |

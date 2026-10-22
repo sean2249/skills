@@ -7,7 +7,7 @@ description: Use when work should become an article in the repo where articles a
 
 Hands material to the article repo as a raw issue. There, `issue-enhance` drafts an outline, the author approves it, and `article-write` writes the article.
 
-Article progress in a project repo is one label, `article-status:`: **request** (the work should become an article; the author adds it to the issue, `issue-implement` copies it to the PR) → **pending** (the PR merged; set by the `article-pending` workflow) → **handoff** (this skill opened the article issue; done on this side). In the article repo, an article issue carries only an `post-type:` label.
+Article progress in a project repo is one label, `article-status:`: **request** (the work should become an article; the author adds it to the issue, `issue-implement` copies it to the PR) → **pending** (the PR merged; set by the `article-pending` workflow) → **handoff** (this skill opened the article issue; done on this side). In the article repo, an article issue carries only a `post-type:` label.
 
 Runs from any repo's session. Every comment or body you write starts with `🤖 AI <YYYY-MM-DD>`. The AI posts with the author's `gh` login, so the author field can't tell AI from author; only this marker can.
 
@@ -61,6 +61,8 @@ gh issue list -R <target> --state all --search "<PR url or permalink> in:body" -
 If one exists, report its URL. In PR mode, still do Step 5 if the PR has `article-status: pending`. Then stop.
 
 ## Step 3 — Ensure labels exist in the target
+
+`post-type:` labels belong to the `Article target` repo only. Create and use them there, and never add a `post-type:` label to the source repo or its PR.
 
 Create only the missing ones. Don't use `--force`, which would overwrite the target's existing colors and descriptions:
 

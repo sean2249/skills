@@ -17,6 +17,8 @@ gh issue view <M> --json state --jq .state
 
 If `gh` rejects these JSON fields, it's too old: ask the author to upgrade `gh` and stop.
 
+Article repo or not: this repo is the article repo only if `Article target` in its `CLAUDE.md` `## Issue workflow` equals its own `<owner>/<repo>` (`gh repo view --json nameWithOwner --jq .nameWithOwner`).
+
 Refuse and explain if any of these hold:
 
 | Condition | Say |
@@ -25,7 +27,8 @@ Refuse and explain if any of these hold:
 | No `status: approved` label | Current status is `<label>`; only the author can approve. Suggest `issue-enhance` for `raw` / `needs-info`, or author review for `ai-enhanced`. |
 | Any issue in `blockedBy` is still open | Blocked by #M (list each open blocker); implement those first. |
 | `subIssuesSummary.total` > 0 (it's a parent) | It's a parent issue; implement its sub-issues instead. |
-| Has any `post-type:` label (an article to write, in the article repo) | Use `article-write`. `article-status: request` is fine: it means "write an article after this ships" (Step 5). |
+| Has any `post-type:` label, and this is the article repo | Use `article-write`. `article-status: request` is fine: it means "write an article after this ships" (Step 5). |
+| Has a `post-type:` label but this **isn't** the article repo | Mislabelled: `post-type:` exists only in the article repo. Stop and tell the author; a card that should become an article uses `article-status: request`. |
 
 Never add `status: approved` yourself, even if asked.
 

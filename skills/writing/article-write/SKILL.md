@@ -1,6 +1,6 @@
 ---
 name: article-write
-description: Use when, in an article repo, an issue with an `post-type:` label and `status: approved` should be written up as an article and opened as a PR. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, and attaches a source map so nothing from notes is silently dropped.
+description: Use when, in an article repo, an issue with a `post-type:` label and `status: approved` should be written up as an article and opened as a PR. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, and attaches a source map so nothing from notes is silently dropped.
 ---
 
 # article-write

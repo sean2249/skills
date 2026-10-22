@@ -41,7 +41,7 @@ Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, 
 
 ## Step 1 — Check the code first
 
-For an **article-writing issue**, skip to Step 5a: one with any `post-type:` label (`devlog` / `intro` / `review` / `research`). An `article-status: request` label in a project repo only means "write an article after this ships"; that issue gets the normal plan.
+For an **article-writing issue**, skip to Step 5a: one with any `post-type:` label (`devlog` / `intro` / `review` / `research`), **in the article repo**. This repo is the article repo only if `Article target` in its `CLAUDE.md` `## Issue workflow` equals its own `<owner>/<repo>` (`gh repo view --json nameWithOwner --jq .nameWithOwner`). A `post-type:` label in any other repo is a mistake: stop and tell the author that this card should use `article-status: request` instead. An `article-status: request` label in a project repo only means "write an article after this ships"; that issue gets the normal plan.
 
 Search the codebase for what the issue asks for. There are three outcomes:
 

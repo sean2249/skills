@@ -121,7 +121,21 @@ Do this **before** Step 5. Renaming into a name that Step 5 has already created 
 | `article: research` | `post-type: research` |
 | `article-type: devlog` / `intro` / `review` / `research` (briefly used name) | `post-type: devlog` / `intro` / `review` / `research` |
 
-1. **Rename everything except `article`:**
+**`post-type:` labels exist only in the article repo** (the repo whose `Article target` is itself). So:
+
+- **Article repo** → rename per the table.
+- **Any other repo** → don't rename the type labels (`article: devlog` / `intro` / `review` / `research`, `article-type: *`, `post-type: *`); **delete** them instead. Unused ones go straight into the plan. For ones in use, list the affected issues/PRs in Step 3 and delete after the author confirms (those cards should use `article-status: request` instead). In this case run only the first two `mv_label` lines below, then step 2 (where every `article` is progress → `article-status: request`).
+
+```bash
+for l in "article: devlog" "article: intro" "article: review" "article: research" \
+         "article-type: devlog" "article-type: intro" "article-type: review" "article-type: research" \
+         "post-type: devlog" "post-type: intro" "post-type: review" "post-type: research"; do
+  grep -qxF "$l" <<<"$(gh label list --limit 200 --json name --jq '.[].name')" || continue
+  echo "$(gh issue list --state all --label "$l" --limit 500 --json number --jq length) issues, $(gh pr list --state all --label "$l" --limit 500 --json number --jq length) PRs  $l"
+done
+```
+
+1. **Rename everything except `article`** (article repo: all lines; other repos: only the two `article-status:` lines):
 
 ```bash
 existing=$(gh label list --limit 200 --json name --jq '.[].name')
@@ -205,7 +219,7 @@ mk "article-status: handoff"   0e8a16 "Handed to the article repo; done here"
 
 Article progress is one label: the author adds `article-status: request` to an issue (`issue-implement` copies it to the PR); `article-pending` swaps it to `article-status: pending` when the PR merges; `article-request` swaps that to `article-status: handoff`. There is no separate `article` label.
 
-**Article repo only** (its `Article target` is itself), also:
+**Article repo only** (its `Article target` is itself), also. Never create `post-type:` labels in any other repo:
 
 ```bash
 mk "post-type: devlog"   d4c5f9 "Article reconstructs a decision path"
@@ -331,6 +345,7 @@ JSON
 - [ ] All 10 workflow labels exist (`gh label list`), including `article-status: request` / `pending` / `handoff`; no `article` label.
 - [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
 - [ ] The six `.github` files exist, all four workflows (issue-status, risk-guard, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>`, and their YAML parses.
+- [ ] Non-article repo: no `post-type:` / `article-type:` / `article: <type>` labels left (deleted, in-use ones after confirmation).
 - [ ] Article repo: the four mode labels (`post-type: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
 - [ ] `CLAUDE.md` has `## Issue workflow` with merge mode set and the author's values (or `<fill in>` placeholders).
 - [ ] Setup PR is open with `risk: high`.
