@@ -1,6 +1,6 @@
 ---
 name: issue-enhance
-description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `intro` / `review` / `research`), an article outline; then grilled from 2–4 professional angles for risks and opportunities, and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
+description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `intro` / `review` / `research`), an article outline; then grilled by fresh-context reviewer subagents from 2–4 professional angles for risks and opportunities, and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
 ---
 
 # issue-enhance
@@ -241,7 +241,7 @@ Then write the body and comment as in Step 5, grill it (Step 5b), and only then 
 
 ## Step 5b — Grill (last step before `status: ai-enhanced`)
 
-Pressure-test the plan the way a senior reviewer would: dig into details, ask professional questions, and surface risks and potential upsides **before** the author approves.
+Pressure-test the plan from 2–4 professional angles to surface risks, upsides, and missing decisions **before** the author approves. **You don't review your own plan.** Each angle is reviewed by a fresh-context subagent that sees only the issue and the repo.
 
 **1. Pick 2–4 angles** that fit the issue, and name them in the round's comment:
 
@@ -250,29 +250,47 @@ Pressure-test the plan the way a senior reviewer would: dig into details, ask pr
 | UI | UX, accessibility, mobile / small screens, visual consistency |
 | Backend / data | data integrity, security, performance, operations (deploy, rollback, monitoring) |
 | Infra / CI | blast radius, rollback, secrets, cost |
-| Article | editor (structure, clarity), target reader, accuracy to sources, voice |
+| Article (outline) | editor (structure, clarity), target reader, fidelity to sources |
 
-**2. Ask in rounds.** Each round lists, numbered, every question that can be answered **now**. For each:
+**2. Dispatch one reviewer per angle, in parallel.** The issue body must already be updated (Step 5 / 5a). In **one message**, launch one subagent per angle (Agent tool, `general-purpose`). Give each **only** the prompt below: no conversation, reasoning, drafts, or hints about what you think is weak.
 
-```markdown
+```text
+You are reviewing a GitHub issue's implementation plan as a <angle> expert.
+Issue: <issue url>   Repo: <local path, or <owner>/<repo>>
+Read it yourself: `gh issue view <issue url> --comments`. The author's original text is above
+`---`; the AI plan is below it. Look up anything factual yourself in the code, docs, or data.
+Find as many problems with the plan as you can from the <angle> angle. Do not contact the
+author, comment on the issue, or change any file.
+Return exactly:
+## Questions
 1. <question>
-   - Why: <the risk it guards against, or the upside it could unlock>
-   - Suggested answer: <your recommendation; the author replying "yes" accepts it>
+   - Why: <the risk it guards against / upside it unlocks / decision that's missing>
+   - Type: risk | opportunity | missing decision
+   - Severity / value: high | medium | low
+   - Suggested answer: <your recommendation>
+## Unclear or missing in the body
+- <what an implementing session would get stuck on>
+Facts you could look up are not questions; state what you found instead.
 ```
 
-- **Facts are yours to find.** Anything answerable from the code, docs, or existing data, look it up yourself and don't ask. Only **decisions** go to the author.
-- A question that depends on an unanswered one waits for the next round.
+For an article outline, the reviewer reads the outline and the listed sources (the outline is the "plan").
 
-**3. Write answers back into the AI section** of the body, then comment:
+**3. Consolidate and ask once.** Merge the reviewers' output: drop duplicates and anything already decided, sort by severity / value, and turn it into one numbered list, each item with **Why** and **Suggested answer** (the author replying "yes" accepts it):
+
+- **Author in the session** → ask the list directly.
+- **Author not present** (e.g. batch mode) → post it as a `status: needs-info` comment in the same format (Step 3) and stop. The next run picks the grill up from the author's reply.
+- Items under **Unclear or missing in the body** aren't questions: fix the body directly.
+
+**4. Write answers back into the AI section** of the body, then comment:
 
 - `## Decisions`: `<YYYY-MM-DD> — <decision> — (author)`.
 - `## Risks`: each risk with likelihood / impact, the mitigation, and the author's decision.
 - `## Opportunities`: each upside with its cost and the author's call: **this time** (add it to Approach and Acceptance criteria), **later** (keep listed), or **new issue** (open it as a sub-issue or a separate issue, per Step 6).
-- One `🤖 AI <YYYY-MM-DD>` comment per round: the angles, the questions asked, and how the author answered.
+- One `🤖 AI <YYYY-MM-DD>` comment per round: the angles reviewed, the questions asked, how the author answered, and any angle that went **unreviewed**.
 
-**4. Stop** when no questions or untested assumptions remain, or the author says it's enough. **At most 3 rounds.** A small issue (one slice, no UI choice, no data change) gets **one** round.
+**5. Next round, fresh reviewers.** Dispatch **new** subagents (never reuse the previous round's) against the updated body, to catch problems the new decisions introduced. **Stop** when the reviewers raise nothing new, or the author says it's enough. **At most 3 rounds**; a small issue (one slice, no UI choice, no data change) gets **one** round.
 
-**5. Author not in the session** (e.g. batch mode): post the round's questions as a `status: needs-info` comment in the same numbered format with suggested answers (Step 3), and stop. When the author replies, the next run picks the grill up from there.
+**6. A reviewer fails or times out** → mark that angle as unreviewed in the round's 🤖 comment and carry on. It doesn't block the flow.
 
 When the grill ends, move the label to `status: ai-enhanced` (Step 5).
 
@@ -328,5 +346,5 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 - [ ] **Conditions the description left out** lists every condition you added.
 - [ ] Scope was settled before any mockup; open choices were shown as 2–3 versions side by side (UI: 375px screenshots, shown before the question); no temp files left in the repo.
 - [ ] Mermaid rendered without errors.
-- [ ] Grill ran (2–4 named angles, ≤ 3 rounds, one for small issues); answers are in Decisions / Risks / Opportunities, each round has a 🤖 comment; facts were looked up, not asked.
+- [ ] Grill ran with fresh-context subagents, one per angle (2–4), dispatched in parallel and new each round (≤ 3 rounds, one for small issues); answers are in Decisions / Risks / Opportunities; unclear-body items were fixed; each round has a 🤖 comment, including unreviewed angles.
 - [ ] No `status: approved` added.
