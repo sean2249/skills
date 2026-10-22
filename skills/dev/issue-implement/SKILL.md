@@ -25,7 +25,7 @@ Refuse and explain if any of these hold:
 | No `status: approved` label | Current status is `<label>`; only the author can approve. Suggest `issue-enhance` for `raw` / `needs-info`, or author review for `ai-enhanced`. |
 | Any issue in `blockedBy` is still open | Blocked by #M (list each open blocker); implement those first. |
 | `subIssuesSummary.total` > 0 (it's a parent) | It's a parent issue; implement its sub-issues instead. |
-| Has an article mode label (`article-type: devlog` / `intro` / `review` / `research`; an article to write, in the article repo) | Use `article-write`. A plain `article` label in a code repo is fine: it means "write an article after this ships" (Step 5). |
+| Has any `article-type:` label (an article to write, in the article repo) | Use `article-write`. `article-status: request` is fine: it means "write an article after this ships" (Step 5). |
 
 Never add `status: approved` yourself, even if asked.
 
@@ -85,7 +85,7 @@ Fill the repo's PR template:
 - **Risk**: level and reason.
 - **Review**: filled in by Step 5b.
 
-If the issue has the `article` label, add a `## 文章素材` section **now, in this session**. The article-writing session can't see this conversation:
+If the issue has `article-status: request`, add a `## 文章素材` section **now, in this session**. The article-writing session can't see this conversation:
 
 - Background: why this work happened.
 - The author's own words from this session at each decision point (quote them).
@@ -96,8 +96,8 @@ If the issue has the `article` label, add a `## 文章素材` section **now, in 
 ```bash
 git push -u origin HEAD
 gh pr create --title "<title>" --body-file <pr.md> --label "risk: <level>"
-# carry the article flag onto the PR so article-request can find it
-gh pr edit <PR> --add-label article   # only if the issue has `article`
+# carry the request onto the PR; article-pending swaps it to pending on merge
+gh pr edit <PR> --add-label "article-status: request"   # only if the issue has it
 ```
 
 ## Step 5b — Review (code + security), before any merge
@@ -154,7 +154,7 @@ When the author asks for changes after reviewing the PR, push the fix to the sam
 
 ## Step 7 — After merge
 
-If the PR has `article` and merged during this session, run `article-request <PR url>` for it. If it merges later (auto mode or the author's review), the `article-pending` workflow labels it `article-status: pending` on merge and comments to remind the author. Running `article-request` with no argument then lists every pending PR.
+If the PR has `article-status: request` and merged during this session, run `article-request <PR url>` for it. If it merges later (auto mode or the author's review), the `article-pending` workflow swaps it to `article-status: pending` on merge and comments to remind the author. Running `article-request` with no argument then lists every pending PR.
 
 ## Done when
 
@@ -163,7 +163,7 @@ If the PR has `article` and merged during this session, run `article-request <PR
 - [ ] Every acceptance criterion has evidence or is listed under **Not verified**.
 - [ ] Every issue Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
-- [ ] `article` issues: PR has `## 文章素材` and the `article` label.
+- [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
 - [ ] Both reviews (code + security) ran, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.
 - [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
 - [ ] Only `risk: low` was merged or queued for auto-merge.

@@ -32,7 +32,7 @@ Then turn on auto-update for `kiwi-skills` as above.
 This is my personal development workflow. The skills are designed around it, so adjust it to your own habits if you use them.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as an A/B table) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; PRs labelled article are flagged by article-pending, handed over with article-request, run through the same flow in the article repo, and written by article-write.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as an A/B table) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; PRs labelled article-status: request move to pending on merge (article-pending), handed over with article-request, run through the same flow in the article repo, and written by article-write.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: answering a needs-info question, deciding A/B items from the Grill, approving an issue, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -70,13 +70,13 @@ flowchart TD
   end
 
   subgraph ART["3 · Article"]
-    L --> N{"PR has the article label?"}
+    L --> N{"PR has article-status: request?"}
     M --> N
     N -->|no| Z["Done"]
-    N -->|yes| O["article-pending<br/>adds article-status: pending + reminder"]
-    O --> Q["article-request"]
+    N -->|yes| O["article-pending<br/>request → article-status: pending + reminder"]
+    O --> Q["article-request<br/>pending → article-status: handoff"]
     X["Any file<br/>(e.g. a notes page)"] --> Q
-    Q --> S["Issue in the article repo<br/>devlog / intro / review / research"]
+    Q --> S["Issue in the article repo<br/>article-type: devlog / intro / review / research"]
     S --> T["Same issue flow in the article repo<br/>outline → Grill → approved"]
     T --> U["article-write → article PR<br/>with a source map"]
     U --> V(["Author merges the article"]):::author
@@ -94,7 +94,7 @@ flowchart TD
 | `dev/issue-workflow-setup` | Installing (or repairing) the issue workflow in a repo: labels, callers for the shared workflows, PR template, CLAUDE.md section |
 | `dev/issue-enhance` | Turning a `status: raw` issue into a reviewable plan (or an article outline), split into sub-issues |
 | `dev/issue-implement` | Implementing a `status: approved` issue: PR with evidence, risk label, merge only `risk: low` |
-| `dev/article-request` | Handing a merged `article` PR, or any file, to the article repo as a raw issue |
+| `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR `article-status: handoff` |
 | `writing/article-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a source map for note sources |
 
 ## Shared workflows

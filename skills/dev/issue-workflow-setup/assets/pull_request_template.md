@@ -63,7 +63,7 @@ Closes #<!-- issue number -->
 ```
 
 <!--
-If the issue has the `article` label, add a `## 文章素材` section here:
+If the issue has `article-status: request`, add a `## 文章素材` section here:
 background, the author's own words from the session (decision points), approach,
 pitfalls hit, before/after numbers.
 -->

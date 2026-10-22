@@ -1,6 +1,6 @@
 ---
 name: issue-enhance
-description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article-type: devlog` / `intro` / `review` / `research`), an article outline; then grilled by fresh-context reviewer subagents from 2–4 professional angles (negotiated with the planner; only real disagreements and trade-offs go to the author), and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
+description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (any `article-type:` label), an article outline; then grilled by fresh-context reviewer subagents from 2–4 professional angles (negotiated with the planner; only real disagreements and trade-offs go to the author), and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
 ---
 
 # issue-enhance
@@ -41,7 +41,7 @@ Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, 
 
 ## Step 1 — Check the code first
 
-For an **article-writing issue**, skip to Step 5a: one with an article mode label (`article-type: devlog` / `intro` / `review` / `research`), or with `article` in the repo that is its own `Article target`. A plain `article` label in a code repo only means "write an article after this ships"; that issue gets the normal plan.
+For an **article-writing issue**, skip to Step 5a: one with any `article-type:` label (`devlog` / `intro` / `review` / `research`). An `article-status: request` label in a project repo only means "write an article after this ships"; that issue gets the normal plan.
 
 Search the codebase for what the issue asks for. There are three outcomes:
 
@@ -191,7 +191,7 @@ gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-inf
 
 ## Step 5a — Article issues: an outline, not an implementation plan
 
-An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has no mode label (`article-type: devlog` / `intro` / `review` / `research`), ask which and add it.
+An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has more than one `article-type:` label, ask the author which one applies and remove the others.
 
 Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with this AI section:
 

@@ -1,11 +1,13 @@
 ---
 name: article-request
-description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `article`, `status: raw`, and one mode (`article-type: devlog`, `intro`, `review`, or `research`), with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
+description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article-status: pending` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `status: raw` and one `article-type:` (`devlog`, `intro`, `review`, or `research`), then marks the source PR `article-status: handoff`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
 ---
 
 # article-request
 
 Hands material to the article repo as a raw issue. There, `issue-enhance` drafts an outline, the author approves it, and `article-write` writes the article.
+
+Article progress in a project repo is one label, `article-status:`: **request** (the work should become an article; the author adds it to the issue, `issue-implement` copies it to the PR) → **pending** (the PR merged; set by the `article-pending` workflow) → **handoff** (this skill opened the article issue; done on this side). In the article repo, an article issue carries only an `article-type:` label.
 
 Runs from any repo's session. Every comment or body you write starts with `🤖 AI <YYYY-MM-DD>`. The AI posts with the author's `gh` login, so the author field can't tell AI from author; only this marker can.
 
@@ -26,7 +28,7 @@ gh search prs --owner "$owner" --label "article-status: pending" --merged --json
 gh pr view <PR> --json number,url,title,state,labels,body,closingIssuesReferences
 ```
 
-Stop and explain if the PR isn't merged, if neither it nor its closing issue has `article`, or if `## 文章素材` is missing or empty (ask the author to add it to the PR first).
+Stop and explain if the PR isn't merged, if neither it nor its closing issue has `article-status: request` or `article-status: pending` (already `handoff` → it was handed over; report that), or if `## 文章素材` is missing or empty (ask the author to add it to the PR first).
 
 **A file** (default mode `article-type: intro`). Ask the author to pick one of the four modes: `intro` (a tool / concept / site), `review` (their take on a work: book, exhibition, performance…), `research` (a topic exploration), or `devlog` (a decision path). Build a permalink pinned to a pushed commit:
 
@@ -64,7 +66,6 @@ Create only the missing ones. Don't use `--force`, which would overwrite the tar
 
 ```bash
 gh label list -R <target> --limit 200 --json name --jq '.[].name'
-gh label create "article"         -R <target> --color 5319e7 --description "Write a technical article"
 gh label create "status: raw"     -R <target> --color ededed --description "New issue, not yet enhanced by AI"
 gh label create "article-type: devlog" -R <target> --color d4c5f9 --description "Article reconstructs a decision path"
 gh label create "article-type: intro"  -R <target> --color c5def5 --description "Article introduces a tool, concept or site"
@@ -94,15 +95,16 @@ Keep only the source lines that apply.
 
 ```bash
 gh issue create -R <target> --title "Article: <PR title or file title>" --body-file <body.md> \
-  --label article --label "status: raw" --label "article-type: <devlog|intro|review|research>"
+  --label "status: raw" --label "article-type: <devlog|intro|review|research>"
 ```
 
-## Step 5 — Mark the PR as requested (PR mode)
+## Step 5 — Mark the PR as handed off (PR mode)
 
 ```bash
-gh label create "article-status: requested" -R <o>/<r> --color 0e8a16 \
-  --description "Article request opened in the article repo" 2>/dev/null || true
-gh pr edit <PR url> --remove-label "article-status: pending" --add-label "article-status: requested"
+gh label create "article-status: handoff" -R <o>/<r> --color 0e8a16 \
+  --description "Handed to the article repo; done here" 2>/dev/null || true
+gh pr edit <PR url> --remove-label "article-status: pending" --remove-label "article-status: request" \
+  --add-label "article-status: handoff"
 gh pr comment <PR url> --body "🤖 AI <YYYY-MM-DD>
 
 Article request: <new issue url>"
@@ -110,7 +112,7 @@ Article request: <new issue url>"
 
 ## Done when
 
-- [ ] Exactly one issue in the target for this source, labelled `article`, `status: raw`, and one `article-type:` label.
+- [ ] Exactly one issue in the target for this source, labelled `status: raw` and one `article-type:` label (no `article` label).
 - [ ] Its body lists the sources with read instructions (file sources as commit-pinned permalinks) and, for a PR, the full `## 文章素材`.
 - [ ] If the source is private and the target public, the author confirmed.
-- [ ] PR mode: the source PR has `article-status: requested` (no longer `article-status: pending`) and a comment linking to the issue.
+- [ ] PR mode: the source PR has `article-status: handoff` (no longer `pending` / `request`) and a comment linking to the issue.

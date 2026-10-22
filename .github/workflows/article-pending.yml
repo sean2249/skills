@@ -1,5 +1,6 @@
-# Reusable workflow: when a PR labelled `article` is merged, label it `article-status: pending`
-# and comment asking the author to run article-request, so the handoff isn't forgotten.
+# Reusable workflow: when a PR labelled `article-status: request` is merged, swap it to
+# `article-status: pending` and comment asking the author to run article-request, so the
+# handoff isn't forgotten.
 # Called from each repo's .github/workflows/article-pending.yml (written by issue-workflow-setup).
 # Touches only the calling repo, with its github.token (no PAT).
 name: article-pending
@@ -15,11 +16,10 @@ jobs:
   mark:
     if: >-
       github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.labels.*.name, 'article') &&
-      !contains(github.event.pull_request.labels.*.name, 'article-status: requested')
+      contains(github.event.pull_request.labels.*.name, 'article-status: request')
     runs-on: ubuntu-latest
     steps:
-      - name: Label the merged PR as pending and remind the author
+      - name: Swap request to pending and remind the author
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -28,8 +28,9 @@ jobs:
         # Block scalar on purpose: label names contain ": ".
         run: |
           gh label create "article-status: pending" --color fbca04 \
-            --description "Merged article PR; article-request not run yet" 2>/dev/null || true
+            --description "Merged; waiting for article-request" 2>/dev/null || true
           gh api -X POST "repos/$GH_REPO/issues/$PR/labels" -f "labels[]=article-status: pending" >/dev/null
+          gh api -X DELETE "repos/$GH_REPO/issues/$PR/labels/article-status%3A%20request" >/dev/null || true
           printf '🤖 AI %s\n\nThis PR is marked for an article. Run `article-request %s` to hand it to the article repo.\n' \
             "$(date -u +%F)" "$URL" > body.md
           gh api -X POST "repos/$GH_REPO/issues/$PR/comments" -F body=@body.md >/dev/null

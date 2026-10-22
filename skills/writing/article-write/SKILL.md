@@ -1,6 +1,6 @@
 ---
 name: article-write
-description: Use when, in an article repo, an issue labelled `article` and `status: approved` should be written up as an article and opened as a PR. Four modes by label: `article-type: devlog` (reconstructs a decision path), `article-type: intro` (introduces a tool, concept or site), `article-type: review` (the author's take on a work: book, exhibition, performance…), `article-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, and attaches a source map so nothing from notes is silently dropped.
+description: Use when, in an article repo, an issue with an `article-type:` label and `status: approved` should be written up as an article and opened as a PR. Four modes by label: `article-type: devlog` (reconstructs a decision path), `article-type: intro` (introduces a tool, concept or site), `article-type: review` (the author's take on a work: book, exhibition, performance…), `article-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, and attaches a source map so nothing from notes is silently dropped.
 ---
 
 # article-write
@@ -24,10 +24,10 @@ Refuse and explain if:
 
 | Condition | Say |
 |---|---|
-| Closed, or no `article` label | Not an open article issue. |
+| Closed, or no `article-type:` label | Not an open article issue. |
 | No `status: approved` | Current status is `<label>`; the author approves. Suggest `issue-enhance` to draft the outline. |
 | An issue in `blockedBy` is still open (`gh issue view <M> --json state`) | Blocked by #M. |
-| Not exactly one of `article-type: devlog` / `intro` / `review` / `research` | Ask the author which mode. |
+| More than one `article-type:` label | Ask the author which mode. |
 
 If `gh` rejects the `blockedBy` / `subIssuesSummary` fields, it's too old: ask the author to upgrade `gh` and stop.
 
