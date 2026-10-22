@@ -32,7 +32,7 @@ Then turn on auto-update for `kiwi-skills` as above.
 This is my personal development workflow. The skills are designed around it, so adjust it to your own habits if you use them.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as an A/B table) to status: ai-enhanced and author approval; issue-implement opens a PR, risk: low auto-merges and medium/high is merged by the author; PRs labelled article are flagged by article-pending, handed over with article-request, run through the same flow in the article repo, and written by article-write.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as an A/B table) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; PRs labelled article are flagged by article-pending, handed over with article-request, run through the same flow in the article repo, and written by article-write.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: answering a needs-info question, deciding A/B items from the Grill, approving an issue, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -63,7 +63,8 @@ flowchart TD
   subgraph IMPL["2 · Implementation"]
     H --> I["issue-implement (new session)<br/>applies risk mitigations"]
     I --> J["PR with evidence + behaviour summary"]
-    J --> K{"risk label"}
+    J --> RV["Review: code + security<br/>fix or justify · ≤ 3 rounds"]
+    RV --> K{"risk label<br/>(unfixed security → not low)"}
     K -->|"risk: low<br/>allowlist · risk-guard / check"| L["Auto-merge"]
     K -->|"risk: medium / high"| M(["Author reviews and merges"]):::author
   end

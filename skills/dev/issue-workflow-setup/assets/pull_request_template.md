@@ -46,6 +46,16 @@ Closes #<!-- issue number -->
 - Level: `risk: low` / `risk: medium` / `risk: high`
 - Reason: <!-- low = every changed file is in the low-risk allowlist; high = auth, DB migrations, .github/workflows, secrets, billing -->
 
+## Review
+
+<!-- Filled by issue-implement after code-review and security-review (at most 3 rounds each). -->
+- code-review: <N> round(s)
+- security-review: <N> round(s)
+
+| Review | Severity | Location | Outcome |
+|---|---|---|---|
+| code / security | high / medium / low | `file:line` | fixed in <sha> / not fixed: <reason> |
+
 ## Verification commands
 
 ```

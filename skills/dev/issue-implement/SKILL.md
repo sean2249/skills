@@ -1,6 +1,6 @@
 ---
 name: issue-implement
-description: Use when implementing a GitHub issue labelled `status: approved` — branch, implement, run the repo's verify command, open a PR with per-criterion evidence, classify risk (low / medium / high), and merge only `risk: low` PRs. Refuses issues in any other status.
+description: Use when implementing a GitHub issue labelled `status: approved` — branch, implement, run the repo's verify command, open a PR with per-criterion evidence, run code and security review (up to 3 rounds), classify risk (low / medium / high), and merge only `risk: low` PRs. Refuses issues in any other status.
 ---
 
 # issue-implement
@@ -65,6 +65,8 @@ Apply in order; the first match wins:
 2. **`risk: low`** if every file matches a glob in `.github/low-risk-paths.txt` and none is under `.github/` (`*` stays in one directory, `**` crosses directories, trailing `/` = whole directory). The `risk-guard` workflow enforces the same rule on the PR.
 3. **`risk: medium`** otherwise.
 
+This is the starting label. Step 5b can raise it, never lower it.
+
 ## Step 5 — Open the PR
 
 Fill the repo's PR template:
@@ -81,6 +83,7 @@ Fill the repo's PR template:
 - **Not verified**: say plainly what wasn't checked and why.
 - **Deviations from the approved plan**: each with its reason, or "None".
 - **Risk**: level and reason.
+- **Review**: filled in by Step 5b.
 
 If the issue has the `article` label, add a `## 文章素材` section **now, in this session**. The article-writing session can't see this conversation:
 
@@ -95,6 +98,25 @@ git push -u origin HEAD
 gh pr create --title "<title>" --body-file <pr.md> --label "risk: <level>"
 # carry the article flag onto the PR so article-request can find it
 gh pr edit <PR> --add-label article   # only if the issue has `article`
+```
+
+## Step 5b — Review (code + security), before any merge
+
+Run both reviews on the open PR, using the built-in skills via the Skill tool:
+
+- `code-review` on this PR (`<PR number>`): correctness problems in the diff.
+- `security-review`: security review of the branch's diff against the default branch.
+
+Don't pass `--comment` (its comments wouldn't carry the 🤖 marker). Collect the findings and handle them here. **If either skill isn't available in the session**, dispatch a fresh-context subagent (Agent tool, `general-purpose`) for that review instead. Give it only the PR URL and the repo, not your reasoning, and ask for findings with severity and `file:line`. Note in the PR that the fallback was used.
+
+**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). After fixes, push and run both reviews again **on the new changes only**. **At most 3 rounds.** If findings are still unhandled after round 3, stop and hand the PR to the author.
+
+**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran (and whether the fallback was used). For each finding, give its severity, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
+
+**Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), or a **high-severity** code-review finding is left unfixed. Swap the label:
+
+```bash
+gh pr edit <PR> --remove-label "risk: low" --add-label "risk: medium"
 ```
 
 ## Step 6 — Merge (risk: low only)
@@ -142,4 +164,6 @@ If the PR has `article` and merged during this session, run `article-request <PR
 - [ ] Every issue Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article` issues: PR has `## 文章素材` and the `article` label.
+- [ ] Both reviews (code + security) ran, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.
+- [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
 - [ ] Only `risk: low` was merged or queued for auto-merge.
