@@ -1,6 +1,6 @@
 ---
 name: article-request
-description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article-status: pending` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `status: raw` and one `post-type:` (`devlog`, `intro`, `review`, or `research`), then marks the source PR `article-status: handoff`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
+description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article-status: pending` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `status: raw` and one `post-type:` (`devlog`, `intro`, `review`, or `research`) that it suggests from the source with reasons and the author confirms, then marks the source PR `article-status: handoff`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
 ---
 
 # article-request
@@ -22,7 +22,7 @@ gh search prs --owner "$owner" --label "article-status: pending" --merged --json
 
 `article-status: pending` is added on merge by the `article-pending` workflow. Nothing listed → say so and stop.
 
-**A PR** (default mode `post-type: devlog`):
+**A PR:**
 
 ```bash
 gh pr view <PR> --json number,url,title,state,labels,body,closingIssuesReferences
@@ -30,7 +30,7 @@ gh pr view <PR> --json number,url,title,state,labels,body,closingIssuesReference
 
 Stop and explain if the PR isn't merged, if neither it nor its closing issue has `article-status: request` or `article-status: pending` (already `handoff` → it was handed over; report that), or if `## 文章素材` is missing or empty (ask the author to add it to the PR first).
 
-**A file** (default mode `post-type: intro`). Ask the author to pick one of the four modes: `intro` (a tool / concept / site), `review` (their take on a work: book, exhibition, performance…), `research` (a topic exploration), or `devlog` (a decision path). Build a permalink pinned to a pushed commit:
+**A file**, e.g. a notes page. Build a permalink pinned to a pushed commit:
 
 ```bash
 git status --porcelain -- <path>            # must print nothing: commit the file first
@@ -40,7 +40,29 @@ gh repo view --json nameWithOwner,visibility
 # permalink: https://github.com/<owner>/<repo>/blob/<sha>/<path>
 ```
 
-Confirm the mode with the author before Step 4.
+## Step 0b — Suggest the post type
+
+Read the source first (PR: `## 文章素材` plus `gh pr view` / `gh pr diff`; file: its contents), then **suggest** a `post-type:` from what the source actually contains. Don't pick a default by source kind.
+
+| What the source mostly is | Suggest |
+|---|---|
+| Decisions made while building: attempts, dead ends, getting stuck and unstuck (a PR's `## 文章素材` usually is) | `devlog` |
+| A core question, a line of reasoning, caveats, open questions ("not found yet", experiments to try) | `research` |
+| The author's judgement of a work (book, exhibition, performance…) | `review` |
+| Mainly facts, comparisons, or an introduction to a tool / concept, with no exploration | `intro` |
+
+Show the author:
+
+```markdown
+Suggested: post-type: <type>
+- <reason 1>. Evidence: "<quoted sentence>" / section "<heading>"
+- <reason 2>. Evidence: …
+- (<reason 3>)
+Runner-up: <type>. Difference: <what would change, e.g. "intro would treat the 'not found yet' and experiment sections as noise">
+```
+
+A suggestion is fine here: no plan exists yet, so the "no recommendation" rule for A/B decisions doesn't apply. **Wait for the author to confirm or pick another type in the session** before Step 4. Choosing the wrong type is expensive. A comparison page treated as `research` kept hitting "the title promises content that was cut" during review until it became `intro`. A page with a core question and experiments treated as `intro` kept asking whether to keep the "not found yet" parts, and as `research` those answered themselves.
+
 
 ## Step 1 — Find the target
 
@@ -89,6 +111,10 @@ Body. Keep `## Sources` with its read instructions; `article-write` reads only w
 
 Read only these sources. Don't search the source repos for other files.
 
+## Post type
+`post-type: <type>`, confirmed by the author on <YYYY-MM-DD>.
+Why: <the reasons from Step 0b, with their evidence>
+
 ## 文章素材
 <PR mode: the section copied verbatim from the PR body. File mode: omit this section.>
 ````
@@ -115,6 +141,7 @@ Article request: <new issue url>"
 ## Done when
 
 - [ ] Exactly one issue in the target for this source, labelled `status: raw` and one `post-type:` label (no `article` label).
+- [ ] The post type was suggested with evidence-backed reasons and a runner-up, confirmed by the author, and recorded under `## Post type` in the body.
 - [ ] Its body lists the sources with read instructions (file sources as commit-pinned permalinks) and, for a PR, the full `## 文章素材`.
 - [ ] If the source is private and the target public, the author confirmed.
 - [ ] PR mode: the source PR has `article-status: handoff` (no longer `pending` / `request`) and a comment linking to the issue.

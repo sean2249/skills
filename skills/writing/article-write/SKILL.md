@@ -29,6 +29,8 @@ Refuse and explain if:
 | An issue in `blockedBy` is still open (`gh issue view <M> --json state`) | Blocked by #M. |
 | More than one `post-type:` label | Ask the author which mode. |
 
+The body's `## Post type` records why that type was chosen. Write to that intent.
+
 If `gh` rejects the `blockedBy` / `subIssuesSummary` fields, it's too old: ask the author to upgrade `gh` and stop.
 
 ## Step 1 — Read the repo's conventions

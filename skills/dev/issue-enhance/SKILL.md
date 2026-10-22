@@ -231,7 +231,7 @@ gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-inf
 
 ## Step 5a — Article issues: an outline, not an implementation plan
 
-An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has more than one `post-type:` label, ask the author which one applies and remove the others.
+An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has more than one `post-type:` label, ask the author which one applies and remove the others. The type was already chosen with the author when the card was opened (see the body's `## Post type`, written by `article-request`): write the outline for that type and **don't ask about the type again**.
 
 Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with this AI section:
 
