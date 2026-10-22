@@ -41,7 +41,7 @@ flowchart TD
     E -->|back to raw| B
     C -->|too big| F["Split into native sub-issues<br/>ordered with blocked-by"]
     F --> GR
-    C --> GR["Grill: 2–4 fresh reviewer subagents,<br/>risks & opportunities"]
+    C --> GR["Grill: reviewer subagents →<br/>negotiate with the planner →<br/>author decides the disputes"]
     GR --> G["status: ai-enhanced"]
     GR -->|author not in session| D
     G --> H(["Author reviews and sets<br/>status: approved (author only)"]):::author

@@ -1,6 +1,6 @@
 ---
 name: issue-enhance
-description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `intro` / `review` / `research`), an article outline; then grilled by fresh-context reviewer subagents from 2–4 professional angles for risks and opportunities, and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
+description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `intro` / `review` / `research`), an article outline; then grilled by fresh-context reviewer subagents from 2–4 professional angles (negotiated with the planner; only real disagreements and trade-offs go to the author), and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
 ---
 
 # issue-enhance
@@ -275,22 +275,61 @@ Facts you could look up are not questions; state what you found instead.
 
 For an article outline, the reviewer reads the outline and the listed sources (the outline is the "plan").
 
-**3. Consolidate and ask once.** Merge the reviewers' output: drop duplicates and anything already decided, sort by severity / value, and turn it into one numbered list, each item with **Why** and **Suggested answer** (the author replying "yes" accepts it):
+**3. Negotiate with each reviewer, in the same round.** For every item a reviewer returned, respond:
 
-- **Author in the session** → ask the list directly.
-- **Author not present** (e.g. batch mode) → post it as a `status: needs-info` comment in the same format (Step 3) and stop. The next run picks the grill up from the author's reply.
-- Items under **Unclear or missing in the body** aren't questions: fix the body directly.
+- **Agree** → change the plan.
+- **Rebut** → only with evidence: a code location (`file:line`), an earlier author decision, the issue's original text, or docs.
+- **Preference** → a trade-off that belongs to the author; mark it for the author.
 
-**4. Write answers back into the AI section** of the body, then comment:
+Send your responses back to the **same** subagent with `SendMessage`, reusing its context (don't start a new one). Ask it to answer item by item: withdraw if persuaded, explain if not, and end with a final position on each item. **At most 2 exchanges per reviewer.** Every item ends in one of three buckets:
 
-- `## Decisions`: `<YYYY-MM-DD> — <decision> — (author)`.
+| Bucket | What happens |
+|---|---|
+| **Agreed change** (both sides) | Change the plan directly. |
+| **Withdrawn** after your rebuttal | No change. Listed in the round's comment with the reason, so the author can overturn it. |
+| **For the author** (still disputed, or a preference / trade-off) | Goes to the author (step 4). |
+
+Items under **Unclear or missing in the body** aren't negotiated: fix the body directly. If a reviewer fails mid-negotiation, every item it hasn't settled goes to **For the author**.
+
+**4. Ask the author, only the "For the author" bucket**, deduplicated across reviewers and sorted by severity / value. Every item uses this fixed, symmetric format. Write it in the issue's language and keep the structure:
+
+```markdown
+### Decision <N>: <short name>
+
+Point of disagreement: <one sentence: what the two sides disagree about>
+
+A (reviewer: <angle>)
+- Claim:
+- Reasoning:
+- Evidence: <file:line, docs, issue text… or "no direct evidence">
+- If A is chosen: <cost, risk, extra work>
+
+B (planner: main agent)
+- Claim:
+- Reasoning:
+- Evidence: <… or "no direct evidence">
+- If B is chosen: <cost, risk, extra work>
+
+Agreed: <what both sides already agree on, or "none">
+
+Options: A / B / other
+```
+
+- A and B are symmetric: all four fields are filled on both sides. Missing evidence is written as "no direct evidence", never left out.
+- **No recommended answer from you.** You are side B, so a recommendation wouldn't be neutral.
+- A pure preference with no dispute uses the same format: A = "option one", B = "option two", each with its consequences.
+- **Author in the session** → show these items directly. **Author not present** (e.g. batch mode) → post them as a `status: needs-info` comment (labelling as in Step 3), in this A/B format, and stop. The next run picks the grill up from the author's reply.
+
+**5. Write answers back into the AI section** of the body, then comment:
+
+- `## Decisions`: `<YYYY-MM-DD> — Decision <N>: chose A / B / other: <what> — (author)`.
 - `## Risks`: each risk with likelihood / impact, the mitigation, and the author's decision.
 - `## Opportunities`: each upside with its cost and the author's call: **this time** (add it to Approach and Acceptance criteria), **later** (keep listed), or **new issue** (open it as a sub-issue or a separate issue, per Step 6).
-- One `🤖 AI <YYYY-MM-DD>` comment per round: the angles reviewed, the questions asked, how the author answered, and any angle that went **unreviewed**.
+- One `🤖 AI <YYYY-MM-DD>` comment per round, listing all three buckets: **changed** (what was changed in the plan), **withdrawn** (each with its reason, so the author can overturn it), and **asked** (the decisions and the author's choices), plus any angle that went **unreviewed**. To overturn a withdrawn item, the author replies to it, and the next round takes it up.
 
-**5. Next round, fresh reviewers.** Dispatch **new** subagents (never reuse the previous round's) against the updated body, to catch problems the new decisions introduced. **Stop** when the reviewers raise nothing new, or the author says it's enough. **At most 3 rounds**; a small issue (one slice, no UI choice, no data change) gets **one** round.
+**6. Next round, fresh reviewers.** Dispatch **new** subagents against the updated body. Negotiation reuses a reviewer's context only within its own round; never carry a reviewer over to the next round. **Stop** when the reviewers raise nothing new, or the author says it's enough. **At most 3 rounds**; a small issue (one slice, no UI choice, no data change) gets **one** round.
 
-**6. A reviewer fails or times out** → mark that angle as unreviewed in the round's 🤖 comment and carry on. It doesn't block the flow.
+**7. A reviewer fails or times out** before returning anything → mark that angle as unreviewed in the round's 🤖 comment and carry on. It doesn't block the flow.
 
 When the grill ends, move the label to `status: ai-enhanced` (Step 5).
 
@@ -346,5 +385,7 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 - [ ] **Conditions the description left out** lists every condition you added.
 - [ ] Scope was settled before any mockup; open choices were shown as 2–3 versions side by side (UI: 375px screenshots, shown before the question); no temp files left in the repo.
 - [ ] Mermaid rendered without errors.
-- [ ] Grill ran with fresh-context subagents, one per angle (2–4), dispatched in parallel and new each round (≤ 3 rounds, one for small issues); answers are in Decisions / Risks / Opportunities; unclear-body items were fixed; each round has a 🤖 comment, including unreviewed angles.
+- [ ] Grill ran with fresh-context subagents, one per angle (2–4), dispatched in parallel and new each round (≤ 3 rounds, one for small issues).
+- [ ] Each reviewer's items were negotiated (≤ 2 exchanges, same subagent) into agreed / withdrawn / for-the-author; only the last went to the author, in the symmetric A/B format with no recommendation from you.
+- [ ] Answers are in Decisions (A / B / other + date) / Risks / Opportunities; unclear-body items were fixed; each round's 🤖 comment lists changed, withdrawn (with reasons), asked, and unreviewed angles.
 - [ ] No `status: approved` added.
