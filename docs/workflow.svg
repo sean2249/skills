@@ -1,15 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1080" width="960" height="1080" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1130" width="960" height="1130" role="img" aria-labelledby="title desc">
 <title id="title">Issue workflow</title>
-<desc id="desc">Issue: author opens an issue, status raw, issue-enhance checks code and settles scope, needs-info when a decision is missing (the author's reply switches it back to raw automatically), the plan is written and grilled by fresh reviewer subagents, negotiated with the planner, disputes go to the author as an A/B table, then status ai-enhanced and author approval. Implementation: issue-implement, pull request with evidence, code and security review (up to 3 rounds), risk label; low auto-merges, medium or high is reviewed and merged by the author. Article: article-pending, article-request (also from any file), the article repo runs the same flow, article-write, and the author merges the article.</desc>
+<desc id="desc">Issue: author opens an issue, status raw, issue-enhance checks code and settles scope, needs-info when a decision is missing (the author's reply switches it back to raw automatically), the plan is written and grilled by fresh reviewer subagents, negotiated with the planner, disputes go to the author as an A/B table, then status ai-enhanced and author approval. Implementation: issue-implement, pull request with evidence, code and security review (up to 3 rounds), risk label; low auto-merges, medium or high is reviewed and merged by the author. Article: a work card in a project repo labelled article-status: request is switched to article-status: pending when its PR merges (article-pending); article-request switches it to article-status: handoff and opens an article card in the article repo labelled post-type: devlog, intro, review or research (post-type exists only in the article repo; article-request can also start from any file); the article card runs the same flow, outline, Grill, approved; article-write writes it with a source map, and the author merges the article.</desc>
 <style>
 svg{--panel:#f6f8fa;--panel-s:#d0d7de;--node:#ffffff;--node-s:#8c959f;--t:#1f2328;--s:#57606a;
---au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--grill:#eef6ff;--grill-s:#a8c7fa;--acc:#0969da}
+--au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--grill:#eef6ff;--grill-s:#a8c7fa;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df}
 @media (prefers-color-scheme: dark){svg{--panel:#161b22;--panel-s:#30363d;--node:#0d1117;--node-s:#6e7681;--t:#e6edf3;--s:#9198a1;
---au:#3b2e0a;--au-s:#e3b341;--halo:#e3b341;--line:#8b949e;--grill:#0c2d6b55;--grill-s:#1f6feb;--acc:#4493f8}}
+--au:#3b2e0a;--au-s:#e3b341;--halo:#e3b341;--line:#8b949e;--grill:#0c2d6b55;--grill-s:#1f6feb;--acc:#4493f8;--art:#2e1f5e55;--art-s:#a371f7}}
 text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;text-anchor:middle}
 .panel{fill:var(--panel);stroke:var(--panel-s);stroke-width:1.2}
 .ph{text-anchor:start;font-size:17px;font-weight:700;fill:var(--t)}
 .pn{fill:var(--acc)}
+.zw{fill:none;stroke:var(--line);stroke-width:1.1;stroke-dasharray:4 4}
+.za{fill:var(--art);stroke:var(--art-s);stroke-width:1.2;stroke-dasharray:5 4}
+.zhw{text-anchor:end;font-size:12.5px;font-weight:600;fill:var(--s)}
+.zha{text-anchor:end;font-size:12.5px;font-weight:600;fill:var(--art-s)}
 .grill{fill:var(--grill);stroke:var(--grill-s);stroke-width:1.2;stroke-dasharray:5 4}
 .gh{text-anchor:start;font-size:13.5px;font-weight:600;fill:var(--acc)}
 .node{fill:var(--node);stroke:var(--node-s);stroke-width:1.3}
@@ -107,36 +111,45 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <text class="lbl" x="878" y="667.0">low</text>
 <path class="flow" d="M770 649.0 V663.0 H600 V672.0" marker-end="url(#ah)"/>
 <text class="lbl" x="610" y="659.0">medium / high</text>
-<rect class="panel" x="20" y="770" width="920" height="250" rx="18"/>
+<rect class="panel" x="20" y="770" width="920" height="300" rx="18"/>
 <text class="ph" x="44" y="802"><tspan class="pn">3</tspan>  Article</text>
-<rect class="node" x="38.0" y="831.0" width="204" height="58" rx="11"/>
-<text class="t" x="140" y="855">article-pending</text>
-<text class="s" x="140" y="874">request → pending · reminder</text>
-<rect class="node" x="268.0" y="831.0" width="204" height="58" rx="11"/>
-<text class="t" x="370" y="855">article-request</text>
-<text class="s" x="370" y="874">article issue · pending → handoff</text>
-<rect class="node" x="498.0" y="831.0" width="204" height="58" rx="11"/>
-<text class="t" x="600" y="855">Article repo</text>
-<text class="s" x="600" y="874">same flow · outline → approved</text>
-<rect class="node" x="728.0" y="831.0" width="204" height="58" rx="11"/>
-<text class="t" x="830" y="855">article-write</text>
-<text class="s" x="830" y="874">devlog · intro · review · research</text>
-<rect class="node" x="268.0" y="926.0" width="204" height="58" rx="11"/>
-<text class="t" x="370" y="950">Any file</text>
-<text class="s" x="370" y="969">e.g. a notes page</text>
-<rect class="halo" x="722.0" y="920.0" width="216" height="70" rx="16"/>
-<rect class="author" x="728.0" y="926.0" width="204" height="58" rx="11"/>
-<text class="t" x="830" y="950">Author merges the article</text>
-<text class="s" x="830" y="969">PR includes a source map</text>
-<path class="flow" d="M830 734.0 V760 H140 V827.0" marker-end="url(#ah)"/>
+<rect class="zw" x="38" y="814" width="444" height="242" rx="12"/>
+<text class="zhw" x="470" y="836">Work card · article-status: (project repo)</text>
+<rect class="za" x="494" y="814" width="444" height="242" rx="12"/>
+<text class="zha" x="926" y="836">Article card · post-type: (article repo only)</text>
+<rect class="node" x="38.0" y="854.0" width="204" height="88" rx="11"/>
+<text class="t" x="140" y="886">article-pending</text>
+<text class="s" x="140" y="904">article-status:</text>
+<text class="s" x="140" y="919">request → pending · reminder</text>
+<rect class="node" x="268.0" y="854.0" width="204" height="88" rx="11"/>
+<text class="t" x="370" y="886">article-request</text>
+<text class="s" x="370" y="904">pending → handoff</text>
+<text class="s" x="370" y="919">opens a post-type: card</text>
+<rect class="node" x="498.0" y="854.0" width="204" height="88" rx="11"/>
+<text class="t" x="600" y="878">Article card</text>
+<text class="s" x="600" y="896">post-type: devlog / intro /</text>
+<text class="s" x="600" y="911">review / research</text>
+<text class="s" x="600" y="926">outline → Grill → approved</text>
+<rect class="node" x="728.0" y="854.0" width="204" height="88" rx="11"/>
+<text class="t" x="830" y="886">article-write</text>
+<text class="s" x="830" y="904">devlog · intro · review · research</text>
+<text class="s" x="830" y="919">+ source map</text>
+<rect class="node" x="268.0" y="983.0" width="204" height="58" rx="11"/>
+<text class="t" x="370" y="1007">Any file</text>
+<text class="s" x="370" y="1026">e.g. a notes page</text>
+<rect class="halo" x="722.0" y="977.0" width="216" height="70" rx="16"/>
+<rect class="author" x="728.0" y="983.0" width="204" height="58" rx="11"/>
+<text class="t" x="830" y="1007">Author merges the article</text>
+<text class="s" x="830" y="1026">checks the source map</text>
+<path class="flow" d="M830 734.0 V760 H140 V850.0" marker-end="url(#ah)"/>
 <path class="flow" d="M600 734.0 V760" marker-end="url(#ah)"/>
-<text class="lbl" x="154" y="786">if the PR has article-status: request</text>
-<path class="flow" d="M242.0 860 H264.0" marker-end="url(#ah)"/>
-<path class="flow" d="M472.0 860 H494.0" marker-end="url(#ah)"/>
-<path class="flow" d="M702.0 860 H724.0" marker-end="url(#ah)"/>
-<path class="flow" d="M370 926.0 V893.0" marker-end="url(#ah)"/>
-<path class="flow" d="M830 889.0 V922.0" marker-end="url(#ah)"/>
-<rect class="author" x="44" y="1037" width="34" height="20" rx="6"/><text class="leg" x="88" y="1052">Author steps in</text>
-<rect class="node" x="230" y="1037" width="34" height="20" rx="6"/><text class="leg" x="274" y="1052">Skill or GitHub Action</text>
-<path class="flow" d="M452 1047 H500" marker-end="url(#ah)"/><text class="leg" x="512" y="1052">Direction of work</text>
+<text class="lbl" x="154" y="788">if the work card has article-status: request</text>
+<path class="flow" d="M242.0 898 H264.0" marker-end="url(#ah)"/>
+<path class="flow" d="M472.0 898 H494.0" marker-end="url(#ah)"/>
+<path class="flow" d="M702.0 898 H724.0" marker-end="url(#ah)"/>
+<path class="flow" d="M370 983.0 V946.0" marker-end="url(#ah)"/>
+<path class="flow" d="M830 942.0 V979.0" marker-end="url(#ah)"/>
+<rect class="author" x="44" y="1087" width="34" height="20" rx="6"/><text class="leg" x="88" y="1102">Author steps in</text>
+<rect class="node" x="230" y="1087" width="34" height="20" rx="6"/><text class="leg" x="274" y="1102">Skill or GitHub Action</text>
+<path class="flow" d="M452 1097 H500" marker-end="url(#ah)"/><text class="leg" x="512" y="1102">Direction of work</text>
 </svg>

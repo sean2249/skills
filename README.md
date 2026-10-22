@@ -32,7 +32,7 @@ Then turn on auto-update for `kiwi-skills` as above.
 This is my personal development workflow. The skills are designed around it, so adjust it to your own habits if you use them.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as an A/B table) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; PRs labelled article-status: request move to pending on merge (article-pending), handed over with article-request, run through the same flow in the article repo, and written by article-write.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as an A/B table) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; work cards labelled article-status: request move to pending on merge (article-pending) and to handoff with article-request, which opens a post-type: article card in the article repo; that card runs the same flow and article-write writes it with a source map.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: answering a needs-info question, deciding A/B items from the Grill, approving an issue, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -70,16 +70,25 @@ flowchart TD
   end
 
   subgraph ART["3 · Article"]
-    L --> N{"PR has article-status: request?"}
+    L --> N{"Work card has<br/>article-status: request?"}
     M --> N
     N -->|no| Z["Done"]
-    N -->|yes| O["article-pending<br/>request → article-status: pending + reminder"]
-    O --> Q["article-request<br/>pending → article-status: handoff"]
-    X["Any file<br/>(e.g. a notes page)"] --> Q
-    Q --> S["Issue in the article repo<br/>post-type: devlog / intro / review / research"]
-    S --> T["Same issue flow in the article repo<br/>outline → Grill → approved"]
-    T --> U["article-write → article PR<br/>with a source map"]
-    U --> V(["Author merges the article"]):::author
+    subgraph WORK["Work card · article-status: (project repo)"]
+      O["article-pending<br/>article-status: request → pending · reminder"]
+      Q["article-request<br/>pending → handoff · opens a post-type: card"]
+      X["Any file<br/>(e.g. a notes page)"]
+    end
+    subgraph CARD["Article card · post-type: (article repo only)"]
+      S["Article card<br/>post-type: devlog / intro / review / research<br/>outline → Grill → approved"]
+      U["article-write<br/>devlog · intro · review · research + source map"]
+      V(["Author merges the article<br/>checks the source map"]):::author
+    end
+    N -->|yes| O
+    O --> Q
+    X --> Q
+    Q --> S
+    S --> U
+    U --> V
   end
 
   classDef author fill:#fde68a,stroke:#b45309,color:#1f2937,stroke-width:2px
