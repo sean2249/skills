@@ -97,6 +97,63 @@ flowchart TD
 
 </details>
 
+### How I run it
+
+This is how I personally operate the workflow day to day: parallel child sessions, with GitHub issues as the only handoff. It needs no extra skill. The parallelism comes from asking Claude, in a main session, to start child sessions.
+
+<p align="center">
+  <img src="docs/operating.svg" width="960" alt="How the author runs the workflow: a main session picks a batch of about three raw issues and starts one child session per issue running issue-enhance; children write plans and Pending decisions into the issue bodies and never talk to each other. The main session reports what waits; the author reviews, ticks boxes and approves (adding article-status: request for articles). A new main session picks approved, unblocked issues (at most one or two per repo) and starts child sessions running issue-implement, which open PRs. The author merges; an Action sets article-status: pending; the author runs article-request in the main session, which opens a post-type: article card in the article repo that goes through the same steps.">
+</p>
+
+1. **Main session:** find `status: raw` issues and start one child session per issue running `issue-enhance`. Each batch is only as many as I can review in a day or two (about 3).
+2. **Child sessions** write each plan into its issue body; decisions for me go in `## Pending decisions` as checkboxes. Children never talk to each other: the issue (labels + body) is the only handoff.
+3. **Main session** reports what waits for me: `status: ai-enhanced` (review the plan), `status: needs-info` (tick the boxes), and PRs to look at.
+4. **I review**, set `status: approved`, and add `article-status: request` to anything that should become an article.
+5. **A new main session** picks approved issues, skips any blocked by an open issue, takes at most 1–2 per repo at a time, and starts a child session per issue running `issue-implement`. Each opens a PR with screenshots, preview, behaviour summary and review.
+6. **I look and merge.** The Action switches the label to `article-status: pending`.
+7. **I run `article-request` in the main session.** The AI suggests a `post-type:` with its reasoning and I confirm, which opens an article card in the article repo. It can also start from any file, such as a notes page.
+8. **The article card goes back to step 1:** `issue-enhance` drafts the outline, I approve, a child session runs `article-write`, and I check the preview and merge.
+
+<details>
+<summary>Text version (mermaid)</summary>
+
+```mermaid
+flowchart TD
+  subgraph MAIN["Main session"]
+    M1["Pick raw issues<br/>a batch of ~3 (1–2 days of review)"]
+    M2["Report what waits<br/>ai-enhanced · needs-info · PRs"]
+    M3["New session: pick approved<br/>skip blocked · ≤ 1–2 per repo"]
+    M5["article-request<br/>AI suggests post-type + reason"]
+  end
+  subgraph CHILD["Child sessions · one per issue, in parallel"]
+    C1["issue-enhance ×3<br/>plan into the issue body"]
+    C3["issue-implement ×1–2<br/>PR · screenshots · preview · summary · review"]
+  end
+  subgraph BOARD["GitHub issues & labels · the handoff board"]
+    B1["Plan in the body<br/>ai-enhanced, or needs-info + ☐ decisions"]
+    B2["status: approved<br/>+ article-status: request"]
+    B3["Pull request"]
+    B4["Merged<br/>Action sets article-status: pending"]
+    B5["Article card (post-type:)<br/>in the article repo · back to step 1 → article-write"]
+  end
+  A2(["Author: review · tick · approve"]):::author
+  A4(["Author: look at it · merge"]):::author
+  A5(["Author: confirm post-type · merge the article"]):::author
+
+  M1 --> M2 --> M3 --> M5
+  M1 -->|spawn| C1 -->|write| B1
+  B1 --> A2 -->|approve| B2
+  B2 -->|pick| M3
+  M3 -->|spawn| C3 --> B3
+  B3 --> A4 -->|merge| B4
+  B4 -->|pending| M5
+  M5 -->|opens| B5 --> A5
+
+  classDef author fill:#fde68a,stroke:#b45309,color:#1f2937,stroke-width:2px
+```
+
+</details>
+
 ### Labels
 
 | Label | Where | Meaning |
