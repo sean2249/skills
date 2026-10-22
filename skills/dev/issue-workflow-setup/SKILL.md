@@ -70,7 +70,7 @@ done
 
 **Repair / upgrade mode.** For an already-set-up repo, plan:
 
-- Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `article-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: pending` / `article-status: requested` labels (Step 5).
+- Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `post-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: pending` / `article-status: requested` labels (Step 5).
 - **Old CLAUDE.md layout.** If the issue-workflow keys (`Verify command`, `Merge mode`, `Article target`, …) sit inside `## Workflow` (e.g. under `### Issue workflow`), **move** them: create a top-level `## Issue workflow` from `assets/claude-md-workflow.md` with the existing values, then delete the old sub-section. Never add a second copy beside it. Leave the rest of `## Workflow` (local dev commands) untouched.
 - **Required check rename**, in this order (Step 9). Reversing it leaves the upgrade PR waiting forever on the old `risk-guard` check, and auto-merge stalls with it:
   1. Open the upgrade PR (Step 8).
@@ -108,17 +108,18 @@ Ask for the values only they know: verify command, preview URL, `Article target`
 
 Do this **before** Step 5. Renaming into a name that Step 5 has already created fails because the name is taken.
 
-**Migrate old article labels** (repo set up with an earlier version). Article progress in a project repo is now one label, `article-status: request` → `pending` → `handoff`; an article issue in the article repo carries only `article-type: <mode>`. Renaming keeps the label on every issue/PR that has it:
+**Migrate old article labels** (repo set up with an earlier version). Article progress in a project repo is now one label, `article-status: request` → `pending` → `handoff`; an article issue in the article repo carries only `post-type: <mode>`. Renaming keeps the label on every issue/PR that has it:
 
 | Old name | New name |
 |---|---|
 | `article` | `article-status: request` (see the article-repo note below) |
 | `article: pending` | `article-status: pending` |
 | `article: requested` | `article-status: handoff` |
-| `article: devlog` | `article-type: devlog` |
-| `article: intro` | `article-type: intro` |
-| `article: review` | `article-type: review` |
-| `article: research` | `article-type: research` |
+| `article: devlog` | `post-type: devlog` |
+| `article: intro` | `post-type: intro` |
+| `article: review` | `post-type: review` |
+| `article: research` | `post-type: research` |
+| `article-type: devlog` / `intro` / `review` / `research` (briefly used name) | `post-type: devlog` / `intro` / `review` / `research` |
 
 1. **Rename everything except `article`:**
 
@@ -131,24 +132,28 @@ mv_label() {
 }
 mv_label "article: pending"   "article-status: pending"
 mv_label "article: requested" "article-status: handoff"
-mv_label "article: devlog"    "article-type: devlog"
-mv_label "article: intro"     "article-type: intro"
-mv_label "article: review"    "article-type: review"
-mv_label "article: research"  "article-type: research"
+mv_label "article: devlog"    "post-type: devlog"
+mv_label "article: intro"     "post-type: intro"
+mv_label "article: review"    "post-type: review"
+mv_label "article: research"  "post-type: research"
+mv_label "article-type: devlog"   "post-type: devlog"
+mv_label "article-type: intro"    "post-type: intro"
+mv_label "article-type: review"   "post-type: review"
+mv_label "article-type: research" "post-type: research"
 ```
 
-2. **Then `article`.** In the article repo, `article` on an article issue is a "this is an article issue" marker, not progress. `article-type:` replaces it. Split its issues/PRs:
+2. **Then `article`.** In the article repo, `article` on an article issue is a "this is an article issue" marker, not progress. `post-type:` replaces it. Split its issues/PRs:
 
 ```bash
 gh issue list --state all --label article --limit 500 --json number,labels \
-  --jq '.[] | select([.labels[].name | startswith("article-type: ")] | any) | .number'   # markers
+  --jq '.[] | select([.labels[].name | startswith("post-type: ")] | any) | .number'   # markers
 gh issue list --state all --label article --limit 500 --json number,labels \
-  --jq '.[] | select([.labels[].name | startswith("article-type: ")] | any | not) | .number' # progress
+  --jq '.[] | select([.labels[].name | startswith("post-type: ")] | any | not) | .number' # progress
 gh pr list --state all --label article --limit 500 --json number --jq '.[].number'      # PRs: progress
 ```
 
 - Markers → remove `article` from them (`gh issue edit <N> --remove-label article`).
-- Progress items left → `mv_label "article" "article-status: request"`. Nothing left (typical for the article repo) → delete `article` (`gh label delete article --yes`); recommended there, since `article-type:` is enough.
+- Progress items left → `mv_label "article" "article-status: request"`. Nothing left (typical for the article repo) → delete `article` (`gh label delete article --yes`); recommended there, since `post-type:` is enough.
 
 If both an old and a new name already exist, don't rename. Add the new label to each issue/PR that has the old one, then delete the old label after the author confirms. List everything found (old labels, marker vs progress issues) in the Step 3 plan for confirmation.
 
@@ -203,10 +208,10 @@ Article progress is one label: the author adds `article-status: request` to an i
 **Article repo only** (its `Article target` is itself), also:
 
 ```bash
-mk "article-type: devlog"   d4c5f9 "Article reconstructs a decision path"
-mk "article-type: intro"    c5def5 "Article introduces a tool, concept or site"
-mk "article-type: review"   f9d0c4 "Article reviews a work: the author's take"
-mk "article-type: research" bfdadc "Article explores a topic, reasoning kept"
+mk "post-type: devlog"   d4c5f9 "Article reconstructs a decision path"
+mk "post-type: intro"    c5def5 "Article introduces a tool, concept or site"
+mk "post-type: review"   f9d0c4 "Article reviews a work: the author's take"
+mk "post-type: research" bfdadc "Article explores a topic, reasoning kept"
 ```
 
 ## Step 6 — Bring existing issues into the flow
@@ -326,7 +331,7 @@ JSON
 - [ ] All 10 workflow labels exist (`gh label list`), including `article-status: request` / `pending` / `handoff`; no `article` label.
 - [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
 - [ ] The six `.github` files exist, all four workflows (issue-status, risk-guard, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>`, and their YAML parses.
-- [ ] Article repo: the four mode labels (`article-type: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
+- [ ] Article repo: the four mode labels (`post-type: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
 - [ ] `CLAUDE.md` has `## Issue workflow` with merge mode set and the author's values (or `<fill in>` placeholders).
 - [ ] Setup PR is open with `risk: high`.
 - [ ] `risk-guard / check` ran on the setup PR and passed (`gh pr checks <PR>`).

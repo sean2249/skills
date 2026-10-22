@@ -1,6 +1,6 @@
 ---
 name: article-write
-description: Use when, in an article repo, an issue with an `article-type:` label and `status: approved` should be written up as an article and opened as a PR. Four modes by label: `article-type: devlog` (reconstructs a decision path), `article-type: intro` (introduces a tool, concept or site), `article-type: review` (the author's take on a work: book, exhibition, performance…), `article-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, and attaches a source map so nothing from notes is silently dropped.
+description: Use when, in an article repo, an issue with an `post-type:` label and `status: approved` should be written up as an article and opened as a PR. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, and attaches a source map so nothing from notes is silently dropped.
 ---
 
 # article-write
@@ -24,10 +24,10 @@ Refuse and explain if:
 
 | Condition | Say |
 |---|---|
-| Closed, or no `article-type:` label | Not an open article issue. |
+| Closed, or no `post-type:` label | Not an open article issue. |
 | No `status: approved` | Current status is `<label>`; the author approves. Suggest `issue-enhance` to draft the outline. |
 | An issue in `blockedBy` is still open (`gh issue view <M> --json state`) | Blocked by #M. |
-| More than one `article-type:` label | Ask the author which mode. |
+| More than one `post-type:` label | Ask the author which mode. |
 
 If `gh` rejects the `blockedBy` / `subIssuesSummary` fields, it's too old: ask the author to upgrade `gh` and stop.
 
@@ -52,22 +52,22 @@ Anything you need that isn't in the sources → ask the author; don't go looking
 
 Follow the approved outline: its main thread, sections, and its "not writing" list.
 
-**`article-type: devlog`: reconstruct the decision path.**
+**`post-type: devlog`: reconstruct the decision path.**
 - Pick **one** main thread. Not everything that happened goes in.
 - For that thread: what the original plan was, why it was dropped, where it got stuck, how the cause was found, what was done instead.
 - Use the author's own words from `## 文章素材` at the decision points, and real numbers where the sources have them.
 
-**`article-type: intro`: introduce a tool, concept, or site to someone who hasn't seen it.**
+**`post-type: intro`: introduce a tool, concept, or site to someone who hasn't seen it.**
 - What it is, in plain terms, up front.
 - Why it's worth the reader's time: what's distinctive, who it's for.
 - Concrete details from the source, not generic praise.
 
-**`article-type: review`: the author's take on a work (book, exhibition, performance…).**
+**`post-type: review`: the author's take on a work (book, exhibition, performance…).**
 - The author's impressions and judgement are the body; facts about the work (title, creator, dates, venue) support them.
 - Keep every evaluation, quotation, comparison, and reservation the author wrote, including the critical ones.
 - Don't add a verdict, rating, or closing conclusion the author didn't write.
 
-**`article-type: research`: a topic study / exploration.**
+**`post-type: research`: a topic study / exploration.**
 - Keep the core question, the line of reasoning, how the author's position changed along the way, and the open questions.
 - Don't compress it into conclusions only; the path is the content.
 - Keep the author's uncertainty where the notes are uncertain.

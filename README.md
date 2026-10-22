@@ -76,7 +76,7 @@ flowchart TD
     N -->|yes| O["article-pending<br/>request → article-status: pending + reminder"]
     O --> Q["article-request<br/>pending → article-status: handoff"]
     X["Any file<br/>(e.g. a notes page)"] --> Q
-    Q --> S["Issue in the article repo<br/>article-type: devlog / intro / review / research"]
+    Q --> S["Issue in the article repo<br/>post-type: devlog / intro / review / research"]
     S --> T["Same issue flow in the article repo<br/>outline → Grill → approved"]
     T --> U["article-write → article PR<br/>with a source map"]
     U --> V(["Author merges the article"]):::author
