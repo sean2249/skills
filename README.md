@@ -31,47 +31,60 @@ Then turn on auto-update for `kiwi-skills` as above.
 
 This is my personal development workflow. The skills are designed around it, so adjust it to your own habits if you use them.
 
+<p align="center">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as an A/B table) to status: ai-enhanced and author approval; issue-implement opens a PR, risk: low auto-merges and medium/high is merged by the author; PRs labelled article are flagged by article-pending, handed over with article-request, run through the same flow in the article repo, and written by article-write.">
+</p>
+
+Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: answering a needs-info question, deciding A/B items from the Grill, approving an issue, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
+
+<details>
+<summary>Text version (mermaid)</summary>
+
 ```mermaid
 flowchart TD
-  subgraph ISSUE["Issue (any repo)"]
+  subgraph ISSUE["1 · Issue (any repo)"]
     A(["Author opens an issue"]):::author --> B["status: raw<br/>(added by the issue-status Action)"]
-    B --> C["issue-enhance"]
-    C -->|blocked on a question| D["status: needs-info"]
+    B --> C["issue-enhance<br/>check code · settle scope"]
+    C -->|missing info| D["status: needs-info"]
     D --> E(["Author answers"]):::author
     E -->|back to raw| B
     C -->|too big| F["Split into native sub-issues<br/>ordered with blocked-by"]
-    F --> GR
-    C --> GR["Grill: reviewer subagents →<br/>negotiate with the planner →<br/>author decides the disputes"]
-    GR --> G["status: ai-enhanced"]
-    GR -->|author not in session| D
-    G --> H(["Author reviews and sets<br/>status: approved (author only)"]):::author
+    C --> P["Write the plan"]
+    F --> P
+    subgraph GRILL["Grill · up to 3 rounds · fresh reviewers each round"]
+      R1["Reviewer subagents<br/>2–4 angles · parallel · fresh context"] --> R2["Negotiate with the planner<br/>agree → change · withdraw · for author"]
+      R2 --> R3(["A / B table → author decides<br/>no planner recommendation"]):::author
+    end
+    P --> R1
+    R3 --> G["status: ai-enhanced<br/>plan + Risks + Opportunities"]
+    G --> H(["Author approves<br/>sets status: approved"]):::author
   end
 
-  subgraph IMPL["Implementation"]
-    H --> I["issue-implement (new session)"]
+  subgraph IMPL["2 · Implementation"]
+    H --> I["issue-implement (new session)<br/>applies risk mitigations"]
     I --> J["PR with evidence + behaviour summary"]
     J --> K{"risk label"}
-    K -->|"risk: low<br/>allowlisted paths only,<br/>risk-guard / check passes"| L["Auto-merge"]
+    K -->|"risk: low<br/>allowlist · risk-guard / check"| L["Auto-merge"]
     K -->|"risk: medium / high"| M(["Author reviews and merges"]):::author
   end
 
-  subgraph ART["Article"]
-    L --> N{"PR has article?"}
+  subgraph ART["3 · Article"]
+    L --> N{"PR has the article label?"}
     M --> N
-    N -->|yes| O["article-pending Action<br/>adds article: pending + reminder"]
     N -->|no| Z["Done"]
-    O --> P["article-request"]
-    Q["Any file<br/>(e.g. a notes page)"] --> P
-    P --> R["Issue in the article repo<br/>article: devlog / intro / review / research"]
-    R --> S["Same issue flow in the article repo:<br/>outline → approved"]
-    S --> T["article-write → article PR"]
-    T --> U(["Author merges the article"]):::author
+    N -->|yes| O["article-pending<br/>adds article: pending + reminder"]
+    O --> Q["article-request"]
+    X["Any file<br/>(e.g. a notes page)"] --> Q
+    Q --> S["Issue in the article repo<br/>devlog / intro / review / research"]
+    S --> T["Same issue flow in the article repo<br/>outline → Grill → approved"]
+    T --> U["article-write → article PR<br/>with a source map"]
+    U --> V(["Author merges the article"]):::author
   end
 
   classDef author fill:#fde68a,stroke:#b45309,color:#1f2937,stroke-width:2px
 ```
 
-Yellow rounded nodes are the points where the author steps in: approving an issue, answering a needs-info question, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions.
+</details>
 
 ## Skills
 
