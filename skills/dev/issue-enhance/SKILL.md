@@ -298,27 +298,23 @@ Items under **Unclear or missing in the body** aren't negotiated: fix the body d
 
 Point of disagreement: <one sentence: what the two sides disagree about>
 
-A (reviewer: <angle>)
-- Claim:
-- Reasoning:
-- Evidence: <file:line, docs, issue text… or "no direct evidence">
-- If A is chosen: <cost, risk, extra work>
-
-B (planner: main agent)
-- Claim:
-- Reasoning:
-- Evidence: <… or "no direct evidence">
-- If B is chosen: <cost, risk, extra work>
+| | A (reviewer: <angle>) | B (planner: main agent) |
+|---|---|---|
+| Claim | | |
+| Reasoning | | |
+| Evidence | <file:line, docs, issue text… or "no direct evidence"> | <… or "no direct evidence"> |
+| If this side is chosen | <cost, risk, extra work> | <cost, risk, extra work> |
 
 Agreed: <what both sides already agree on, or "none">
 
 Options: A / B / other
 ```
 
-- A and B are symmetric: all four fields are filled on both sides. Missing evidence is written as "no direct evidence", never left out.
+- A and B sit side by side, and all eight cells are filled. Missing evidence is written as "no direct evidence", never left blank.
+- No line breaks inside a cell. Keep each cell to one or two sentences, and put details in footnotes under the table (`[^1]` in the cell, `[^1]: …` below).
 - **No recommended answer from you.** You are side B, so a recommendation wouldn't be neutral.
-- A pure preference with no dispute uses the same format: A = "option one", B = "option two", each with its consequences.
-- **Author in the session** → show these items directly. **Author not present** (e.g. batch mode) → post them as a `status: needs-info` comment (labelling as in Step 3), in this A/B format, and stop. The next run picks the grill up from the author's reply.
+- A pure preference with no dispute uses the same table, with the column headers "Option one" / "Option two", each with its consequences.
+- **Author in the session** → show these items, table included, directly in chat. **Author not present** (e.g. batch mode) → post them as a `status: needs-info` comment (labelling as in Step 3), in this same table format, and stop. The next run picks the grill up from the author's reply.
 
 **5. Write answers back into the AI section** of the body, then comment:
 
@@ -386,6 +382,6 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 - [ ] Scope was settled before any mockup; open choices were shown as 2–3 versions side by side (UI: 375px screenshots, shown before the question); no temp files left in the repo.
 - [ ] Mermaid rendered without errors.
 - [ ] Grill ran with fresh-context subagents, one per angle (2–4), dispatched in parallel and new each round (≤ 3 rounds, one for small issues).
-- [ ] Each reviewer's items were negotiated (≤ 2 exchanges, same subagent) into agreed / withdrawn / for-the-author; only the last went to the author, in the symmetric A/B format with no recommendation from you.
+- [ ] Each reviewer's items were negotiated (≤ 2 exchanges, same subagent) into agreed / withdrawn / for-the-author; only the last went to the author, as side-by-side A/B tables with every cell filled and no recommendation from you.
 - [ ] Answers are in Decisions (A / B / other + date) / Risks / Opportunities; unclear-body items were fixed; each round's 🤖 comment lists changed, withdrawn (with reasons), asked, and unreviewed angles.
 - [ ] No `status: approved` added.
