@@ -1,0 +1,53 @@
+# Reusable workflow: when the author replies on a `status: needs-info` issue, move it
+# back to `status: raw` so issue-enhance picks it up again. No comment is posted.
+# Called from each repo's .github/workflows/needs-info-reply.yml (written by issue-workflow-setup).
+# Acts only when ALL hold: the comment is on an issue (not a PR); the issue has
+# `status: needs-info`; the commenter is the repo owner or the issue's author, and not a bot;
+# the comment doesn't start with "🤖 AI" (the AI posts with the author's login, so only
+# that marker tells the two apart).
+name: needs-info-reply
+
+on:
+  workflow_call:
+
+permissions:
+  issues: write
+
+jobs:
+  to-raw:
+    # Cheap pre-filter; the step below re-checks everything.
+    if: >-
+      contains(github.event.issue.labels.*.name, 'status: needs-info')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move a replied needs-info issue back to raw
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        # Block scalar on purpose: label names contain ": ".
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+
+          ev = json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+          issue, comment = ev.get("issue", {}), ev.get("comment", {})
+          user = comment.get("user") or {}
+          labels = [l["name"] for l in issue.get("labels", [])]
+          checks = {
+              "on an issue, not a PR": not issue.get("pull_request"),
+              "issue has status: needs-info": "status: needs-info" in labels,
+              "commenter is not a bot": user.get("type") != "Bot",
+              "commenter is owner or issue author": comment.get("author_association") == "OWNER"
+                  or user.get("login") == (issue.get("user") or {}).get("login"),
+              "comment is not an AI comment": not (comment.get("body") or "").lstrip().startswith("🤖 AI"),
+          }
+          for name, ok in checks.items():
+              print(f"{'ok ' if ok else 'NO '} {name}")
+          if not all(checks.values()):
+              print("Not switching.")
+              raise SystemExit(0)
+          n = str(issue["number"])
+          subprocess.run(["gh", "issue", "edit", n, "--remove-label", "status: needs-info",
+                          "--add-label", "status: raw"], check=True)
+          print(f"Issue #{n}: status: needs-info -> status: raw")
+          PY

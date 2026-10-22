@@ -47,7 +47,7 @@ flowchart TD
     B --> C["issue-enhance<br/>check code · settle scope"]
     C -->|missing info| D["status: needs-info"]
     D --> E(["Author answers"]):::author
-    E -->|back to raw| B
+    E -->|"reply → auto back to raw<br/>(needs-info-reply)"| B
     C -->|too big| F["Split into native sub-issues<br/>ordered with blocked-by"]
     C --> P["Write the plan"]
     F --> P
@@ -98,7 +98,7 @@ flowchart TD
 
 ## Shared workflows
 
-`.github/workflows/issue-status.yml`, `risk-guard.yml`, and `article-pending.yml` are reusable workflows (`on: workflow_call`). Repos set up with `issue-workflow-setup` call them through short callers, for example:
+`.github/workflows/issue-status.yml`, `risk-guard.yml`, `article-pending.yml`, and `needs-info-reply.yml` are reusable workflows (`on: workflow_call`). `needs-info-reply` switches a `status: needs-info` issue back to `status: raw` when the issue's author or the repo owner replies; it ignores PRs, bots, other users, and comments starting with `🤖 AI`, and posts nothing. Repos set up with `issue-workflow-setup` call them through short callers, for example:
 
 ```yaml
 jobs:

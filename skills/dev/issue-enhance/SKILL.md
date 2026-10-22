@@ -29,7 +29,7 @@ gh issue list --state open --limit 500 --json number,title,labels,comments --jq 
   | "#\(.number) [\(.labels | map(.name) | map(select(startswith("status: "))) | join(","))] \(.title)"'
 ```
 
-The filter skips issues whose **latest** comment is the AI's "Already done" evidence (Step 1). They wait for the author to close them. Any newer author comment brings the issue back into the batch. A `needs-info` issue is only worth picking up when the author has replied after the AI's question.
+The filter skips issues whose **latest** comment is the AI's "Already done" evidence (Step 1). They wait for the author to close them. Any newer author comment brings the issue back into the batch. Normally an author's reply on a `needs-info` issue switches it back to `status: raw` automatically (the `needs-info-reply` workflow). The `needs-info` branch of the filter is a fallback for when that workflow didn't run: such an issue is only worth picking up when the author has replied after the AI's question.
 
 In batch mode, list them all first, then enhance one at a time, finishing each (label changed) before starting the next.
 
