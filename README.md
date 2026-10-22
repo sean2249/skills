@@ -123,7 +123,7 @@ flowchart TD
     M1["Pick raw issues<br/>a batch of ~3 (1–2 days of review)"]
     M2["Report what waits<br/>ai-enhanced · needs-info · PRs"]
     M3["New session: pick approved<br/>skip blocked · ≤ 1–2 per repo"]
-    M5["article-request<br/>AI suggests post-type + reason"]
+    M5["article-request<br/>AI suggests post-type + reasons; author confirms"]
   end
   subgraph CHILD["Child sessions · one per issue, in parallel"]
     C1["issue-enhance ×3<br/>plan into the issue body"]
@@ -134,7 +134,7 @@ flowchart TD
     B2["status: approved<br/>+ article-status: request"]
     B3["Pull request"]
     B4["Merged<br/>Action sets article-status: pending"]
-    B5["Article card (post-type:)<br/>in the article repo · back to step 1 → article-write"]
+    B5["Article card<br/>post-type: · article repo · back to step 1 → article-write"]
   end
   A2(["Author: review · tick · approve"]):::author
   A4(["Author: look at it · merge"]):::author
@@ -147,6 +147,7 @@ flowchart TD
   M3 -->|spawn| C3 --> B3
   B3 --> A4 -->|merge| B4
   B4 -->|pending| M5
+  X["Any file<br/>(e.g. a notes page)"] -->|or a file| M5
   M5 -->|opens| B5 --> A5
 
   classDef author fill:#fde68a,stroke:#b45309,color:#1f2937,stroke-width:2px

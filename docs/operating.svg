@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 700" width="960" height="700" role="img" aria-labelledby="title desc">
 <title id="title">How the author runs the workflow</title>
-<desc id="desc">The author's own way of operating the workflow. A main session picks a batch of about three raw issues, small enough to review in a day or two, and starts one child session per issue running issue-enhance. Each child writes its plan into the issue body, with decisions for the author as Pending decisions checkboxes; children never talk to each other, and GitHub issues and labels are the only handoff. The main session reports what waits: status ai-enhanced, status needs-info, and PRs. The author reviews, ticks the boxes and sets status approved, adding article-status request if the work should become an article. A new main session picks approved issues, skips blocked ones, at most one or two per repo, and starts a child session per issue running issue-implement, which opens a PR with screenshots, preview, behaviour summary and review. The author looks and merges; a GitHub Action sets article-status pending. The author runs article-request in the main session; the AI suggests a post-type with a reason and the author confirms; it opens an article card with a post-type label in the article repo (it can also start from any file). The article card goes through the same steps: issue-enhance outline, author approval, article-write in a child session, and the author merges the article.</desc>
+<desc id="desc">The author's own way of operating the workflow. A main session picks a batch of about three raw issues, small enough to review in a day or two, and starts one child session per issue running issue-enhance. Each child writes its plan into the issue body, with decisions for the author as Pending decisions checkboxes; children never talk to each other, and GitHub issues and labels are the only handoff. The main session reports what waits: status ai-enhanced, status needs-info, and PRs. The author reviews, ticks the boxes and sets status approved, adding article-status request if the work should become an article. A new main session picks approved issues, skips blocked ones, at most one or two per repo, and starts a child session per issue running issue-implement, which opens a PR with screenshots, preview, behaviour summary and review. The author looks and merges; a GitHub Action sets article-status pending. The author runs article-request in the main session; the AI suggests a post-type with reasons and the author confirms; it opens an article card with a post-type label in the article repo; article-request can also start from any file, such as a notes page. The article card goes through the same steps: issue-enhance outline, author approval, article-write in a child session, and the author merges the article.</desc>
 <style>
 svg{--panel:#f6f8fa;--panel-s:#d0d7de;--node:#ffffff;--node-s:#8c959f;--t:#1f2328;--s:#57606a;
 --au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--grill:#eef6ff;--grill-s:#a8c7fa;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df;--board:#eefbf1;--board-s:#4ac26b;--board-t:#1a7f37}
@@ -67,13 +67,17 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <rect class="node" x="770.0" y="84.0" width="164" height="64" rx="10"/>
 <text class="t" x="852" y="104">article-request</text>
 <text class="s" x="852" y="121">AI suggests post-type</text>
-<text class="s" x="852" y="135">+ reason; author confirms</text>
+<text class="s" x="852" y="135">+ reasons; author confirms</text>
 <rect class="node ghost" x="40.0" y="234.0" width="164" height="64" rx="10"/>
 <rect class="node ghost" x="35.0" y="229.0" width="164" height="64" rx="10"/>
 <rect class="node" x="30.0" y="224.0" width="164" height="64" rx="10"/>
 <text class="t" x="112" y="244">issue-enhance</text>
 <text class="s" x="112" y="261">plan into the issue body</text>
 <text class="s" x="112" y="275">no talk between children</text>
+<rect class="node" x="585.0" y="224.0" width="164" height="64" rx="10"/>
+<text class="t" x="667" y="244">Any file</text>
+<text class="s" x="667" y="261">e.g. a notes page</text>
+<text class="s" x="667" y="275">(file mode)</text>
 <rect class="node ghost" x="405.0" y="229.0" width="164" height="64" rx="10"/>
 <rect class="node" x="400.0" y="224.0" width="164" height="64" rx="10"/>
 <text class="t" x="482" y="244">issue-implement</text>
@@ -95,8 +99,8 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <text class="s" x="667" y="419">Action sets</text>
 <text class="s" x="667" y="433">article-status: pending</text>
 <rect class="node" x="770.0" y="382.0" width="164" height="64" rx="10"/>
-<text class="t" x="852" y="402">Article card (post-type:)</text>
-<text class="s" x="852" y="419">in the article repo;</text>
+<text class="t" x="852" y="402">Article card</text>
+<text class="s" x="852" y="419">post-type: · article repo</text>
 <text class="s" x="852" y="433">back to step 1 → article-write</text>
 <rect class="halo" x="209.0" y="524.0" width="176" height="68" rx="15"/>
 <rect class="author" x="215.0" y="530.0" width="164" height="56" rx="10"/>
@@ -127,10 +131,12 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <path class="flow" d="M482 446.0 V484 H637 V526" marker-end="url(#ah)"/>
 <path class="flow" d="M667 530 V450.0" marker-end="url(#ah)"/>
 <text class="lbl" x="673" y="518" style="text-anchor:start">merge</text>
-<path class="flow" d="M667 382.0 V198 H822 V152.0" marker-end="url(#ah)"/>
-<text class="lbl" x="673" y="214" style="text-anchor:start">pending</text>
-<path class="flow" d="M882 148.0 V378.0" marker-end="url(#ah)"/>
-<text class="lbl" x="888" y="170.0" style="text-anchor:start">opens</text>
+<path class="flow" d="M749.0 414 H760 V170.0 H862 V152.0" marker-end="url(#ah)"/>
+<text class="lbl" x="764" y="346" style="text-anchor:start">pending</text>
+<path class="flow" d="M667 224.0 V158.0 H800 V152.0" marker-end="url(#ah)"/>
+<text class="lbl" x="673" y="178.0" style="text-anchor:start">or a file</text>
+<path class="flow" d="M910 148.0 V378.0" marker-end="url(#ah)"/>
+<text class="lbl" x="916" y="198.0" style="text-anchor:start">opens</text>
 <path class="flow" d="M852 446.0 V526" marker-end="url(#ah)"/>
 <rect class="author" x="32" y="657" width="34" height="20" rx="6"/><text class="leg" x="76" y="672">Author steps in</text>
 <rect class="node" x="210" y="657" width="34" height="20" rx="6"/><rect class="node ghost" x="215" y="662" width="34" height="20" rx="6"/><text class="leg" x="262" y="672">Parallel child sessions</text>
