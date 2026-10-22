@@ -60,7 +60,7 @@ flowchart TD
     N -->|no| Z["Done"]
     O --> P["article-request"]
     Q["Any file<br/>(e.g. a notes page)"] --> P
-    P --> R["Issue in the article repo<br/>article: devlog / article: intro"]
+    P --> R["Issue in the article repo<br/>article: devlog / intro / review / research"]
     R --> S["Same issue flow in the article repo:<br/>outline → approved"]
     S --> T["article-write → article PR"]
     T --> U(["Author merges the article"]):::author
@@ -79,7 +79,7 @@ Yellow rounded nodes are the points where the author steps in: approving an issu
 | `dev/issue-enhance` | Turning a `status: raw` issue into a reviewable plan (or an article outline), split into sub-issues |
 | `dev/issue-implement` | Implementing a `status: approved` issue: PR with evidence, risk label, merge only `risk: low` |
 | `dev/article-request` | Handing a merged `article` PR, or any file, to the article repo as a raw issue |
-| `writing/article-write` | Writing an approved article issue as a devlog or intro, following the article repo's conventions |
+| `writing/article-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a source map for note sources |
 
 ## Shared workflows
 

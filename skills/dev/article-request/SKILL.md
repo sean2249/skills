@@ -1,6 +1,6 @@
 ---
 name: article-request
-description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `article`, `status: raw`, and `article: devlog` or `article: intro`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
+description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `article`, `status: raw`, and one mode (`article: devlog`, `intro`, `review`, or `research`), with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
 ---
 
 # article-request
@@ -28,7 +28,7 @@ gh pr view <PR> --json number,url,title,state,labels,body,closingIssuesReference
 
 Stop and explain if the PR isn't merged, if neither it nor its closing issue has `article`, or if `## 文章素材` is missing or empty (ask the author to add it to the PR first).
 
-**A file** (default mode `article: intro`; the author may switch it). Build a permalink pinned to a pushed commit:
+**A file** (default mode `article: intro`). Ask the author to pick one of the four modes: `intro` (a tool / concept / site), `review` (their take on a work: book, exhibition, performance…), `research` (a topic exploration), or `devlog` (a decision path). Build a permalink pinned to a pushed commit:
 
 ```bash
 git status --porcelain -- <path>            # must print nothing: commit the file first
@@ -38,7 +38,7 @@ gh repo view --json nameWithOwner,visibility
 # permalink: https://github.com/<owner>/<repo>/blob/<sha>/<path>
 ```
 
-Confirm the mode with the author.
+Confirm the mode with the author before Step 4.
 
 ## Step 1 — Find the target
 
@@ -67,7 +67,9 @@ gh label list -R <target> --limit 200 --json name --jq '.[].name'
 gh label create "article"         -R <target> --color 5319e7 --description "Write a technical article"
 gh label create "status: raw"     -R <target> --color ededed --description "New issue, not yet enhanced by AI"
 gh label create "article: devlog" -R <target> --color d4c5f9 --description "Article reconstructs a decision path"
-gh label create "article: intro"  -R <target> --color c5def5 --description "Article introduces something to new readers"
+gh label create "article: intro"  -R <target> --color c5def5 --description "Article introduces a tool, concept or site"
+gh label create "article: review"   -R <target> --color f9d0c4 --description "Article reviews a work: the author's take"
+gh label create "article: research" -R <target> --color bfdadc --description "Article explores a topic, reasoning kept"
 ```
 
 ## Step 4 — Open the issue
@@ -92,7 +94,7 @@ Keep only the source lines that apply.
 
 ```bash
 gh issue create -R <target> --title "Article: <PR title or file title>" --body-file <body.md> \
-  --label article --label "status: raw" --label "article: <devlog|intro>"
+  --label article --label "status: raw" --label "article: <devlog|intro|review|research>"
 ```
 
 ## Step 5 — Mark the PR as requested (PR mode)

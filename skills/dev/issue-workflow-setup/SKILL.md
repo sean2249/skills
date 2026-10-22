@@ -157,8 +157,10 @@ mk "article: requested"  0e8a16 "Article request opened in the article repo"
 **Article repo only** (its `Article target` is itself), also:
 
 ```bash
-mk "article: devlog" d4c5f9 "Article reconstructs a decision path"
-mk "article: intro"  c5def5 "Article introduces something to new readers"
+mk "article: devlog"   d4c5f9 "Article reconstructs a decision path"
+mk "article: intro"    c5def5 "Article introduces a tool, concept or site"
+mk "article: review"   f9d0c4 "Article reviews a work: the author's take"
+mk "article: research" bfdadc "Article explores a topic, reasoning kept"
 ```
 
 ## Step 6 — Bring existing issues into the flow
@@ -275,7 +277,7 @@ JSON
 - [ ] All 10 workflow labels exist (`gh label list`), including `article: pending` / `article: requested`.
 - [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
 - [ ] The five `.github` files exist, all three workflows are thin callers with the real `<skills-repo>`, and their YAML parses.
-- [ ] Article repo: `article: devlog` / `article: intro` labels exist and `## Article conventions` is in `CLAUDE.md`.
+- [ ] Article repo: the four mode labels (`article: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
 - [ ] `CLAUDE.md` has `## Issue workflow` with merge mode set and the author's values (or `<fill in>` placeholders).
 - [ ] Setup PR is open with `risk: high`.
 - [ ] `risk-guard / check` ran on the setup PR and passed (`gh pr checks <PR>`).

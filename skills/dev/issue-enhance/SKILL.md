@@ -1,6 +1,6 @@
 ---
 name: issue-enhance
-description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `article: intro`), an article outline; then moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
+description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `intro` / `review` / `research`), an article outline; then moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
 ---
 
 # issue-enhance
@@ -41,7 +41,7 @@ Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, 
 
 ## Step 1 — Check the code first
 
-For an **article-writing issue**, skip to Step 5a: one with `article: devlog` or `article: intro`, or with `article` in the repo that is its own `Article target`. A plain `article` label in a code repo only means "write an article after this ships"; that issue gets the normal plan.
+For an **article-writing issue**, skip to Step 5a: one with an article mode label (`article: devlog` / `intro` / `review` / `research`), or with `article` in the repo that is its own `Article target`. A plain `article` label in a code repo only means "write an article after this ships"; that issue gets the normal plan.
 
 Search the codebase for what the issue asks for. There are three outcomes:
 
@@ -184,7 +184,7 @@ gh issue comment <N> --body "🤖 AI <YYYY-MM-DD>
 
 ## Step 5a — Article issues: an outline, not an implementation plan
 
-An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has neither `article: devlog` nor `article: intro`, ask which and add it.
+An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has no mode label (`article: devlog` / `intro` / `review` / `research`), ask which and add it.
 
 Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with this AI section:
 
@@ -194,7 +194,7 @@ Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with
 > 🤖 AI-enhanced (Claude Code), <YYYY-MM-DD>. Waiting for author review.
 
 ## Mode
-`article: devlog` (reconstruct the decision path) or `article: intro` (introduce it to new readers).
+One of: `article: devlog` (reconstruct a decision path), `article: intro` (introduce a tool / concept / site), `article: review` (the author's take on a work), `article: research` (a topic exploration, reasoning kept).
 
 ## Main thread
 - The one thread the article follows, in a sentence or two.
@@ -205,6 +205,13 @@ Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with
 ## Not writing
 - What is deliberately left out, and why.
 
+## Source map
+<!-- Required when a source is a note-like file: always for review / research, and for intro from a file. -->
+| Source section / point | Goes to section | If left out: why |
+|---|---|---|
+| <heading or point> | <outline section #> | |
+| <…> | — | duplicate / only meaningful to the author / internal link / … |
+
 ## Conditions the description left out
 - …
 
@@ -214,6 +221,8 @@ Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with
 ## Verification
 - Build/preview per the article repo's `## Article conventions`.
 ````
+
+For note-like sources, list **every** source section in the source map, so the author sees what's kept and dropped before approving. `review` and `research` outlines keep the author's evaluations and line of reasoning as sections; don't reduce them to a summary.
 
 Then move the label to `status: ai-enhanced` and comment, as in Step 5.
 
