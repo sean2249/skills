@@ -215,6 +215,7 @@ mk "risk: high"          b60205 "Auth, migrations, workflows, secrets or billing
 mk "article-status: request"   5319e7 "Write an article about this after it ships"
 mk "article-status: pending"   fbca04 "Merged; waiting for article-request"
 mk "article-status: handoff"   0e8a16 "Handed to the article repo; done here"
+mk "grill"                     d93f0b "Author asks issue-enhance to run the Grill review"
 ```
 
 Article progress is one label: the author adds `article-status: request` to an issue (`issue-implement` copies it to the PR); `article-pending` swaps it to `article-status: pending` when the PR merges; `article-request` swaps that to `article-status: handoff`. There is no separate `article` label.
@@ -342,7 +343,7 @@ JSON
 - [ ] GitHub's default labels are gone (in-use ones only after the author confirmed the affected issues/PRs); bot labels such as `dependencies` are kept.
 - [ ] No existing label's color or description was changed (no `--force`).
 - [ ] No old article labels remain (`article`, `article: pending`, … migrated per the Step 4 table; article-repo markers removed).
-- [ ] All 10 workflow labels exist (`gh label list`), including `article-status: request` / `pending` / `handoff`; no `article` label.
+- [ ] All 11 workflow labels exist (`gh label list`), including `grill` and `article-status: request` / `pending` / `handoff`; no `article` label.
 - [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
 - [ ] `needs-info-reply.yml` triggers on both `issue_comment: created` and `issues: edited`.
 - [ ] The six `.github` files exist, all four workflows (issue-status, risk-guard, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>`, and their YAML parses.

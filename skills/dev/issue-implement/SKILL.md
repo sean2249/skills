@@ -47,7 +47,7 @@ git switch -c issue-<N>-<short-slug> origin/<default-branch>
 
 Follow the issue's **Approach** and **Acceptance criteria**. Also:
 
-- **Risks**: apply every mitigation listed there. Each one gets accounted for in the PR.
+- **Risks** (present only if the issue was grilled): apply every mitigation listed there. Each one gets accounted for in the PR.
 - **Opportunities** marked **this time**: implement them; ones marked later or new issue are out of scope.
 
 When you must deviate from the approved plan, note what and why as you go; it goes in the PR.
@@ -80,7 +80,7 @@ Fill the repo's PR template:
   - What it does: one short paragraph.
   - What it deliberately doesn't do: one short paragraph.
   - Mapped to acceptance criteria: one line per criterion → the part of the behaviour that meets it.
-  - Risks: one line per risk in the issue → how the mitigation was handled (or why it wasn't, under **Not verified** / **Deviations**).
+  - Risks (grilled issues only): one line per risk in the issue → how the mitigation was handled (or why it wasn't, under **Not verified** / **Deviations**).
   - Opportunities (this time): one line each → where it's done.
 - **Acceptance criteria — evidence**: every criterion from the issue, word for word, each with its evidence (command + output excerpt, screenshot, preview link).
 - **Not verified**: say plainly what wasn't checked and why.
@@ -164,7 +164,7 @@ If the PR has `article-status: request` and merged during this session, run `art
 - [ ] Verify command ran; output is in the PR.
 - [ ] PR opens with **Behaviour summary**: run output, what it does, what it deliberately doesn't do, mapped to criteria.
 - [ ] Every acceptance criterion has evidence or is listed under **Not verified**.
-- [ ] Every issue Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
+- [ ] If the issue has Risks / Opportunities (grilled issues): every Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
 - [ ] Both reviews (code + security) ran, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.

@@ -51,12 +51,13 @@ flowchart TD
     C -->|too big| F["Split into native sub-issues<br/>ordered with blocked-by"]
     C --> P["Write the plan"]
     F --> P
-    subgraph GRILL["Grill · up to 3 rounds · fresh reviewers each round"]
+    subgraph GRILL["Grill (optional) · up to 3 rounds · fresh reviewers each round"]
       R1["Reviewer subagents<br/>2–4 angles · parallel · fresh context"] --> R2["Negotiate with the planner<br/>agree → change · withdraw · for author"]
       R2 --> R3(["A / B tables in the issue body<br/>author ticks · no planner recommendation"]):::author
     end
-    P --> R1
-    R3 --> G["status: ai-enhanced<br/>plan + Risks + Opportunities"]
+    P -->|"grill label or<br/>high-risk paths"| R1
+    P -->|default| G
+    R3 --> G["status: ai-enhanced<br/>plan (+ Risks / Opportunities if grilled)"]
     G --> H(["Author approves<br/>sets status: approved"]):::author
   end
 
@@ -102,6 +103,7 @@ flowchart TD
 |---|---|---|
 | `status: raw` → `needs-info` → `ai-enhanced` → `approved` | every repo | Issue progress; only the author sets `approved` |
 | `risk: low` / `medium` / `high` | every repo, on PRs | Merge gate; only `low` merges automatically |
+| `grill` | every repo, on issues | The author asks `issue-enhance` to run the optional Grill review (it also runs automatically when a plan touches high-risk paths) |
 | `article-status: request` → `pending` → `handoff` | project repos (including the article repo's own feature cards) | This work should become an article, and how far the handoff got |
 | `post-type: devlog` / `intro` / `review` / `research` | **article repo only**, on article cards | How the article is written; never used in other repos |
 

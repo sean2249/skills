@@ -1,6 +1,6 @@
 ---
 name: issue-enhance
-description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (any `post-type:` label), an article outline; then grilled by fresh-context reviewer subagents from 2–4 professional angles (negotiated with the planner; only real disagreements and trade-offs go to the author), and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
+description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (any `post-type:` label), an article outline; optionally grilled by fresh-context reviewer subagents (only with the `grill` label or when the plan touches high-risk paths), and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
 ---
 
 # issue-enhance
@@ -43,6 +43,8 @@ gh issue view <N> --json body --jq .body | python3 "${CLAUDE_PLUGIN_ROOT}/skills
 - Write each answered decision into `## Decisions` as `<YYYY-MM-DD> — Decision <N>: chose A / B / Other: <text> — (author)`, and remove it from `## Pending decisions`. Remove the whole section once it's empty.
 - Anything unanswered, with several boxes ticked, or Other ticked but empty → keep it pending, keep `status: needs-info`, and post a 🤖 comment naming exactly those decisions and what's wrong. Stop.
 - All answered → carry on: the plan, or the next Grill round, or `status: ai-enhanced`.
+
+**Grilling an `ai-enhanced` issue.** If the author adds `grill` to an issue that's already `status: ai-enhanced`, run Step 5b on it directly. No need to go back to raw.
 
 In batch mode, list them all first, then enhance one at a time, finishing each (label changed) before starting the next.
 
@@ -181,10 +183,12 @@ Write the AI section below the original text; on later revisions, replace the ex
 - <YYYY-MM-DD> — <decision> — <why>. (Mark which ones the author made vs. AI defaults.)
 
 ## Risks
+<!-- Only when the Grill ran (Step 5b). Otherwise leave this section out. -->
 - <risk> — likelihood / impact: <low|med|high> / <low|med|high> — mitigation: <what the implementation must do> — author: <accepted / changed to …> (<YYYY-MM-DD>)
 
 ## Opportunities
-- <potential upside> — cost: <rough size> — author: <this time / later / new issue #N> (<YYYY-MM-DD>)
+<!-- Only when the Grill ran (Step 5b). Otherwise leave this section out. -->
+- <potential upside> — cost: <rough size> — author: <this time / later: #N / declined> (<YYYY-MM-DD>)
 
 ## Approach
 - Ordered steps a fresh session can follow.
@@ -214,14 +218,14 @@ npx -y @mermaid-js/mermaid-cli -i flow.mmd -o flow.svg
 
 The first run downloads a headless browser and can take a minute or two; that's normal. Write `flow.mmd` / `flow.svg` to a temp dir, not the repo.
 
-Then write the body and comment, and go on to the grill (Step 5b). Only after the grill does the label move:
+Then write the body and comment. If the Grill applies (`grill` label, or high-risk paths, Step 5b), run it first; otherwise move the label right away:
 
 ```bash
 gh issue edit <N> --body-file <body.md>
 gh issue comment <N> --body "🤖 AI <YYYY-MM-DD>
 
 <what this round added or changed, and why>"
-# after Step 5b finishes:
+# no Grill, or after Step 5b finishes:
 gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-info" --add-label "status: ai-enhanced"
 ```
 
@@ -256,10 +260,12 @@ One of: `post-type: devlog` (reconstruct a decision path), `post-type: intro` (i
 | <…> | — | duplicate / only meaningful to the author / internal link / … |
 
 ## Risks
+<!-- Only when the Grill ran (Step 5b). -->
 - <risk, e.g. misrepresenting the author's view> — likelihood / impact — mitigation — author: <decision> (<date>)
 
 ## Opportunities
-- <upside, e.g. a follow-up piece> — cost — author: <this time / later / new issue> (<date>)
+<!-- Only when the Grill ran (Step 5b). -->
+- <upside, e.g. a follow-up piece> — cost — author: <this time / later: #N / declined> (<date>)
 
 ## Conditions the description left out
 - …
@@ -273,17 +279,26 @@ One of: `post-type: devlog` (reconstruct a decision path), `post-type: intro` (i
 
 For note-like sources, list **every** source section in the source map, so the author sees what's kept and dropped before approving. `review` and `research` outlines keep the author's evaluations and line of reasoning as sections; don't reduce them to a summary.
 
-Then write the body and comment as in Step 5, grill it (Step 5b), and only then move the label to `status: ai-enhanced`.
+Then write the body and comment as in Step 5, grill it only if Step 5b applies (`grill` label; article outlines rarely touch high-risk paths), and move the label to `status: ai-enhanced`.
 
-## Step 5b — Grill (last step before `status: ai-enhanced`)
+## Step 5b — Grill (optional)
 
-Pressure-test the plan from 2–4 professional angles to surface risks, upsides, and missing decisions **before** the author approves. **You don't review your own plan.** Each angle is reviewed by a fresh-context subagent that sees only the issue and the repo.
+**By default there is no Grill.** Once the plan (or article outline) is written, go straight to `status: ai-enhanced` (Step 5). Run the Grill only when either holds:
+
+- The author added the `grill` label to the issue.
+- The plan will touch **high-risk paths**, the same ones that make `issue-implement` label a PR `risk: high`: auth, database migrations / schema, `.github/workflows/`, secrets / credentials, or billing / payments. Run it automatically, and say in the round's 🤖 comment which rule triggered it.
+
+`## Risks` and `## Opportunities` exist only when the Grill ran. Leave them out of plans that weren't grilled.
+
+**Re-running.** An issue already at `status: ai-enhanced` (e.g. the author added `grill` later) can be grilled directly, without going back to raw. When a new decision overturns an old one, keep the old line in Decisions and mark it `superseded by the <YYYY-MM-DD> decision`; don't delete it.
+
+The Grill pressure-tests the plan from 2–4 professional angles to surface risks, upsides, and missing decisions before the author approves. **You don't review your own plan**: each angle is reviewed by a fresh-context subagent that sees only the issue and the repo.
 
 **1. Pick 2–4 angles** that fit the issue, and name them in the round's comment:
 
 | Issue type | Angles to pick from |
 |---|---|
-| UI | UX, accessibility, mobile / small screens, visual consistency |
+| UI | UX, accessibility, mobile / small screens, visual consistency, front-end state / routing correctness |
 | Backend / data | data integrity, security, performance, operations (deploy, rollback, monitoring) |
 | Infra / CI | blast radius, rollback, secrets, cost |
 | Article (outline) | editor (structure, clarity), target reader, fidelity to sources |
@@ -295,15 +310,15 @@ You are reviewing a GitHub issue's implementation plan as a <angle> expert.
 Issue: <issue url>   Repo: <local path, or <owner>/<repo>>
 Read it yourself: `gh issue view <issue url> --comments`. The author's original text is above
 `---`; the AI plan is below it. Look up anything factual yourself in the code, docs, or data.
-Find as many problems with the plan as you can from the <angle> angle. Do not contact the
+Find the most important problems with the plan from the <angle> angle. Do not contact the
 author, comment on the issue, or change any file.
-Return exactly:
+Return at most 7 questions, most severe first, exactly in this format:
 ## Questions
 1. <question>
    - Why: <the risk it guards against / upside it unlocks / decision that's missing>
    - Type: risk | opportunity | missing decision
    - Severity / value: high | medium | low
-   - Suggested answer: <your recommendation>
+   - Suggested answer: <your recommendation, or an alternative plan>
 ## Unclear or missing in the body
 - <what an implementing session would get stuck on>
 Facts you could look up are not questions; state what you found instead.
@@ -311,7 +326,9 @@ Facts you could look up are not questions; state what you found instead.
 
 For an article outline, the reviewer reads the outline and the listed sources (the outline is the "plan").
 
-**3. Negotiate with each reviewer, in the same round.** For every item a reviewer returned, respond:
+**3. Merge duplicates first.** When all reviewers are back, combine items that raise the same point (note every angle that raised it) before responding, so you answer each point once. Two angles that **contradict** each other (e.g. fidelity says cut it, reader says keep it) become one item **for the author** (step 4), with the two reviewers' claims as A and B.
+
+**4. Negotiate with each reviewer, in the same round.** For every merged item, respond:
 
 - **Agree** → change the plan.
 - **Rebut** → only with evidence: a code location (`file:line`), an earlier author decision, the issue's original text, or docs.
@@ -321,13 +338,13 @@ Send your responses back to the **same** subagent with `SendMessage`, reusing it
 
 | Bucket | What happens |
 |---|---|
-| **Agreed change** (both sides) | Change the plan directly. |
+| **Agreed change** (both sides; also when the reviewer proposes an alternative and you accept it) | Change the plan directly. If an alternative was adopted, say so in the round's comment. |
 | **Withdrawn** after your rebuttal | No change. Listed in the round's comment with the reason, so the author can overturn it. |
-| **For the author** (still disputed, or a preference / trade-off) | Goes to the author (step 4). |
+| **For the author** (still disputed, a preference / trade-off, or reviewers contradicting each other) | Goes to the author (step 5). |
 
 Items under **Unclear or missing in the body** aren't negotiated: fix the body directly. If a reviewer fails mid-negotiation, every item it hasn't settled goes to **For the author**.
 
-**4. Hand the "For the author" bucket to the author, in the issue body**, deduplicated across reviewers and sorted by severity / value. Every item uses this fixed, symmetric format. Write it in the issue's language and keep the structure:
+**5. Hand the "For the author" bucket to the author, in the issue body**, sorted by severity / value, under `## Pending decisions` (Step 3). Disputes and preferences use this fixed, symmetric format. Write it in the issue's language and keep the structure:
 
 ```markdown
 ### Decision <N>: <short name>
@@ -343,25 +360,40 @@ Point of disagreement: <one sentence: what the two sides disagree about>
 
 Agreed: <what both sides already agree on, or "none">
 
-Options: A / B / other
+- [ ] A: <one sentence>
+- [ ] B: <one sentence>
+- [ ] Other (write on the next line)
+Other:
 ```
 
 - A and B sit side by side, and all eight cells are filled. Missing evidence is written as "no direct evidence", never left blank.
 - No line breaks inside a cell. Keep each cell to one or two sentences, and put details in footnotes under the table (`[^1]` in the cell, `[^1]: …` below).
 - **No recommended answer from you.** You are side B, so a recommendation wouldn't be neutral.
+- If B is an **earlier author decision** rather than your new proposal, head the column `B (author's decision, <YYYY-MM-DD>)`.
+- Reviewers contradicting each other: the columns are `A (reviewer: <angle 1>)` and `B (reviewer: <angle 2>)`; your own position goes under Agreed or in a footnote.
 - A pure preference with no dispute uses the same table, with the column headers "Option one" / "Option two", each with its consequences.
-- Put every item in the body's `## Pending decisions` with checkboxes (`- [ ] A: …` / `- [ ] B: …` / `- [ ] Other`), switch to `status: needs-info`, comment, and stop, all as in Step 3, whether or not the author is in the session. The next run reads the ticks (Step 0) and continues the grill.
+- **Opportunities don't use the table.** Each is one short entry with three boxes:
 
-**5. Write answers back into the AI section** of the body, then comment:
+  ```markdown
+  ### Decision <N>: Opportunity: <upside, one line>
+  Cost: <rough size>
+  - [ ] A: do it this time
+  - [ ] B: later, as a separate issue
+  - [ ] C: don't do it
+  ```
 
-- `## Decisions`: `<YYYY-MM-DD> — Decision <N>: chose A / B / other: <what> — (author)`.
+Then switch to `status: needs-info`, comment, and stop, all as in Step 3, whether or not the author is in the session. The next run reads the ticks (Step 0) and continues the grill.
+
+**6. Write answers back into the AI section** of the body, then comment:
+
+- `## Decisions`: `<YYYY-MM-DD> — Decision <N>: chose A / B / other: <what> — (author)`. An overturned earlier line stays, marked `superseded by the <YYYY-MM-DD> decision`.
 - `## Risks`: each risk with likelihood / impact, the mitigation, and the author's decision.
-- `## Opportunities`: each upside with its cost and the author's call: **this time** (add it to Approach and Acceptance criteria), **later** (keep listed), or **new issue** (open it as a sub-issue or a separate issue, per Step 6).
-- One `🤖 AI <YYYY-MM-DD>` comment per round, listing all three buckets: **changed** (what was changed in the plan), **withdrawn** (each with its reason, so the author can overturn it), and **asked** (the decisions and the author's choices), plus any angle that went **unreviewed**. To overturn a withdrawn item, the author replies to it, and the next round takes it up.
+- `## Opportunities`: each upside with its cost and the author's call. **This time** → add it to Approach and Acceptance criteria. **Later, as a separate issue** → open a standalone issue (`status: raw`, body links back to this one; not a sub-issue) and record its link. **Don't do it** → keep it listed as declined.
+- One `🤖 AI <YYYY-MM-DD>` comment per round, listing all three buckets: **changed** (what was changed in the plan, and any adopted alternative), **withdrawn** (each with its reason, so the author can overturn it), and **asked** (the decisions and the author's choices), plus any angle that went **unreviewed**. To overturn a withdrawn item, the author replies to it, and the next round takes it up.
 
-**6. Next round, fresh reviewers.** Dispatch **new** subagents against the updated body. Negotiation reuses a reviewer's context only within its own round; never carry a reviewer over to the next round. **Stop** when the reviewers raise nothing new, or the author says it's enough. **At most 3 rounds**; a small issue (one slice, no UI choice, no data change) gets **one** round.
+**7. Next round, fresh reviewers.** Dispatch **new** subagents against the updated body. Negotiation reuses a reviewer's context only within its own round; never carry a reviewer over to the next round. **Stop** when a round produces no new item for the author and overturns no existing decision, or when the author says it's enough. **At most 3 rounds.**
 
-**7. A reviewer fails or times out** before returning anything → mark that angle as unreviewed in the round's 🤖 comment and carry on. It doesn't block the flow.
+**8. A reviewer fails or times out** before returning anything → mark that angle as unreviewed in the round's 🤖 comment and carry on. It doesn't block the flow.
 
 When the grill ends, move the label to `status: ai-enhanced` (Step 5).
 
@@ -417,7 +449,8 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 - [ ] **Conditions the description left out** lists every condition you added.
 - [ ] Scope was settled before any mockup; open choices were shown as 2–3 versions side by side (UI: 375px screenshots, shown before the question); no temp files left in the repo.
 - [ ] Mermaid rendered without errors.
-- [ ] Grill ran with fresh-context subagents, one per angle (2–4), dispatched in parallel and new each round (≤ 3 rounds, one for small issues).
+- [ ] Grill ran only if the issue has `grill` or the plan touches high-risk paths (the comment names the trigger); otherwise no Risks / Opportunities sections.
+- [ ] If grilled: fresh-context subagents, one per angle (2–4), ≤ 7 items each, dispatched in parallel and new each round; duplicates merged before negotiating; ≤ 3 rounds, stopping when a round adds nothing for the author and overturns nothing.
 - [ ] Each reviewer's items were negotiated (≤ 2 exchanges, same subagent) into agreed / withdrawn / for-the-author; only the last went to the author, as side-by-side A/B tables with every cell filled and no recommendation from you.
 - [ ] Answers are in Decisions (A / B / other + date) / Risks / Opportunities; unclear-body items were fixed; each round's 🤖 comment lists changed, withdrawn (with reasons), asked, and unreviewed angles.
 - [ ] Every author decision was asked in the body's `## Pending decisions` with checkboxes (never in chat); no box was ticked by you; answered ones moved to Decisions.
