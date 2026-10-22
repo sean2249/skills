@@ -25,7 +25,7 @@ Refuse and explain if any of these hold:
 | No `status: approved` label | Current status is `<label>`; only the author can approve. Suggest `issue-enhance` for `raw` / `needs-info`, or author review for `ai-enhanced`. |
 | Any issue in `blockedBy` is still open | Blocked by #M (list each open blocker); implement those first. |
 | `subIssuesSummary.total` > 0 (it's a parent) | It's a parent issue; implement its sub-issues instead. |
-| Has an article mode label (`article: devlog` / `intro` / `review` / `research`; an article to write, in the article repo) | Use `article-write`. A plain `article` label in a code repo is fine: it means "write an article after this ships" (Step 5). |
+| Has an article mode label (`article-type: devlog` / `intro` / `review` / `research`; an article to write, in the article repo) | Use `article-write`. A plain `article` label in a code repo is fine: it means "write an article after this ships" (Step 5). |
 
 Never add `status: approved` yourself, even if asked.
 
@@ -154,7 +154,7 @@ When the author asks for changes after reviewing the PR, push the fix to the sam
 
 ## Step 7 — After merge
 
-If the PR has `article` and merged during this session, run `article-request <PR url>` for it. If it merges later (auto mode or the author's review), the `article-pending` workflow labels it `article: pending` on merge and comments to remind the author. Running `article-request` with no argument then lists every pending PR.
+If the PR has `article` and merged during this session, run `article-request <PR url>` for it. If it merges later (auto mode or the author's review), the `article-pending` workflow labels it `article-status: pending` on merge and comments to remind the author. Running `article-request` with no argument then lists every pending PR.
 
 ## Done when
 

@@ -70,7 +70,7 @@ done
 
 **Repair / upgrade mode.** For an already-set-up repo, plan:
 
-- Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it. Missing `article-pending.yml` → add it, plus the `article: pending` / `article: requested` labels (Step 5).
+- Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it. Old-name article labels (`article: pending`, `article: devlog`, …) → rename them to `article-status:` / `article-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: pending` / `article-status: requested` labels (Step 5).
 - **Old CLAUDE.md layout.** If the issue-workflow keys (`Verify command`, `Merge mode`, `Article target`, …) sit inside `## Workflow` (e.g. under `### Issue workflow`), **move** them: create a top-level `## Issue workflow` from `assets/claude-md-workflow.md` with the existing values, then delete the old sub-section. Never add a second copy beside it. Leave the rest of `## Workflow` (local dev commands) untouched.
 - **Required check rename**, in this order (Step 9). Reversing it leaves the upgrade PR waiting forever on the old `risk-guard` check, and auto-merge stalls with it:
   1. Open the upgrade PR (Step 8).
@@ -95,6 +95,7 @@ Everything else follows the usual merge-only rules.
 List, and ask the author to confirm:
 
 - Every label to create (only the missing ones; existing labels keep their color and description).
+- Old-name article labels to rename (Step 4 migration table), with how many issues/PRs carry each.
 - GitHub's default labels to delete (Step 4): unused ones are simply listed; for ones in use, list the affected issues/PRs.
 - Each overlapping existing label, with a choice per label: **keep** (leave as is), **rename** into one of the workflow labels (keeps its issues), or **delete**.
 - The open issues that will get `status: raw` (Step 6). The author may exclude some.
@@ -106,6 +107,34 @@ Ask for the values only they know: verify command, preview URL, `Article target`
 ## Step 4 — Tidy existing labels
 
 Do this **before** Step 5. Renaming into a name that Step 5 has already created fails because the name is taken.
+
+**Migrate old article label names** (repo set up with an earlier version). Progress labels now use `article-status:` and type labels use `article-type:`; `article` itself is unchanged. Renaming keeps the label on every issue/PR that has it:
+
+| Old name | New name |
+|---|---|
+| `article: pending` | `article-status: pending` |
+| `article: requested` | `article-status: requested` |
+| `article: devlog` | `article-type: devlog` |
+| `article: intro` | `article-type: intro` |
+| `article: review` | `article-type: review` |
+| `article: research` | `article-type: research` |
+
+```bash
+existing=$(gh label list --limit 200 --json name --jq '.[].name')
+mv_label() {
+  grep -qxF "$1" <<<"$existing" || return 0                      # old name absent: nothing to do
+  if grep -qxF "$2" <<<"$existing"; then echo "BOTH exist: $1 / $2 (handle by hand)"; return; fi
+  gh label edit "$1" --name "$2"
+}
+mv_label "article: pending"   "article-status: pending"
+mv_label "article: requested" "article-status: requested"
+mv_label "article: devlog"    "article-type: devlog"
+mv_label "article: intro"     "article-type: intro"
+mv_label "article: review"    "article-type: review"
+mv_label "article: research"  "article-type: research"
+```
+
+If both the old and new names already exist, don't rename. Add the new label to each issue/PR that has the old one, then delete the old label after the author confirms. List the old labels found in the Step 3 plan for confirmation.
 
 **Overlapping labels** (the author's keep / rename / delete choice from Step 3):
 
@@ -149,19 +178,19 @@ mk "risk: low"           c2e0c6 "PR touches only allowlisted low-risk paths; may
 mk "risk: medium"        fef2c0 "PR needs author review before merge"
 mk "risk: high"          b60205 "Auth, migrations, workflows, secrets or billing; author review required"
 mk "article"             5319e7 "Write a technical article after this ships"
-mk "article: pending"    fbca04 "Merged article PR; article-request not run yet"
-mk "article: requested"  0e8a16 "Article request opened in the article repo"
+mk "article-status: pending"    fbca04 "Merged article PR; article-request not run yet"
+mk "article-status: requested"  0e8a16 "Article request opened in the article repo"
 ```
 
-`article-pending` adds `article: pending` when an `article` PR merges; `article-request` swaps it for `article: requested`.
+`article-pending` adds `article-status: pending` when an `article` PR merges; `article-request` swaps it for `article-status: requested`.
 
 **Article repo only** (its `Article target` is itself), also:
 
 ```bash
-mk "article: devlog"   d4c5f9 "Article reconstructs a decision path"
-mk "article: intro"    c5def5 "Article introduces a tool, concept or site"
-mk "article: review"   f9d0c4 "Article reviews a work: the author's take"
-mk "article: research" bfdadc "Article explores a topic, reasoning kept"
+mk "article-type: devlog"   d4c5f9 "Article reconstructs a decision path"
+mk "article-type: intro"    c5def5 "Article introduces a tool, concept or site"
+mk "article-type: review"   f9d0c4 "Article reviews a work: the author's take"
+mk "article-type: research" bfdadc "Article explores a topic, reasoning kept"
 ```
 
 ## Step 6 — Bring existing issues into the flow
@@ -277,10 +306,11 @@ JSON
 - [ ] Overlapping labels were kept, renamed, or deleted as the author chose.
 - [ ] GitHub's default labels are gone (in-use ones only after the author confirmed the affected issues/PRs); bot labels such as `dependencies` are kept.
 - [ ] No existing label's color or description was changed (no `--force`).
-- [ ] All 10 workflow labels exist (`gh label list`), including `article: pending` / `article: requested`.
+- [ ] No old-name article labels remain (`article: pending` etc. renamed to `article-status:` / `article-type:`).
+- [ ] All 10 workflow labels exist (`gh label list`), including `article-status: pending` / `article-status: requested`.
 - [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
 - [ ] The six `.github` files exist, all four workflows (issue-status, risk-guard, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>`, and their YAML parses.
-- [ ] Article repo: the four mode labels (`article: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
+- [ ] Article repo: the four mode labels (`article-type: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
 - [ ] `CLAUDE.md` has `## Issue workflow` with merge mode set and the author's values (or `<fill in>` placeholders).
 - [ ] Setup PR is open with `risk: high`.
 - [ ] `risk-guard / check` ran on the setup PR and passed (`gh pr checks <PR>`).

@@ -73,7 +73,7 @@ flowchart TD
     L --> N{"PR has the article label?"}
     M --> N
     N -->|no| Z["Done"]
-    N -->|yes| O["article-pending<br/>adds article: pending + reminder"]
+    N -->|yes| O["article-pending<br/>adds article-status: pending + reminder"]
     O --> Q["article-request"]
     X["Any file<br/>(e.g. a notes page)"] --> Q
     Q --> S["Issue in the article repo<br/>devlog / intro / review / research"]
