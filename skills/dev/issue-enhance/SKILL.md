@@ -21,15 +21,19 @@ Turns a raw issue into a plan a fresh session can implement without this convers
 ```bash
 # one issue
 gh issue view <N> --json number,title,body,labels,comments
-# batch: every raw issue, plus needs-info issues where the author replied after the AI's question
-# (filter --json locally: `--label` goes through the search index, which lags right after label edits)
-gh issue list --state open --limit 500 --json number,title,labels \
-  --jq '.[] | select([.labels[].name] | index("status: raw") or index("status: needs-info")) | "#\(.number) [\(.labels | map(.name) | map(select(startswith("status: "))) | join(","))] \(.title)"'
+# batch: every raw / needs-info issue, minus those already answered with an "Already done" comment
+# the author hasn't replied to. Filter --json locally (`--label` uses the search index, which lags).
+gh issue list --state open --limit 500 --json number,title,labels,comments --jq '
+  .[] | select([.labels[].name] | index("status: raw") or index("status: needs-info"))
+  | select((.comments[-1].body // "") as $b | ($b | startswith("🤖 AI")) and ($b | contains("**Already done**")) | not)
+  | "#\(.number) [\(.labels | map(.name) | map(select(startswith("status: "))) | join(","))] \(.title)"'
 ```
+
+The filter skips issues whose **latest** comment is the AI's "Already done" evidence (Step 1). They wait for the author to close them. Any newer author comment brings the issue back into the batch. A `needs-info` issue is only worth picking up when the author has replied after the AI's question.
 
 In batch mode, list them all first, then enhance one at a time, finishing each (label changed) before starting the next.
 
-Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, preview URL, and issue assets branch.
+Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, preview URL, issue assets branch, and `Mockup path` (default `<N>/<file>`).
 
 ## Prerequisite — gh version
 
@@ -39,7 +43,25 @@ Read the repo's `CLAUDE.md` `## Issue workflow` section for the verify command, 
 
 For an **article-writing issue**, skip to Step 5a: one with `article: devlog` or `article: intro`, or with `article` in the repo that is its own `Article target`. A plain `article` label in a code repo only means "write an article after this ships"; that issue gets the normal plan.
 
-Search the codebase for what the issue asks for. If it is **already done**, comment (first line `🤖 AI <YYYY-MM-DD>`) with the evidence (file:line, commit) and tell the author it can be closed. Leave the labels and the closing to them. Stop.
+Search the codebase for what the issue asks for. There are three outcomes:
+
+- **All done** → post the "Already done" comment below with `Not done: nothing`. Leave the label and the closing to the author, then stop. Batch mode skips the issue from now on (Step 0).
+- **Partly done** → post the same comment, listing what's left under `Not done`. Then plan **only the remaining part** (Steps 2–5). If the remaining part is really a different piece of work, ask the author (Step 3) whether to open it as a new issue rather than keep it here.
+- **Not done** → continue with Step 2.
+
+"Already done" comment, fixed format, so Step 0 and the author can recognise it:
+
+```markdown
+🤖 AI <YYYY-MM-DD>
+**Already done**
+
+- <what the issue asked for> — `path/to/file.ext:123`, <commit sha or PR url>
+- …
+
+Not done: <what the issue asked for that isn't there, or "nothing">
+
+If this matches what you meant, please close the issue yourself; the AI doesn't close issues.
+```
 
 ## Step 2 — Is it one vertical slice?
 
@@ -52,6 +74,10 @@ One issue = one vertical slice a single fresh session can finish (implement, ver
 
 If you cannot write the plan without an answer only the author has:
 
+**Author in the session** → ask them directly, in chat. Write the answer into the body's **Decisions** as `<YYYY-MM-DD> — <decision> — (author)` and mention it in this round's 🤖 comment. No label change.
+
+**Author not present** (e.g. batch run) → ask on the issue:
+
 ```bash
 gh issue comment <N> --body-file <questions.md>
 gh issue edit <N> --remove-label "status: raw" --add-label "status: needs-info"
@@ -61,22 +87,42 @@ The comment starts with `🤖 AI <YYYY-MM-DD>`. Questions must be specific and a
 
 ## Step 4 — UI work and open choices: options side by side
 
-For any UI change, or any choice that isn't settled yet, show **2–3 versions side by side in the same round** and ask the author to pick one (multiple choice) **before** writing the plan. Never one version per round: the author should see the failures and the compromises together. For UI, attach a 375px-wide screenshot of each version. Only the chosen option goes into the issue.
+**Settle scope first.** Don't draw anything until the code has been checked (Step 1) and every question that changes the scope is answered (Step 3), e.g. "should the remaining part be done here at all?". Mockups for a scope that later changes are wasted work.
 
-Store images on the repo's `issue-assets` branch: never merged, never on a public CDN.
+For any UI change, or any choice that isn't settled yet, show **2–3 versions side by side in the same round** and ask the author to pick one (multiple choice) **before** writing the plan. Never one version per round: the author should see the failures and the compromises together. Only the chosen option goes into the issue.
+
+**375px screenshots (UI).** Render each version (an HTML mockup, or the running app) at phone width into a temp dir outside the repo:
 
 ```bash
-git fetch origin issue-assets 2>/dev/null \
-  && git worktree add ../.issue-assets issue-assets \
-  || git worktree add --orphan -b issue-assets ../.issue-assets
-mkdir -p ../.issue-assets/<N>
-cp <mockup>.png ../.issue-assets/<N>/
-git -C ../.issue-assets add <N> && git -C ../.issue-assets commit -m "Mockups for #<N>"
-git -C ../.issue-assets push -u origin issue-assets
-git worktree remove ../.issue-assets
+shots=$(mktemp -d)
+npx -y playwright install chromium            # first time only
+npx -y playwright screenshot --viewport-size=375,812 --full-page "file://$PWD/mockup-a.html" "$shots/a.png"
+npx -y playwright screenshot --viewport-size=375,812 --full-page "<preview url>" "$shots/b.png"
+# alternative without Playwright (Chrome/Chromium on PATH):
+#   chromium --headless --hide-scrollbars --window-size=375,812 --screenshot="$shots/a.png" "file://$PWD/mockup-a.html"
 ```
 
-Reference them as `https://github.com/<owner>/<repo>/blob/issue-assets/<N>/<file>.png?raw=true` (works for private repos when the viewer is logged in).
+Keep the mockup HTML files in that temp dir too, not in the repo.
+
+**Show the images, then ask.** A multiple-choice question can't display images. First show the screenshots: send them as files in the chat if your client can, or upload them (below) and paste the links. Then ask the multiple-choice question referring to them as A / B / C.
+
+**Store images on the `issue-assets` branch:** never merged, never on a public CDN. Upload from a temp clone outside the repo and outside any worktree. This works with any git version (no `worktree add --orphan`, which needs git ≥ 2.42):
+
+```bash
+tmp=$(mktemp -d)
+git -C "$tmp" init -q
+git -C "$tmp" remote add origin "$(git remote get-url origin)"
+git -C "$tmp" symbolic-ref HEAD refs/heads/issue-assets
+git -C "$tmp" fetch -q --depth 1 origin issue-assets 2>/dev/null && git -C "$tmp" reset -q --hard FETCH_HEAD
+# <dest> = `Mockup path` from CLAUDE.md with <N> and <file> filled in (default: <N>/<file>)
+mkdir -p "$tmp/$(dirname <dest>)"
+cp "$shots/a.png" "$tmp/<dest>"
+git -C "$tmp" add -A && git -C "$tmp" commit -q -m "Mockups for #<N>"
+git -C "$tmp" push -q origin issue-assets
+rm -rf "$tmp"
+```
+
+Reference them as `https://github.com/<owner>/<repo>/blob/issue-assets/<dest>?raw=true` (works for private repos when the viewer is logged in). Delete `$shots` once the chosen image is in the issue.
 
 ## Step 5 — Write the enhanced body
 
@@ -123,6 +169,8 @@ flowchart TD
 ```bash
 npx -y @mermaid-js/mermaid-cli -i flow.mmd -o flow.svg
 ```
+
+The first run downloads a headless browser and can take a minute or two; that's normal. Write `flow.mmd` / `flow.svg` to a temp dir, not the repo.
 
 Then:
 
@@ -213,11 +261,12 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 
 ## Done when (per issue)
 
-- [ ] Either: already-done evidence posted; or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI; article issues use the Step 5a outline).
+- [ ] Either: the fixed-format "Already done" comment (all done); or that comment **plus** a plan for the rest (partly done); or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI; article issues use the Step 5a outline).
+- [ ] Questions answered in the session are in **Decisions**, marked `(author)` with the date.
 - [ ] Splits are native sub-issues; order is native blocked-by; no `Blocked by #N` / `## Slices` text.
 - [ ] Original text is intact; exactly one AI section, below `---` and the 🤖 header.
 - [ ] Every body change has a matching `🤖 AI <date>` comment saying what changed and why.
 - [ ] **Conditions the description left out** lists every condition you added.
-- [ ] Open choices were shown as 2–3 versions side by side (UI: 375px screenshots).
+- [ ] Scope was settled before any mockup; open choices were shown as 2–3 versions side by side (UI: 375px screenshots, shown before the question); no temp files left in the repo.
 - [ ] Mermaid rendered without errors.
 - [ ] No `status: approved` added.

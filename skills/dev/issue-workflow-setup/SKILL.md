@@ -93,7 +93,8 @@ Everything else follows the usual merge-only rules.
 
 List, and ask the author to confirm:
 
-- Every label to create.
+- Every label to create (only the missing ones; existing labels keep their color and description).
+- GitHub's default labels to delete (Step 4): unused ones are simply listed; for ones in use, list the affected issues/PRs.
 - Each overlapping existing label, with a choice per label: **keep** (leave as is), **rename** into one of the workflow labels (keeps its issues), or **delete**.
 - The open issues that will get `status: raw` (Step 6). The author may exclude some.
 - Each file to create or merge, and what will be added.
@@ -101,9 +102,11 @@ List, and ask the author to confirm:
 
 Ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none"), and which paths count as low risk.
 
-## Step 4 — Reconcile overlapping labels
+## Step 4 — Tidy existing labels
 
-Do this **before** Step 5. Renaming into a name that `gh label create --force` has already created fails because the name is taken.
+Do this **before** Step 5. Renaming into a name that Step 5 has already created fails because the name is taken.
+
+**Overlapping labels** (the author's keep / rename / delete choice from Step 3):
 
 ```bash
 # rename: the label and all its issues move to the workflow name
@@ -112,21 +115,41 @@ gh label edit "<old-name>" --name "<workflow label>"
 gh label delete "<old-name>" --yes
 ```
 
-## Step 5 — Labels
-
-`--force` makes this idempotent (it updates color/description if the label exists, including ones just renamed in Step 4).
+**GitHub's default labels are deleted:** `bug`, `documentation`, `duplicate`, `enhancement`, `good first issue`, `help wanted`, `invalid`, `question`, `wontfix`. Labels that bots apply automatically, such as dependabot's `dependencies`, `github_actions`, `javascript`, are **not** defaults; keep them. Check usage first (issues and PRs, open and closed):
 
 ```bash
-gh label create "status: raw"         --force --color ededed --description "New issue, not yet enhanced by AI"
-gh label create "status: needs-info"  --force --color fbca04 --description "AI is blocked on a specific question for the author"
-gh label create "status: ai-enhanced" --force --color 1d76db --description "AI-enhanced, waiting for author review"
-gh label create "status: approved"    --force --color 0e8a16 --description "Approved by the author for implementation (author only)"
-gh label create "risk: low"           --force --color c2e0c6 --description "PR touches only allowlisted low-risk paths; may auto-merge"
-gh label create "risk: medium"        --force --color fef2c0 --description "PR needs author review before merge"
-gh label create "risk: high"          --force --color b60205 --description "Auth, migrations, workflows, secrets or billing; author review required"
-gh label create "article"             --force --color 5319e7 --description "Write a technical article after this ships"
-gh label create "article: pending"    --force --color fbca04 --description "Merged article PR; article-request not run yet"
-gh label create "article: requested"  --force --color 0e8a16 --description "Article request opened in the article repo"
+for l in bug documentation duplicate enhancement "good first issue" "help wanted" invalid question wontfix; do
+  gh label list --limit 200 --json name --jq '.[].name' | grep -qxF "$l" || continue
+  n=$(( $(gh issue list --state all --label "$l" --limit 500 --json number --jq length) \
+      + $(gh pr list --state all --label "$l" --limit 500 --json number --jq length) ))
+  echo "$n  $l"
+done
+```
+
+- `0` → in the Step 3 plan as "delete".
+- `> 0` → in the Step 3 plan with the affected issues/PRs listed (`gh issue list --state all --label "<l>"`, `gh pr list --state all --label "<l>"`); delete after the author confirms. Deleting a label removes it from those issues/PRs.
+
+```bash
+gh label delete "<default label>" --yes
+```
+
+## Step 5 — Labels
+
+Create **only the missing** labels. Don't pass `--force`: on an existing label it overwrites the author's color and description (e.g. a description written in another language). Existing labels, including ones just renamed in Step 4, stay as they are.
+
+```bash
+existing=$(gh label list --limit 200 --json name --jq '.[].name')
+mk() { grep -qxF "$1" <<<"$existing" || gh label create "$1" --color "$2" --description "$3"; }
+mk "status: raw"         ededed "New issue, not yet enhanced by AI"
+mk "status: needs-info"  fbca04 "AI is blocked on a specific question for the author"
+mk "status: ai-enhanced" 1d76db "AI-enhanced, waiting for author review"
+mk "status: approved"    0e8a16 "Approved by the author for implementation (author only)"
+mk "risk: low"           c2e0c6 "PR touches only allowlisted low-risk paths; may auto-merge"
+mk "risk: medium"        fef2c0 "PR needs author review before merge"
+mk "risk: high"          b60205 "Auth, migrations, workflows, secrets or billing; author review required"
+mk "article"             5319e7 "Write a technical article after this ships"
+mk "article: pending"    fbca04 "Merged article PR; article-request not run yet"
+mk "article: requested"  0e8a16 "Article request opened in the article repo"
 ```
 
 `article-pending` adds `article: pending` when an `article` PR merges; `article-request` swaps it for `article: requested`.
@@ -134,8 +157,8 @@ gh label create "article: requested"  --force --color 0e8a16 --description "Arti
 **Article repo only** (its `Article target` is itself), also:
 
 ```bash
-gh label create "article: devlog" --force --color d4c5f9 --description "Article reconstructs a decision path"
-gh label create "article: intro"  --force --color c5def5 --description "Article introduces something to new readers"
+mk "article: devlog" d4c5f9 "Article reconstructs a decision path"
+mk "article: intro"  c5def5 "Article introduces something to new readers"
 ```
 
 ## Step 6 — Bring existing issues into the flow
@@ -247,6 +270,8 @@ JSON
 ## Done when
 
 - [ ] Overlapping labels were kept, renamed, or deleted as the author chose.
+- [ ] GitHub's default labels are gone (in-use ones only after the author confirmed the affected issues/PRs); bot labels such as `dependencies` are kept.
+- [ ] No existing label's color or description was changed (no `--force`).
 - [ ] All 10 workflow labels exist (`gh label list`), including `article: pending` / `article: requested`.
 - [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
 - [ ] The five `.github` files exist, all three workflows are thin callers with the real `<skills-repo>`, and their YAML parses.
