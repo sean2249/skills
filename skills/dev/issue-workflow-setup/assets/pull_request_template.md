@@ -22,6 +22,11 @@ Closes #<!-- issue number -->
 
 - <criterion> → <the behaviour above that meets it>
 
+**Risks and opportunities**
+
+<!-- One line per Risk in the issue → how its mitigation was handled; one line per "this time" Opportunity → where it's done. "None" if the issue lists none. -->
+- <risk> → <mitigation applied>
+
 ## Acceptance criteria — evidence
 
 <!-- One line per acceptance criterion from the approved issue. Copy the wording. -->

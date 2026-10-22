@@ -40,8 +40,10 @@ flowchart TD
     D --> E(["Author answers"]):::author
     E -->|back to raw| B
     C -->|too big| F["Split into native sub-issues<br/>ordered with blocked-by"]
-    F --> G
-    C --> G["status: ai-enhanced"]
+    F --> GR
+    C --> GR["Grill: 2–4 expert angles,<br/>risks & opportunities"]
+    GR --> G["status: ai-enhanced"]
+    GR -->|author not in session| D
     G --> H(["Author reviews and sets<br/>status: approved (author only)"]):::author
   end
 

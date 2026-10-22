@@ -42,7 +42,12 @@ git switch -c issue-<N>-<short-slug> origin/<default-branch>
 
 ## Step 2 — Implement
 
-Follow the issue's **Approach** and **Acceptance criteria**. When you must deviate from the approved plan, note what and why as you go; it goes in the PR.
+Follow the issue's **Approach** and **Acceptance criteria**. Also:
+
+- **Risks**: apply every mitigation listed there. Each one gets accounted for in the PR.
+- **Opportunities** marked **this time**: implement them; ones marked later or new issue are out of scope.
+
+When you must deviate from the approved plan, note what and why as you go; it goes in the PR.
 
 ## Step 3 — Verify
 
@@ -70,6 +75,8 @@ Fill the repo's PR template:
   - What it does: one short paragraph.
   - What it deliberately doesn't do: one short paragraph.
   - Mapped to acceptance criteria: one line per criterion → the part of the behaviour that meets it.
+  - Risks: one line per risk in the issue → how the mitigation was handled (or why it wasn't, under **Not verified** / **Deviations**).
+  - Opportunities (this time): one line each → where it's done.
 - **Acceptance criteria — evidence**: every criterion from the issue, word for word, each with its evidence (command + output excerpt, screenshot, preview link).
 - **Not verified**: say plainly what wasn't checked and why.
 - **Deviations from the approved plan**: each with its reason, or "None".
@@ -132,6 +139,7 @@ If the PR has `article` and merged during this session, run `article-request <PR
 - [ ] Verify command ran; output is in the PR.
 - [ ] PR opens with **Behaviour summary**: run output, what it does, what it deliberately doesn't do, mapped to criteria.
 - [ ] Every acceptance criterion has evidence or is listed under **Not verified**.
+- [ ] Every issue Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article` issues: PR has `## 文章素材` and the `article` label.
 - [ ] Only `risk: low` was merged or queued for auto-merge.

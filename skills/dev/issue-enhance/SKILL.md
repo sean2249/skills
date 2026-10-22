@@ -1,6 +1,6 @@
 ---
 name: issue-enhance
-description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `intro` / `review` / `research`), an article outline; then moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
+description: Use when a GitHub issue labelled `status: raw` (or `status: needs-info` with a new author reply) needs to be turned into an implementation-ready plan — current state with file:line, decisions, approach, mermaid flow, mockups, acceptance criteria, and verification steps — or, for an article-writing issue (`article: devlog` / `intro` / `review` / `research`), an article outline; then grilled from 2–4 professional angles for risks and opportunities, and moved to `status: ai-enhanced` for the author to review. Splits work into native sub-issues with blocked-by dependencies. Handles one issue or every raw issue in the repo.
 ---
 
 # issue-enhance
@@ -12,7 +12,7 @@ Turns a raw issue into a plan a fresh session can implement without this convers
 - **Never add `status: approved`.** Only the author sets it — even if asked to "finish" or "complete" the issue. Say so and stop.
 - **Keep the author's original text verbatim.** Never rewrite or delete it.
 - **One AI section in the body, always overwritten.** Everything you write goes below `---` and the `> 🤖 AI-enhanced (Claude Code), <YYYY-MM-DD>` header. It is the latest complete plan: each revision replaces that whole section; never stack a second one. The implementing session reads only the body.
-- **One AI comment per body change.** Every time you change the body (Step 5 first enhancement, each Step 5b revision, Step 6 split, Step 7 rejection) or ask needs-info questions (Step 3), post a `gh issue comment` whose first line is `🤖 AI <YYYY-MM-DD>`, followed by what changed this round and why. Other AI comments (e.g. already-done evidence) use the same first line. The author's comments have no prefix, so any comment not starting with 🤖 is the author's.
+- **One AI comment per body change.** Every time you change the body (Step 5 first enhancement, each Step 5b grill round, each Step 5c revision, Step 6 split, Step 7 rejection) or ask needs-info questions (Step 3), post a `gh issue comment` whose first line is `🤖 AI <YYYY-MM-DD>`, followed by what changed this round and why. Other AI comments (e.g. already-done evidence) use the same first line. The author's comments have no prefix, so any comment not starting with 🤖 is the author's.
 - **Why markers:** the AI posts with the author's `gh` login, so GitHub's author field can't tell AI from author; only these fixed markers can.
 - **Don't close issues on your own judgement.** Closing happens only when the author has rejected an idea in this session (see Step 7).
 
@@ -144,6 +144,12 @@ Write the AI section below the original text; on later revisions, replace the ex
 ## Decisions
 - <YYYY-MM-DD> — <decision> — <why>. (Mark which ones the author made vs. AI defaults.)
 
+## Risks
+- <risk> — likelihood / impact: <low|med|high> / <low|med|high> — mitigation: <what the implementation must do> — author: <accepted / changed to …> (<YYYY-MM-DD>)
+
+## Opportunities
+- <potential upside> — cost: <rough size> — author: <this time / later / new issue #N> (<YYYY-MM-DD>)
+
 ## Approach
 - Ordered steps a fresh session can follow.
 
@@ -172,14 +178,15 @@ npx -y @mermaid-js/mermaid-cli -i flow.mmd -o flow.svg
 
 The first run downloads a headless browser and can take a minute or two; that's normal. Write `flow.mmd` / `flow.svg` to a temp dir, not the repo.
 
-Then:
+Then write the body and comment, and go on to the grill (Step 5b). Only after the grill does the label move:
 
 ```bash
 gh issue edit <N> --body-file <body.md>
-gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-info" --add-label "status: ai-enhanced"
 gh issue comment <N> --body "🤖 AI <YYYY-MM-DD>
 
 <what this round added or changed, and why>"
+# after Step 5b finishes:
+gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-info" --add-label "status: ai-enhanced"
 ```
 
 ## Step 5a — Article issues: an outline, not an implementation plan
@@ -212,6 +219,12 @@ One of: `article: devlog` (reconstruct a decision path), `article: intro` (intro
 | <heading or point> | <outline section #> | |
 | <…> | — | duplicate / only meaningful to the author / internal link / … |
 
+## Risks
+- <risk, e.g. misrepresenting the author's view> — likelihood / impact — mitigation — author: <decision> (<date>)
+
+## Opportunities
+- <upside, e.g. a follow-up piece> — cost — author: <this time / later / new issue> (<date>)
+
 ## Conditions the description left out
 - …
 
@@ -224,9 +237,46 @@ One of: `article: devlog` (reconstruct a decision path), `article: intro` (intro
 
 For note-like sources, list **every** source section in the source map, so the author sees what's kept and dropped before approving. `review` and `research` outlines keep the author's evaluations and line of reasoning as sections; don't reduce them to a summary.
 
-Then move the label to `status: ai-enhanced` and comment, as in Step 5.
+Then write the body and comment as in Step 5, grill it (Step 5b), and only then move the label to `status: ai-enhanced`.
 
-## Step 5b — Author asks for changes
+## Step 5b — Grill (last step before `status: ai-enhanced`)
+
+Pressure-test the plan the way a senior reviewer would: dig into details, ask professional questions, and surface risks and potential upsides **before** the author approves.
+
+**1. Pick 2–4 angles** that fit the issue, and name them in the round's comment:
+
+| Issue type | Angles to pick from |
+|---|---|
+| UI | UX, accessibility, mobile / small screens, visual consistency |
+| Backend / data | data integrity, security, performance, operations (deploy, rollback, monitoring) |
+| Infra / CI | blast radius, rollback, secrets, cost |
+| Article | editor (structure, clarity), target reader, accuracy to sources, voice |
+
+**2. Ask in rounds.** Each round lists, numbered, every question that can be answered **now**. For each:
+
+```markdown
+1. <question>
+   - Why: <the risk it guards against, or the upside it could unlock>
+   - Suggested answer: <your recommendation; the author replying "yes" accepts it>
+```
+
+- **Facts are yours to find.** Anything answerable from the code, docs, or existing data, look it up yourself and don't ask. Only **decisions** go to the author.
+- A question that depends on an unanswered one waits for the next round.
+
+**3. Write answers back into the AI section** of the body, then comment:
+
+- `## Decisions`: `<YYYY-MM-DD> — <decision> — (author)`.
+- `## Risks`: each risk with likelihood / impact, the mitigation, and the author's decision.
+- `## Opportunities`: each upside with its cost and the author's call: **this time** (add it to Approach and Acceptance criteria), **later** (keep listed), or **new issue** (open it as a sub-issue or a separate issue, per Step 6).
+- One `🤖 AI <YYYY-MM-DD>` comment per round: the angles, the questions asked, and how the author answered.
+
+**4. Stop** when no questions or untested assumptions remain, or the author says it's enough. **At most 3 rounds.** A small issue (one slice, no UI choice, no data change) gets **one** round.
+
+**5. Author not in the session** (e.g. batch mode): post the round's questions as a `status: needs-info` comment in the same numbered format with suggested answers (Step 3), and stop. When the author replies, the next run picks the grill up from there.
+
+When the grill ends, move the label to `status: ai-enhanced` (Step 5).
+
+## Step 5c — Author asks for changes
 
 When the author asks for changes after seeing mockups or the enhanced issue:
 
@@ -278,4 +328,5 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 - [ ] **Conditions the description left out** lists every condition you added.
 - [ ] Scope was settled before any mockup; open choices were shown as 2–3 versions side by side (UI: 375px screenshots, shown before the question); no temp files left in the repo.
 - [ ] Mermaid rendered without errors.
+- [ ] Grill ran (2–4 named angles, ≤ 3 rounds, one for small issues); answers are in Decisions / Risks / Opportunities, each round has a 🤖 comment; facts were looked up, not asked.
 - [ ] No `status: approved` added.
