@@ -1,6 +1,6 @@
 ---
 name: issue-implement
-description: Use when implementing a GitHub issue labelled `status: approved` — branch, implement, run the repo's verify command, open a PR with per-criterion evidence, classify risk (low / medium / high), and merge only `risk: low` PRs. Refuses issues in any other status.
+description: Use when implementing a GitHub issue labelled `status: approved` — branch, implement, run the repo's verify command, open a PR with per-criterion evidence, run code and security review (up to 3 rounds), classify risk (low / medium / high), and merge only `risk: low` PRs. Refuses issues in any other status.
 ---
 
 # issue-implement
@@ -17,6 +17,8 @@ gh issue view <M> --json state --jq .state
 
 If `gh` rejects these JSON fields, it's too old: ask the author to upgrade `gh` and stop.
 
+Article repo or not: this repo is the article repo only if `Article target` in its `CLAUDE.md` `## Issue workflow` equals its own `<owner>/<repo>` (`gh repo view --json nameWithOwner --jq .nameWithOwner`).
+
 Refuse and explain if any of these hold:
 
 | Condition | Say |
@@ -25,7 +27,8 @@ Refuse and explain if any of these hold:
 | No `status: approved` label | Current status is `<label>`; only the author can approve. Suggest `issue-enhance` for `raw` / `needs-info`, or author review for `ai-enhanced`. |
 | Any issue in `blockedBy` is still open | Blocked by #M (list each open blocker); implement those first. |
 | `subIssuesSummary.total` > 0 (it's a parent) | It's a parent issue; implement its sub-issues instead. |
-| Has `article: devlog` or `article: intro` (an article to write, in the article repo) | Use `article-write`. A plain `article` label in a code repo is fine: it means "write an article after this ships" (Step 5). |
+| Has any `post-type:` label, and this is the article repo | Use `article-write`. `article-status: request` is fine: it means "write an article after this ships" (Step 5). |
+| Has a `post-type:` label but this **isn't** the article repo | Mislabelled: `post-type:` exists only in the article repo. Stop and tell the author; a card that should become an article uses `article-status: request`. |
 
 Never add `status: approved` yourself, even if asked.
 
@@ -42,7 +45,12 @@ git switch -c issue-<N>-<short-slug> origin/<default-branch>
 
 ## Step 2 — Implement
 
-Follow the issue's **Approach** and **Acceptance criteria**. When you must deviate from the approved plan, note what and why as you go; it goes in the PR.
+Follow the issue's **Approach** and **Acceptance criteria**. Also:
+
+- **Risks**: apply every mitigation listed there. Each one gets accounted for in the PR.
+- **Opportunities** marked **this time**: implement them; ones marked later or new issue are out of scope.
+
+When you must deviate from the approved plan, note what and why as you go; it goes in the PR.
 
 ## Step 3 — Verify
 
@@ -60,6 +68,8 @@ Apply in order; the first match wins:
 2. **`risk: low`** if every file matches a glob in `.github/low-risk-paths.txt` and none is under `.github/` (`*` stays in one directory, `**` crosses directories, trailing `/` = whole directory). The `risk-guard` workflow enforces the same rule on the PR.
 3. **`risk: medium`** otherwise.
 
+This is the starting label. Step 5b can raise it, never lower it.
+
 ## Step 5 — Open the PR
 
 Fill the repo's PR template:
@@ -70,12 +80,15 @@ Fill the repo's PR template:
   - What it does: one short paragraph.
   - What it deliberately doesn't do: one short paragraph.
   - Mapped to acceptance criteria: one line per criterion → the part of the behaviour that meets it.
+  - Risks: one line per risk in the issue → how the mitigation was handled (or why it wasn't, under **Not verified** / **Deviations**).
+  - Opportunities (this time): one line each → where it's done.
 - **Acceptance criteria — evidence**: every criterion from the issue, word for word, each with its evidence (command + output excerpt, screenshot, preview link).
 - **Not verified**: say plainly what wasn't checked and why.
 - **Deviations from the approved plan**: each with its reason, or "None".
 - **Risk**: level and reason.
+- **Review**: filled in by Step 5b.
 
-If the issue has the `article` label, add a `## 文章素材` section **now, in this session**. The article-writing session can't see this conversation:
+If the issue has `article-status: request`, add a `## 文章素材` section **now, in this session**. The article-writing session can't see this conversation:
 
 - Background: why this work happened.
 - The author's own words from this session at each decision point (quote them).
@@ -86,8 +99,27 @@ If the issue has the `article` label, add a `## 文章素材` section **now, in 
 ```bash
 git push -u origin HEAD
 gh pr create --title "<title>" --body-file <pr.md> --label "risk: <level>"
-# carry the article flag onto the PR so article-request can find it
-gh pr edit <PR> --add-label article   # only if the issue has `article`
+# carry the request onto the PR; article-pending swaps it to pending on merge
+gh pr edit <PR> --add-label "article-status: request"   # only if the issue has it
+```
+
+## Step 5b — Review (code + security), before any merge
+
+Run both reviews on the open PR, using the built-in skills via the Skill tool:
+
+- `code-review` on this PR (`<PR number>`): correctness problems in the diff.
+- `security-review`: security review of the branch's diff against the default branch.
+
+Don't pass `--comment` (its comments wouldn't carry the 🤖 marker). Collect the findings and handle them here. **If either skill isn't available in the session**, dispatch a fresh-context subagent (Agent tool, `general-purpose`) for that review instead. Give it only the PR URL and the repo, not your reasoning, and ask for findings with severity and `file:line`. Note in the PR that the fallback was used.
+
+**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). After fixes, push and run both reviews again **on the new changes only**. **At most 3 rounds.** If findings are still unhandled after round 3, stop and hand the PR to the author.
+
+**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran (and whether the fallback was used). For each finding, give its severity, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
+
+**Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), or a **high-severity** code-review finding is left unfixed. Swap the label:
+
+```bash
+gh pr edit <PR> --remove-label "risk: low" --add-label "risk: medium"
 ```
 
 ## Step 6 — Merge (risk: low only)
@@ -125,13 +157,16 @@ When the author asks for changes after reviewing the PR, push the fix to the sam
 
 ## Step 7 — After merge
 
-If the PR has `article` and merged during this session, run `article-request <PR url>` for it. If it merges later (auto mode or the author's review), the `article-pending` workflow labels it `article: pending` on merge and comments to remind the author. Running `article-request` with no argument then lists every pending PR.
+If the PR has `article-status: request` and merged during this session, run `article-request <PR url>` for it. If it merges later (auto mode or the author's review), the `article-pending` workflow swaps it to `article-status: pending` on merge and comments to remind the author. Running `article-request` with no argument then lists every pending PR.
 
 ## Done when
 
 - [ ] Verify command ran; output is in the PR.
 - [ ] PR opens with **Behaviour summary**: run output, what it does, what it deliberately doesn't do, mapped to criteria.
 - [ ] Every acceptance criterion has evidence or is listed under **Not verified**.
+- [ ] Every issue Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
-- [ ] `article` issues: PR has `## 文章素材` and the `article` label.
+- [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
+- [ ] Both reviews (code + security) ran, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.
+- [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
 - [ ] Only `risk: low` was merged or queued for auto-merge.

@@ -3,6 +3,7 @@
 Read by `article-write`. It stops and asks while any value is still `<fill in>`.
 
 - Output path: `<fill in, e.g. content/posts/<slug>/index.md>`
+- Mode → category / directory: `<fill in: where each of devlog / intro / review / research goes, e.g. "review → content/reviews/">`
 - Frontmatter fields: `<fill in: required keys and their format>`
 - Series and numbering: `<fill in, or "none">`
 - Images: `<fill in: where they go and how they're referenced>`

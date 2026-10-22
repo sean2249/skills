@@ -1,6 +1,6 @@
 ---
 name: article-write
-description: Use when, in an article repo, an issue labelled `article` and `status: approved` should be written up as an article and opened as a PR. Writes a devlog (`article: devlog`, reconstructs the decision path) or an intro (`article: intro`, explains what something is and why it's worth a look), reading only the sources the issue names and following the repo's `## Article conventions`.
+description: Use when, in an article repo, an issue with a `post-type:` label and `status: approved` should be written up as an article and opened as a PR. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, and attaches a source map so nothing from notes is silently dropped.
 ---
 
 # article-write
@@ -11,7 +11,7 @@ Turns an approved article issue into an article PR. The issue usually comes from
 
 - **Only `status: approved` issues.** Never add `status: approved` yourself, even if asked.
 - **Read only the sources the issue names.** Never search a source repo for other files: it may hold private material.
-- **Faithful to notes.** When a source is a personal note, you may smooth sentences and drop internal links and frontmatter. Don't add opinions or conclusions the author didn't write. Never present anything the note marks as AI speculation, or as unconfirmed by the author, as the author's view.
+- **Faithful to notes.** Applies to every source that is a personal note, and always to `review` and `research`. When a source is a personal note, you may smooth sentences and drop internal links and frontmatter. Don't add opinions or conclusions the author didn't write. Never present anything the note marks as AI speculation, or as unconfirmed by the author, as the author's view.
 - **Every comment you post starts with** `🤖 AI <YYYY-MM-DD>`. The AI posts with the author's `gh` login, so the author field can't tell AI from author; only this marker can.
 
 ## Step 0 — Gate
@@ -24,16 +24,16 @@ Refuse and explain if:
 
 | Condition | Say |
 |---|---|
-| Closed, or no `article` label | Not an open article issue. |
+| Closed, or no `post-type:` label | Not an open article issue. |
 | No `status: approved` | Current status is `<label>`; the author approves. Suggest `issue-enhance` to draft the outline. |
 | An issue in `blockedBy` is still open (`gh issue view <M> --json state`) | Blocked by #M. |
-| Neither or both of `article: devlog` / `article: intro` | Ask the author which mode. |
+| More than one `post-type:` label | Ask the author which mode. |
 
 If `gh` rejects the `blockedBy` / `subIssuesSummary` fields, it's too old: ask the author to upgrade `gh` and stop.
 
 ## Step 1 — Read the repo's conventions
 
-Read the `## Article conventions` section of this repo's `CLAUDE.md`. It defines the output path, frontmatter fields, series and numbering, where images go, the verify/build command, and the preview URL. **If the section is missing, or any key you need is still `<fill in>`, stop and ask the author.** Don't guess conventions from existing files.
+Read the `## Article conventions` section of this repo's `CLAUDE.md`. It defines the output path (and the category/directory for each mode), frontmatter fields, series and numbering, where images go, the verify/build command, and the preview URL. **If the section is missing, or any key you need is still `<fill in>`, stop and ask the author.** Don't guess conventions from existing files.
 
 ## Step 2 — Read the sources
 
@@ -52,17 +52,41 @@ Anything you need that isn't in the sources → ask the author; don't go looking
 
 Follow the approved outline: its main thread, sections, and its "not writing" list.
 
-**`article: devlog`: reconstruct the decision path.**
+**`post-type: devlog`: reconstruct the decision path.**
 - Pick **one** main thread. Not everything that happened goes in.
 - For that thread: what the original plan was, why it was dropped, where it got stuck, how the cause was found, what was done instead.
 - Use the author's own words from `## 文章素材` at the decision points, and real numbers where the sources have them.
 
-**`article: intro`: introduce it to someone who hasn't seen it.**
+**`post-type: intro`: introduce a tool, concept, or site to someone who hasn't seen it.**
 - What it is, in plain terms, up front.
 - Why it's worth the reader's time: what's distinctive, who it's for.
 - Concrete details from the source, not generic praise.
 
+**`post-type: review`: the author's take on a work (book, exhibition, performance…).**
+- The author's impressions and judgement are the body; facts about the work (title, creator, dates, venue) support them.
+- Keep every evaluation, quotation, comparison, and reservation the author wrote, including the critical ones.
+- Don't add a verdict, rating, or closing conclusion the author didn't write.
+
+**`post-type: research`: a topic study / exploration.**
+- Keep the core question, the line of reasoning, how the author's position changed along the way, and the open questions.
+- Don't compress it into conclusions only; the path is the content.
+- Keep the author's uncertainty where the notes are uncertain.
+
 Write in the issue's language. Apply the repo's conventions to path, frontmatter, and images.
+
+## Step 3b — Source map (note sources)
+
+Required when a source is a note-like file: always for `review` and `research`, and for `intro` when its source is a file. Go through the source section by section (or point by point) and record where each part went:
+
+```markdown
+## Source map
+| Source section / point | In the article | If left out: why |
+|---|---|---|
+| <heading or first words of the point> | §<article section> | |
+| <…> | — | duplicate of <…> / only meaningful to the author / internal link / … |
+```
+
+Every section of the source appears as a row. A row with neither an article section nor a reason means something was lost; fix the article or add the reason. This goes in the PR (Step 5) so the author can check for gaps.
 
 ## Step 4 — Verify
 
@@ -83,6 +107,7 @@ PR body, following the repo's PR template:
 - `Closes #<N>`.
 - **Preview**: the page(s) to open, as links.
 - **Behaviour summary**: build output, what the article covers (main thread), what it deliberately leaves out, and each outline point / acceptance criterion mapped to the section that meets it.
+- **Source map** (Step 3b) when a source is a note-like file.
 - **Not verified**, plus **Deviations from the approved outline** with reasons.
 - Risk per `issue-implement` Step 4.
 
@@ -94,5 +119,6 @@ When the author asks for changes: revise on the same branch, comment `🤖 AI <Y
 
 - [ ] Article follows `## Article conventions` and the approved outline; mode matches the label.
 - [ ] Only the named sources were read; nothing from notes was turned into an opinion the author didn't state.
+- [ ] Note sources: the PR has a source map where every source section is either placed in the article or has a reason for leaving it out.
 - [ ] Build ran; the PR has preview links, the Behaviour summary, and `Closes #<N>`.
 - [ ] PR left for the author to merge.

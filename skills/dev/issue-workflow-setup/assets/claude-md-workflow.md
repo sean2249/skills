@@ -9,3 +9,4 @@ Only the author sets `status: approved`. Skills: `issue-enhance`, `issue-impleme
 - Merge mode: `<auto | session>`
 - Article target: `<owner>/<repo>`
 - Issue assets branch: `issue-assets`
+- Mockup path: `<N>/<file>` (inside the issue assets branch; `<N>` = issue number)
