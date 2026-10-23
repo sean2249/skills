@@ -76,9 +76,15 @@ jobs:
           ).stdout.splitlines()  # one path per line; paths may contain spaces
           files = [f for f in files if f]
 
-          # .github/ (workflows, templates, the allowlist itself) is never low risk.
+          # Never low risk, whatever the allowlist says: .github/ (workflows, templates, the
+          # allowlist itself), .claude/ (permission deny rules, hooks) and CLAUDE.md (verify command,
+          # workflow keys), at any depth.
+          def protected(f):
+              parts = f.split("/")
+              return parts[0] == ".github" or ".claude" in parts[:-1] \
+                  or parts[-1] in ("CLAUDE.md", "CLAUDE.local.md")
           bad = [f for f in files
-                 if f.startswith(".github/") or not any(p.match(f) for p in patterns)]
+                 if protected(f) or not any(p.match(f) for p in patterns)]
           if bad:
               print("::error::risk: low, but these files are outside the low-risk allowlist:")
               for f in bad:

@@ -112,6 +112,27 @@ Every PR from `issue-implement` is reviewed before any merge, and the implementi
 
 The cap exists because every round of fixes can bring in new problems, so reviewing until clean never converges.
 
+### Public repos
+
+On a public repo anyone can open an issue or comment, and everything the skills post (issues, PRs, comments, the `issue-assets` branch) is public. The workflow guards against three things:
+
+1. **Outsiders steering the AI (prompt injection).** Only the repo owner is trusted, in the Actions and the skills alike.
+   - The `issue-status` Action gives `status: raw` only to issues opened by the owner (`author_association` `OWNER`). Anyone else's issue, collaborators included, gets the `external` label, no status, and one neutral comment saying a maintainer triages it by hand. Status labels an issue template added are removed. Issues opened by bots (Renovate, github-actions, …) are skipped: no label, no comment.
+   - `needs-info-reply` only reacts to the owner's comments and edits.
+   - `issue-enhance` batch mode only picks issues opened by the owner (`--author <trusted>`). Given an issue someone else opened, `issue-enhance`, `issue-implement` and `post-write` stop and tell me. To act on one, I open my own issue in my own words.
+   - Comments are fetched already filtered with jq to the owner's (`select(.author.login == "<trusted>")`), so a faked `🤖 AI` or "Already done" comment from someone else counts for nothing. `issue-implement` reads no comments at all and works only from the issue body. Reviewer subagents get the same filtered commands.
+   - Anything written by someone else, and anything fetched or linked (web pages, other issues or PRs, fork diffs), is untrusted data: the skills and their subagents never follow instructions in it; they only summarise it.
+   - `risk-guard` treats `.github/`, `.claude/` (deny rules, hooks) and any `CLAUDE.md` (verify command, workflow keys) as never low risk. `article-pending` only writes after a maintainer merges a PR that a maintainer labelled, so it needed no change.
+   - Don't give issue templates a default `status:` label: an outside issue would start in the flow (the Action strips it, but don't rely on that alone).
+2. **Announcing a vulnerability before it's fixed.** On a public repo, `issue-implement` keeps security review findings out of the PR, the issue, comments and commit messages. Publicly it writes only "<K> security finding(s); details shared privately with the author", and gives me the details in the session. This includes the round-3 hand-back. A weakness that's already on the default branch isn't fixed on a public branch at all, since the fix's diff points at the hole: it's fixed from the start on a security advisory's private fork. Other unfixed findings go to GitHub private vulnerability reporting / a security advisory too.
+3. **Personal data in screenshots and output.** On a public repo, mockups, screenshots, run output, Behaviour summaries and `## 文章素材` use made-up data: no account IDs, emails, tokens, internal URLs, or names of private repos. `issue-workflow-setup` reminds me that `issue-assets` is public when it installs on a public repo.
+
+**Before making a private repo public**, go through what the workflow wrote while it was private: old PR `## Review` tables (security findings with `file:line`), issue and PR comments, and the images on the `issue-assets` branch (its history keeps deleted images too).
+
+**Secret files.** `issue-workflow-setup` also merges `permissions.deny` rules into the repo's `.claude/settings.json` (e.g. `Read(**/.env)`, `Read(**/.dev.vars)`, `Read(**/*.pem)`, `Read(**/id_rsa*)`, `Read(**/*.tfstate)`, `Read(**/secrets/**)`, `Bash(gh auth token*)`, `Bash(printenv*)`), fitted to the secret files the repo actually has and confirmed by me first. Existing settings are kept; repair mode adds only missing rules. These rules block Claude Code's file tools, not shell commands like `cat` or `grep`, so they guard against accidents rather than acting as a sandbox; for a real boundary, turn on Claude Code's sandbox for Bash.
+
+**No PreToolUse hook.** The plugin doesn't ship one. A plugin hook runs in every session in every repo and can't tell when an issue skill is running. Command-pattern blocks on `git push` / `gh` are easy to get around with an equivalent command, yet would block legitimate pushes and merges. The checks that matter run on GitHub (outside issues kept out of the flow, `risk-guard` as a required check, branch protection), and secret files are covered by Claude Code's own deny rules.
+
 ### How I run it
 
 This is how I personally operate the workflow day to day: parallel child sessions, with GitHub issues as the only handoff. It needs no extra skill. The parallelism comes from asking Claude, in a main session, to start child sessions.
@@ -176,6 +197,7 @@ flowchart TD
 |---|---|---|
 | `status: raw` → `needs-info` → `ai-enhanced` → `approved` | every repo | Issue progress; only the author sets `approved` |
 | `risk: low` / `medium` / `high` | every repo, on PRs | Merge gate; only `low` merges automatically |
+| `external` | every repo, on issues | Not opened by the repo owner; added by the `issue-status` Action instead of `status: raw`, and never worked on by the skills (see Public repos) |
 | `grill` | every repo, on issues | The author asks `issue-enhance` to run the optional Grill review (it also runs automatically when a plan touches high-risk paths) |
 | `article-status: request` → `pending` → `handoff` | project repos (including the article repo's own feature cards) | This work should become an article, and how far the handoff got |
 | `post-type: devlog` / `intro` / `review` / `research` | **article repo only**, on article cards | How the article is written; never used in other repos |
@@ -193,14 +215,30 @@ flowchart TD
 
 ## Shared workflows
 
-`.github/workflows/issue-status.yml`, `risk-guard.yml`, `article-pending.yml`, and `needs-info-reply.yml` are reusable workflows (`on: workflow_call`). `needs-info-reply` switches a `status: needs-info` issue back to `status: raw` once the author has answered: either the issue's author or the repo owner ticks a box for every decision in the body's `## Pending decisions` (`issues: edited`), or replies in a comment (`issue_comment: created`). It ignores PRs, bots, other users, and comments starting with `🤖 AI` (the AI writes decisions with empty boxes and never ticks one), and posts nothing. Repos set up with `issue-workflow-setup` call them through short callers, for example:
+`.github/workflows/issue-status.yml`, `risk-guard.yml`, `article-pending.yml`, and `needs-info-reply.yml` are reusable workflows (`on: workflow_call`). `issue-status` labels the owner's new issue `status: raw`, anyone else's `external`, and skips bots. `needs-info-reply` switches a `status: needs-info` issue back to `status: raw` once the owner has answered: the owner ticks a box for every decision in the body's `## Pending decisions` (`issues: edited`), or replies in a comment (`issue_comment: created`). It reacts only to the owner (`author_association` `OWNER`), ignores PRs, bots, and comments starting with `🤖 AI` (the AI writes decisions with empty boxes and never ticks one), and posts nothing. Repos set up with `issue-workflow-setup` call them through short callers, for example:
 
 ```yaml
 jobs:
   risk-guard:
-    uses: <owner>/skills/.github/workflows/risk-guard.yml@main
+    uses: <owner>/skills/.github/workflows/risk-guard.yml@v1
 ```
 
 In the calling repo the required check is named `risk-guard / check`.
 
-Callers pin `@main`: one change here reaches every repo on its next run. The trade-off is that these workflows can write issues, labels and PR comments, so a mistake on `main` hits every repo at once. To lock a repo, point its callers at a tag (`@v1`) or a full commit SHA (`@<sha>`). To upgrade later, review `gh api repos/<owner>/skills/compare/<old>...<new>` and bump the ref in all callers in one PR.
+### Versions
+
+Callers pin a release tag (`@v1`), never `@main`. These workflows can write issues, labels and PR comments, so each repo runs only a version I chose; a mistake on `main` doesn't reach any repo until I bump it.
+
+- **Tags are `v1`, `v2`, `v3`, …**: one plain whole number per release. A published tag is never moved or re-pushed; a fix is always a new tag.
+- **Only the reusable workflows are pinned.** The skills themselves (the `kiwi-skills` plugin) still update from `main` as usual (Install, above).
+
+Releasing:
+
+1. Merge the change to `main`.
+2. Tag the merge commit with the next number and write release notes (what changed for calling repos, and whether anything needs repair mode):
+   ```bash
+   gh release create v<N> --target main --title v<N> --notes-file <notes.md>
+   ```
+3. In each repo, run `issue-workflow-setup` in repair mode. It shows `gh api repos/<owner>/skills/compare/v<old>...v<N>` for review, then opens one PR bumping all four callers to `v<N>` (`risk: high`, merged by me).
+
+The first tag, `v1`, is created by hand after the change that introduced tags is merged (the command in step 2). Until it exists, `issue-workflow-setup` stops instead of writing callers. Repos whose callers still say `@main` move to the latest tag the next time repair mode runs.

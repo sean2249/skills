@@ -1,5 +1,11 @@
-# Reusable workflow: adds `status: raw` to a new issue opened without a status label.
+# Reusable workflow: adds `status: raw` to a new issue opened by the repo owner without a status label.
 # Called from each repo's .github/workflows/issue-status.yml (written by issue-workflow-setup).
+#
+# Only issues whose author_association is OWNER enter the flow, matching the skills, which work
+# only on the owner's issues. Issues opened by bots (Renovate, github-actions, …) are skipped:
+# no label, no comment. Anyone else's issue (possible on a public repo) gets `external`, no status
+# label (any `status: ` label an issue template applied is removed), and one neutral comment:
+# the AI skills never pick it up, so its text can't steer them. The owner triages it by hand.
 name: issue-status
 
 on:
@@ -10,16 +16,31 @@ permissions:
 
 jobs:
   label-raw:
+    if: github.event.issue.user.type != 'Bot'
     runs-on: ubuntu-latest
     steps:
-      - name: Add the raw status label when no status label is present
+      - name: Add the raw status label, or mark an outside issue external
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           NUMBER: ${{ github.event.issue.number }}
+          ASSOCIATION: ${{ github.event.issue.author_association }}
           LABELS: ${{ toJSON(github.event.issue.labels.*.name) }}
         # Keep this a block scalar: a label like "status: raw" inline would break YAML parsing.
         run: |
+          case "$ASSOCIATION" in
+            OWNER) ;;
+            *)
+              echo "Issue #$NUMBER author is $ASSOCIATION; marking it external."
+              gh label create external --color d4c5f9 \
+                --description "Not opened by the repo owner; the owner triages it by hand" 2>/dev/null || true
+              printf '%s' "$LABELS" | python3 -c 'import json,sys; [print(l) for l in json.load(sys.stdin) if l.startswith("status: ")]' |
+                while IFS= read -r l; do gh issue edit "$NUMBER" --remove-label "$l"; done
+              gh issue edit "$NUMBER" --add-label external
+              gh issue comment "$NUMBER" --body "Thanks for opening this. Issues like this one are triaged by a maintainer by hand, so this one won't be picked up automatically."
+              exit 0
+              ;;
+          esac
           if printf '%s' "$LABELS" | grep -q '"status: '; then
             echo "Issue #$NUMBER already has a status label; nothing to do."
             exit 0
