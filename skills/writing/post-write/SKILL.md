@@ -184,7 +184,7 @@ Fill the repo's PR template (it's `issue-implement`'s) this way:
 - **Source map** (Step 3b, with the 作者編修 labels) when a source is a note-like file.
 - **Not verified**, and **Deviations from the approved plan** with reasons (outline points changed by the voice pass or by pages found on the blog in Step 2b).
 - **Risk**: `risk: low`, reason "content only".
-- **Review**: run `code-review` on the PR, focused on the text: facts against the sources, links and anchors, front matter and format. Fill the table with its findings and outcomes. security-review: "not applicable (content only)".
+- **Review**: one fresh-context reviewer subagent, as in `issue-implement` Step 5b, but as a text reviewer: facts against the sources the issue names, links and anchors, front matter and format. It may run `code-review`. You handle its findings here; never revert an author edit to fix one (say it in the PR instead). Fill the table with its findings and outcomes. security-review: "not applicable (content only)".
 
 **Don't merge**, even at `risk: low`. The author reads every post before it's published.
 
@@ -201,4 +201,4 @@ When the author asks for more changes: same branch, separate commits, a `🤖 AI
 - [ ] Verify passed, including 375px and dark mode, after the last table/image; back-links from published posts checked.
 - [ ] The author's edits are one `edit: 作者編修` commit, named in the PR; no AI change is mixed into it or reverts it.
 - [ ] Three titles were offered from the final text.
-- [ ] PR is `risk: low`, fills the template (review table, security-review "not applicable (content only)", acceptance evidence), and is left for the author to merge.
+- [ ] PR is `risk: low`, fills the template (review table from a fresh-context reviewer, security-review "not applicable (content only)", acceptance evidence), and is left for the author to merge.
