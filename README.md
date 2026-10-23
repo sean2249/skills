@@ -32,7 +32,7 @@ Then turn on auto-update for `kiwi-skills` as above.
 This is my personal development workflow. The skills are designed around it, so adjust it to your own habits if you use them.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as A/B decisions with checkboxes in the issue body) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; work cards labelled article-status: request move to pending on merge (article-pending) and to handoff with article-request, which opens a post-type: article card in the article repo; that card runs the same flow and article-write writes it with a source map.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as A/B decisions with checkboxes in the issue body) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; work cards labelled article-status: request move to pending on merge (article-pending) and to handoff with article-request, which opens a post-type: article card in the article repo; that card runs the same flow and post-write writes it with a source map.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: ticking a box for each pending decision in the issue body (needs-info questions and the Grill's A/B items; never asked in chat), approving an issue, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -81,7 +81,7 @@ flowchart TD
     end
     subgraph CARD["Article card · post-type: (article repo only)"]
       S["Article card<br/>post-type: devlog / intro / review / research<br/>outline → Grill → approved"]
-      U["article-write<br/>devlog · intro · review · research + source map"]
+      U["post-write<br/>devlog · intro · review · research + source map<br/>kiwi-voice 套用 → author edits → 收納 → PR"]
       V(["Author merges the article<br/>checks the source map"]):::author
     end
     N -->|yes| O
@@ -112,7 +112,7 @@ This is how I personally operate the workflow day to day: parallel child session
 5. **A new main session** picks approved issues, skips any blocked by an open issue, takes at most 1–2 per repo at a time, and starts a child session per issue running `issue-implement`. Each opens a PR with screenshots, preview, behaviour summary and review.
 6. **I look and merge.** The Action switches the label to `article-status: pending`.
 7. **I run `article-request` in the main session.** The AI suggests a `post-type:` with its reasoning and I confirm, which opens an article card in the article repo. It can also start from any file, such as a notes page.
-8. **The article card goes back to step 1:** `issue-enhance` drafts the outline, I approve, a child session runs `article-write`, and I check the preview and merge.
+8. **The article card goes back to step 1:** `issue-enhance` drafts the outline, I approve, a child session runs `post-write` and hands me the draft; I edit it in place and say I'm done, the AI commits my edits and opens the PR, and I check the preview and merge.
 
 <details>
 <summary>Text version (mermaid)</summary>
@@ -134,7 +134,7 @@ flowchart TD
     B2["status: approved<br/>+ article-status: request"]
     B3["Pull request"]
     B4["Merged<br/>Action sets article-status: pending"]
-    B5["Article card<br/>post-type: · article repo · back to step 1 → article-write"]
+    B5["Article card<br/>post-type: · article repo · back to step 1 → post-write"]
   end
   A2(["Author: review · tick · approve"]):::author
   A4(["Author: look at it · merge"]):::author
@@ -173,7 +173,8 @@ flowchart TD
 | `dev/issue-enhance` | Turning a `status: raw` issue into a reviewable plan (or an article outline), split into sub-issues |
 | `dev/issue-implement` | Implementing a `status: approved` issue: PR with evidence, risk label, merge only `risk: low` |
 | `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR `article-status: handoff` |
-| `writing/article-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a source map for note sources |
+| `writing/post-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a cover, blog links for `wiki:` targets, and a source map for note sources; hands the draft to the author to edit before opening the PR |
+| `writing/kiwi-voice` | Applying the repo's voice file to a post (套用), and after the author's edits proposing new voice rules for the author to approve (收納). Rules live in each repo's voice file, not in the skill |
 
 ## Shared workflows
 
