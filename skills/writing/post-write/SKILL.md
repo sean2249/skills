@@ -48,7 +48,7 @@ If `gh` rejects the `blockedBy` / `subIssuesSummary` fields, it's too old: ask t
 
 ## Step 1 — Read the repo's conventions
 
-Read the `## Article conventions` section of this repo's `CLAUDE.md`. It defines the output path (and the category/directory for each mode), frontmatter fields, series and numbering, where images go and how a cover diagram is made, the verify/build command, the preview URL, and the voice file (`Voice file: <path>`). **If the section is missing, or any key you need is still `<fill in>`, stop and ask the author.** Don't guess conventions from existing files.
+Read the `## Article conventions` section of this repo's `CLAUDE.md`. It defines the output path (and the category/directory for each mode), frontmatter fields, series and numbering, where images go and how a cover diagram is made, the verify/build command, the preview URL, and the voice file (`Voice file: <path>`; `Voice examples:` and `Voice limits:` are optional and only `kiwi-voice` reads them). **If the section is missing, or any key you need is still `<fill in>`, stop and ask the author.** Don't guess conventions from existing files.
 
 Then branch:
 
@@ -168,7 +168,7 @@ git commit -m "<title>"
    Every later change of yours is a separate commit after this one.
 2. **Recheck the source map** against the edited post. Label each author change in the map: `作者編修刪除` (they removed it), `作者編修改寫` (they rewrote it), `作者新增` (new, not from the source).
 3. **Acceptance criteria.** If an author edit breaks a criterion from the issue (e.g. they removed a caveat the criterion asked for), keep the author's version. The criterion stays unticked in the PR with "author's decision". Never revert.
-4. **`kiwi-voice` 收納.** Run it on this round's author diff. It drafts rule proposals; only the ones the author approves are written to the voice file, as a separate commit on this same branch.
+4. **`kiwi-voice` 收納.** Run it on this round's author diff. It drafts rule and example proposals; only the ones the author approves are written to the voice files, as a separate `voice: 收納 <post>` commit on this same branch. If the voice rules file is over its size limit, `kiwi-voice` first proposes a 整併 (consolidation), which the author also approves item by item and which lands as its own `voice: 整併` commit before the 收納 one.
 5. **Titles.** Recommend three titles drawn from the final text, following the voice file's 標題 rule, and let the author pick (they can keep the draft's). A changed title is an AI commit of its own.
 6. Make any follow-up fixes the author asked for (separate commits), then rerun Step 5.
 
@@ -205,7 +205,7 @@ When the author asks for more changes: same branch, separate commits, a `🤖 AI
 - [ ] Every vault page the blog already covers is linked: `wiki:` for posts that list it, a path + anchor for a section or a post that doesn't; only missing ones stay pending.
 - [ ] The post has a cover (a source image, or a diagram from the post's own content).
 - [ ] Public repo: screenshots, diagrams, run output and the PR body use made-up data (no account IDs, emails, tokens, internal URLs, private repo names).
-- [ ] `kiwi-voice` 套用 ran before hand-over; 收納 ran after the author's edits, and approved rules are a separate commit in this PR.
+- [ ] `kiwi-voice` 套用 ran before hand-over; 收納 ran after the author's edits, and approved rules are a separate commit in this PR (with a separate `voice: 整併` commit before it when the rules file was over its limit).
 - [ ] Source map rechecked after the voice pass and after the author's edits, with author changes labelled.
 - [ ] Verify passed, including 375px and dark mode, after the last table/image; back-links from published posts checked.
 - [ ] The author's edits are one `edit: 作者編修` commit, named in the PR; no AI change is mixed into it or reverts it.
