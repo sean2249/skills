@@ -52,6 +52,8 @@ Follow the issue's **Approach** and **Acceptance criteria**. Also:
 
 When you must deviate from the approved plan, note what and why as you go; it goes in the PR.
 
+**Something user-visible the plan didn't settle** (rare). If you hit something the user would see that the approved plan leaves open (whether a prompt appears at all, its wording, what a button does next), ask the author directly in the session before building it. Say in the question that this is an exception: the plan should have settled it, in `issue-enhance`'s Mockup and Acceptance criteria. Record the answer under **Deviations** in the PR. This should happen very, very rarely; anything the plan does settle, just build.
+
 ## Step 3 — Verify
 
 Run the verify command from `CLAUDE.md` and any checks listed under the issue's **Verification**. Keep the output; it is the evidence. Check the preview URL when one is configured. Anything you could not verify, write down.
@@ -71,6 +73,8 @@ Apply in order; the first match wins:
 This is the starting label. Step 5b can raise it, never lower it.
 
 ## Step 5 — Open the PR
+
+**Open the PR only for finished work**: implemented (Step 2), verified with evidence (Step 3), then reviewed straight away (Step 5b) before you hand it to the author. Never open a PR earlier, draft or not, so the author can preview the work. If something genuinely needs the author's eyes first, ask in the session (Step 2). The only draft is the one Step 5b makes when round 3 finds medium+ problems.
 
 Fill the repo's PR template:
 
@@ -144,9 +148,10 @@ Return findings, most severe first, exactly in this format ("None" if there are 
   3. In the issue body, add a decision under `## Pending decisions` (as in `issue-enhance` Step 3): start over with one of those directions, or keep the approach and fix the round-3 findings.
   4. Swap the issue to `status: needs-info`: `gh issue edit <N> --remove-label "status: approved" --add-label "status: needs-info"`.
   5. Stop. Don't rewrite the plan yourself; the author decides whether to start over.
+- **The author changes the scope → the count restarts at round 1.** A scope change is the author deciding it after the PR is open: a new line in the issue's `## Decisions` that supersedes an earlier one. Rounds already run against the old scope are listed separately in the Review table, marked "old scope, not counted". Only an author scope decision resets the count; your own bug fixes or changes of approach don't.
 - **Only exception** (any round): the fix needs a product decision from the author that you can't make (e.g. which of two user-visible behaviours is wanted). Leave just that finding unfixed, write in the Review table what decision is needed and why you can't make it, and hand that item to the author.
 
-**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran; if round 3 ran, add either "Round 3 findings all fixed; not sent for another review." or "Round 3 found medium+ findings; sent back to the author to rethink the approach." For each finding, give its severity, category, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
+**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran; if round 3 ran, add either "Round 3 findings all fixed; not sent for another review." or "Round 3 found medium+ findings; sent back to the author to rethink the approach." For each finding, give its severity, category, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. After a scope change, keep the old-scope rounds in their own group headed "old scope, not counted". Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
 
 **Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), or a **high-severity** code-review finding is left unfixed. Swap the label:
 
@@ -185,7 +190,7 @@ Don't merge through a GitHub Action using `GITHUB_TOKEN`: merges made with that 
 
 ## Step 6b — Author asks for changes
 
-When the author asks for changes after reviewing the PR, push the fix to the same branch, comment `🤖 AI <YYYY-MM-DD>` with what changed and why, update **Behaviour summary** and evidence, and re-classify risk if the file set changed.
+When the author asks for changes after reviewing the PR, push the fix to the same branch, comment `🤖 AI <YYYY-MM-DD>` with what changed and why, update **Behaviour summary** and evidence, and re-classify risk if the file set changed. If the change is a new scope (a new line in the issue's `## Decisions` superseding an earlier one), review it with the count restarted at round 1 (Step 5b).
 
 ## Step 7 — After merge
 
@@ -193,12 +198,13 @@ If the PR has `article-status: request` and merged during this session, run `art
 
 ## Done when
 
+- [ ] PR was opened only once the work was implemented and verified, with review run straight after; no early or draft PR for the author to preview.
 - [ ] Verify command ran; output is in the PR.
 - [ ] PR opens with **Behaviour summary**: run output, what it does, what it deliberately doesn't do, mapped to criteria.
 - [ ] Every acceptance criterion has evidence or is listed under **Not verified**.
 - [ ] If the issue has Risks / Opportunities (grilled issues): every Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
-- [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; findings carry a category and were fixed a category at a time, with the rest of the change checked for the same class; if round 3 ran with only low findings, all are fixed (except unfixable security findings, or ones needing an author product decision, each with its reason) and no further review was dispatched; if round 3 had any medium+ finding, nothing was patched or merged, the PR is a draft, PR and issue each have a 🤖 comment (findings by category, why it's the approach, 2–3 alternatives), and the issue is back at `status: needs-info` with the decision in the body; the PR has `## Review` and a 🤖 summary comment.
+- [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; findings carry a category and were fixed a category at a time, with the rest of the change checked for the same class; if round 3 ran with only low findings, all are fixed (except unfixable security findings, or ones needing an author product decision, each with its reason) and no further review was dispatched; if round 3 had any medium+ finding, nothing was patched or merged, the PR is a draft, PR and issue each have a 🤖 comment (findings by category, why it's the approach, 2–3 alternatives), and the issue is back at `status: needs-info` with the decision in the body; the PR has `## Review` and a 🤖 summary comment. After an author scope change, the count restarted at round 1 and the old-scope rounds are listed apart as "old scope, not counted".
 - [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
 - [ ] Only `risk: low` was merged or queued for auto-merge.

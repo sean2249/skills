@@ -106,8 +106,9 @@ Every PR from `issue-implement` is reviewed before any merge, and the implementi
 3. **The implementing session handles the findings:** it checks each one against the code, fixes the real ones, and gives a reason for the rest. It fixes a whole category at once and looks for the same class of problem elsewhere in the change, not just the line that was flagged.
 4. **New reviewers every round.** Rounds 1–2: fix, then review again.
 5. **Round 3 is the last review.** If it finds only low findings, they're all fixed and nothing is sent for another review. If it finds anything medium or higher, the approach itself is probably wrong: nothing is patched or merged, the PR becomes a draft, the AI comments on the PR and the issue with the findings by category and 2–3 alternative directions, and the issue goes back to `status: needs-info` for me to decide whether to start over.
-6. **Product decisions are mine.** In any round, only a fix that needs my product decision is handed to me, with the reason.
-7. **Risk:** any unfixed security finding means the PR can't be `risk: low`.
+6. **A scope change by me restarts the count.** If I change the scope after the PR is open (a new decision in the issue that supersedes an old one), review starts again at round 1; the earlier rounds are listed apart as "old scope, not counted". The AI's own fixes or changes of approach don't reset it.
+7. **Product decisions are mine.** In any round, only a fix that needs my product decision is handed to me, with the reason.
+8. **Risk:** any unfixed security finding means the PR can't be `risk: low`.
 
 The cap exists because every round of fixes can bring in new problems, so reviewing until clean never converges.
 
@@ -186,7 +187,7 @@ flowchart TD
 | `dev/issue-workflow-setup` | Installing (or repairing) the issue workflow in a repo: labels, callers for the shared workflows, PR template, CLAUDE.md section |
 | `dev/issue-enhance` | Turning a `status: raw` issue into a reviewable plan (or an article outline), split into sub-issues |
 | `dev/issue-implement` | Implementing a `status: approved` issue: PR with evidence, risk label, merge only `risk: low` |
-| `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR `article-status: handoff` |
+| `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR and the issues it closes `article-status: handoff` |
 | `writing/post-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a cover, blog links for `wiki:` targets, and a source map for note sources; hands the draft to the author to edit before opening the PR |
 | `writing/kiwi-voice` | Applying the repo's voice file to a post (套用), and after the author's edits proposing new voice rules for the author to approve (收納). Rules live in each repo's voice file, not in the skill |
 

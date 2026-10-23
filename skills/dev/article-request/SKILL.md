@@ -1,6 +1,6 @@
 ---
 name: article-request
-description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article-status: pending` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `status: raw` and one `post-type:` (`devlog`, `intro`, `review`, or `research`) that it suggests from the source with reasons and the author confirms, then marks the source PR `article-status: handoff`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
+description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article-status: pending` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `status: raw` and one `post-type:` (`devlog`, `intro`, `review`, or `research`) that it suggests from the source with reasons and the author confirms, then marks the source PR and the issues it closes `article-status: handoff`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
 ---
 
 # article-request
@@ -80,7 +80,7 @@ gh repo view <target> --json nameWithOwner,visibility
 gh issue list -R <target> --state all --search "<PR url or permalink> in:body" --json number,url
 ```
 
-If one exists, report its URL. In PR mode, still do Step 5 if the PR has `article-status: pending`. Then stop.
+If one exists, report its URL. In PR mode, still do Step 5 if the PR or an issue it closes has `article-status: request` or `pending`. Then stop.
 
 ## Step 3 — Ensure labels exist in the target
 
@@ -126,13 +126,22 @@ gh issue create -R <target> --title "Article: <PR title or file title>" --body-f
   --label "status: raw" --label "post-type: <devlog|intro|review|research>"
 ```
 
-## Step 5 — Mark the PR as handed off (PR mode)
+## Step 5 — Mark the PR and its issues as handed off (PR mode)
+
+Swap the label on the PR **and** on every issue it closes (`closingIssuesReferences`) that still has `article-status: request` or `pending`. Otherwise the issue still looks like it's waiting for its article.
 
 ```bash
 gh label create "article-status: handoff" -R <o>/<r> --color 0e8a16 \
   --description "Handed to the article repo; done here" 2>/dev/null || true
 gh pr edit <PR url> --remove-label "article-status: pending" --remove-label "article-status: request" \
   --add-label "article-status: handoff"
+gh pr view <PR url> --json closingIssuesReferences --jq '.closingIssuesReferences[].url' |
+while read -r issue; do
+  gh issue view "$issue" --json labels --jq '.labels[].name' |
+    grep -qxE 'article-status: (request|pending)' || continue
+  gh issue edit "$issue" --remove-label "article-status: pending" --remove-label "article-status: request" \
+    --add-label "article-status: handoff"
+done
 gh pr comment <PR url> --body "🤖 AI <YYYY-MM-DD>
 
 Article request: <new issue url>"
@@ -145,3 +154,4 @@ Article request: <new issue url>"
 - [ ] Its body lists the sources with read instructions (file sources as commit-pinned permalinks) and, for a PR, the full `## 文章素材`.
 - [ ] If the source is private and the target public, the author confirmed.
 - [ ] PR mode: the source PR has `article-status: handoff` (no longer `pending` / `request`) and a comment linking to the issue.
+- [ ] PR mode: every issue the PR closes that had `article-status: request` / `pending` now has `article-status: handoff` instead.
