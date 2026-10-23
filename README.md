@@ -81,7 +81,7 @@ flowchart TD
     end
     subgraph CARD["Article card · post-type: (article repo only)"]
       S["Article card<br/>post-type: devlog / intro / review / research<br/>outline → Grill → approved"]
-      U["post-write<br/>devlog · intro · review · research + source map<br/>kiwi-voice 套用 → author edits → 收納 → PR"]
+      U["post-write<br/>devlog · intro · review · research + source map<br/>kiwi-voice 套用 → author edits → (整併 if over limit) → 收納 → PR"]
       V(["Author merges the article<br/>checks the source map"]):::author
     end
     N -->|yes| O
@@ -211,7 +211,7 @@ flowchart TD
 | `dev/issue-implement` | Implementing a `status: approved` issue: PR with evidence, risk label, merge only `risk: low` |
 | `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR and the issues it closes `article-status: handoff` |
 | `writing/post-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a cover, blog links for `wiki:` targets, and a source map for note sources; hands the draft to the author to edit before opening the PR |
-| `writing/kiwi-voice` | Applying the repo's voice file to a post (套用), and after the author's edits proposing new voice rules for the author to approve (收納). Rules live in each repo's voice file, not in the skill |
+| `writing/kiwi-voice` | Applying the repo's voice rules to a post (套用); after the author's edits, proposing new rules or examples for the author to approve (收納); when the rules file passes its size limit (default 8 KB / 25 rules), proposing merges, generalisations and retirements, and listing rule/example conflicts for the author to decide (整併). Rules live in each repo's voice rules file (`Voice file:`), extra examples in its examples directory (`Voice examples:`), not in the skill |
 
 ## Shared workflows
 
