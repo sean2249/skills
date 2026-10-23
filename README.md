@@ -32,7 +32,7 @@ Then turn on auto-update for `kiwi-skills` as above.
 This is my personal development workflow. The skills are designed around it, so adjust it to your own habits if you use them.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as A/B decisions with checkboxes in the issue body) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review, risk: low auto-merges and medium/high is merged by the author; work cards labelled article-status: request move to pending on merge (article-pending) and to handoff with article-request, which opens a post-type: article card in the article repo; that card runs the same flow and post-write writes it with a source map.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as A/B decisions with checkboxes in the issue body) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review (up to 3 rounds; in round 3, low findings are all fixed with no further review, and any medium+ finding sends it back to the author), risk: low auto-merges and medium/high is merged by the author; work cards labelled article-status: request move to pending on merge (article-pending) and to handoff with article-request, which opens a post-type: article card in the article repo; that card runs the same flow and post-write writes it with a source map.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: ticking a box for each pending decision in the issue body (needs-info questions and the Grill's A/B items; never asked in chat), approving an issue, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -64,7 +64,7 @@ flowchart TD
   subgraph IMPL["2 · Implementation"]
     H --> I["issue-implement (new session)<br/>applies risk mitigations"]
     I --> J["PR with evidence + behaviour summary"]
-    J --> RV["Review: code + security<br/>fix or justify · ≤ 3 rounds"]
+    J --> RV["Review: code + security<br/>fix by category · ≤ 3 rounds<br/>round 3 → low: fix all, no re-review<br/>medium+: back to the author"]
     RV --> K{"risk label<br/>(unfixed security → not low)"}
     K -->|"risk: low<br/>allowlist · risk-guard / check"| L["Auto-merge"]
     K -->|"risk: medium / high"| M(["Author reviews and merges"]):::author
@@ -96,6 +96,20 @@ flowchart TD
 ```
 
 </details>
+
+### Code and security review
+
+Every PR from `issue-implement` is reviewed before any merge, and the implementing session never reviews its own work.
+
+1. **Two reviewers in parallel:** fresh-context subagents, one for code (correctness, missed acceptance criteria, regressions) and one for security. Each gets only the PR URL, with no conversation or hints, and never comments on the PR or pushes commits.
+2. **Every finding has a category** (state / race, error handling, a11y, input validation…).
+3. **The implementing session handles the findings:** it checks each one against the code, fixes the real ones, and gives a reason for the rest. It fixes a whole category at once and looks for the same class of problem elsewhere in the change, not just the line that was flagged.
+4. **New reviewers every round.** Rounds 1–2: fix, then review again.
+5. **Round 3 is the last review.** If it finds only low findings, they're all fixed and nothing is sent for another review. If it finds anything medium or higher, the approach itself is probably wrong: nothing is patched or merged, the PR becomes a draft, the AI comments on the PR and the issue with the findings by category and 2–3 alternative directions, and the issue goes back to `status: needs-info` for me to decide whether to start over.
+6. **Product decisions are mine.** In any round, only a fix that needs my product decision is handed to me, with the reason.
+7. **Risk:** any unfixed security finding means the PR can't be `risk: low`.
+
+The cap exists because every round of fixes can bring in new problems, so reviewing until clean never converges.
 
 ### How I run it
 

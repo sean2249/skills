@@ -1,6 +1,6 @@
 ---
 name: issue-implement
-description: Use when implementing a GitHub issue labelled `status: approved` — branch, implement, run the repo's verify command, open a PR with per-criterion evidence, run code and security review (up to 3 rounds), classify risk (low / medium / high), and merge only `risk: low` PRs. Refuses issues in any other status.
+description: Use when implementing a GitHub issue labelled `status: approved` — branch, implement, run the repo's verify command, open a PR with per-criterion evidence, run code and security review (up to 3 rounds; medium+ findings in round 3 send it back to the author), classify risk (low / medium / high), and merge only `risk: low` PRs. Refuses issues in any other status.
 ---
 
 # issue-implement
@@ -125,15 +125,28 @@ Return findings, most severe first, exactly in this format ("None" if there are 
 1. <one-sentence problem>
    - Where: `file:line`
    - Severity: high | medium | low
+   - Category: <bug class, e.g. state / race, error handling, a11y, input validation>
    - Why: <concrete input / state → wrong result>
    - Suggested fix: <one line>
 ```
 
 **2. Handle the findings here**, in this session, without asking the author first: check each one against the code; real ones you fix and commit, the rest get a reason.
 
-**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). After fixes, push and dispatch **new** fresh-context reviewers on the new changes only (`<base sha>..HEAD` in the prompt), never the same subagent again. **At most 3 rounds.** If findings are still unhandled after round 3, stop and hand the PR to the author.
+**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). **Fix by category, not by line**: fix every finding of one category together, then search the rest of the change for the same class of problem and fix those too, not just the line the reviewer pointed at. After fixes, push and dispatch **new** fresh-context reviewers on the new changes only (`<base sha>..HEAD` in the prompt), never the same subagent again.
 
-**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran. For each finding, give its severity, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
+**At most 3 rounds; round 3 is the last review.**
+
+- **Rounds 1–2**: handle the findings as above, then review again with new reviewers.
+- **Round 3, only low findings (or none)**: fix **every** finding from this round, commit and push, and **don't dispatch another review**. Reaching the round limit is never a reason to leave a finding unfixed or hand it to the author. A security finding you can't fix safely stays unfixed with its reason and affects the risk label as below.
+- **Round 3, any medium or high finding**: problems still this serious after two rounds of fixes point to the approach, not the patch. **Don't patch and don't merge.** Instead:
+  1. Turn the PR into a draft: `gh pr ready <PR> --undo`.
+  2. Post one `🤖 AI <YYYY-MM-DD>` comment on the PR and one on the issue: all three rounds' findings grouped by category, why this looks like a problem with the approach, and 2–3 possible alternative approaches (directions only, not a full plan).
+  3. In the issue body, add a decision under `## Pending decisions` (as in `issue-enhance` Step 3): start over with one of those directions, or keep the approach and fix the round-3 findings.
+  4. Swap the issue to `status: needs-info`: `gh issue edit <N> --remove-label "status: approved" --add-label "status: needs-info"`.
+  5. Stop. Don't rewrite the plan yourself; the author decides whether to start over.
+- **Only exception** (any round): the fix needs a product decision from the author that you can't make (e.g. which of two user-visible behaviours is wanted). Leave just that finding unfixed, write in the Review table what decision is needed and why you can't make it, and hand that item to the author.
+
+**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran; if round 3 ran, add either "Round 3 findings all fixed; not sent for another review." or "Round 3 found medium+ findings; sent back to the author to rethink the approach." For each finding, give its severity, category, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
 
 **Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), or a **high-severity** code-review finding is left unfixed. Swap the label:
 
@@ -186,6 +199,6 @@ If the PR has `article-status: request` and merged during this session, run `art
 - [ ] If the issue has Risks / Opportunities (grilled issues): every Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
-- [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.
+- [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; findings carry a category and were fixed a category at a time, with the rest of the change checked for the same class; if round 3 ran with only low findings, all are fixed (except unfixable security findings, or ones needing an author product decision, each with its reason) and no further review was dispatched; if round 3 had any medium+ finding, nothing was patched or merged, the PR is a draft, PR and issue each have a 🤖 comment (findings by category, why it's the approach, 2–3 alternatives), and the issue is back at `status: needs-info` with the decision in the body; the PR has `## Review` and a 🤖 summary comment.
 - [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
 - [ ] Only `risk: low` was merged or queued for auto-merge.
