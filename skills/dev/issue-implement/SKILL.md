@@ -131,9 +131,15 @@ Return findings, most severe first, exactly in this format ("None" if there are 
 
 **2. Handle the findings here**, in this session, without asking the author first: check each one against the code; real ones you fix and commit, the rest get a reason.
 
-**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). After fixes, push and dispatch **new** fresh-context reviewers on the new changes only (`<base sha>..HEAD` in the prompt), never the same subagent again. **At most 3 rounds.** If findings are still unhandled after round 3, stop and hand the PR to the author.
+**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). After fixes, push and dispatch **new** fresh-context reviewers on the new changes only (`<base sha>..HEAD` in the prompt), never the same subagent again.
 
-**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran. For each finding, give its severity, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
+**At most 3 rounds; round 3 is the last review.**
+
+- **Rounds 1–2**: handle the findings as above, then review again with new reviewers.
+- **Round 3**: fix **every** finding from this round, commit and push, and **don't dispatch another review**. Reaching the round limit is never a reason to leave a finding unfixed or hand it to the author. A security finding you can't fix safely stays unfixed with its reason and affects the risk label as below.
+- **Only exception**: the fix needs a product decision from the author that you can't make (e.g. which of two user-visible behaviours is wanted). Leave just that finding unfixed, write in the Review table what decision is needed and why you can't make it, and hand that item to the author.
+
+**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran; if round 3 ran, add "Round 3 findings all fixed; not sent for another review." For each finding, give its severity, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
 
 **Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), or a **high-severity** code-review finding is left unfixed. Swap the label:
 
@@ -186,6 +192,6 @@ If the PR has `article-status: request` and merged during this session, run `art
 - [ ] If the issue has Risks / Opportunities (grilled issues): every Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
-- [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.
+- [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; if round 3 ran, all its findings are fixed (except unfixable security findings, or ones needing an author product decision, each with its reason) and no further review was dispatched; the PR has `## Review` and a 🤖 summary comment.
 - [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
 - [ ] Only `risk: low` was merged or queued for auto-merge.

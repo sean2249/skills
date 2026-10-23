@@ -48,9 +48,11 @@ Closes #<!-- issue number -->
 
 ## Review
 
-<!-- Filled by issue-implement after its fresh-context code and security reviewer subagents (at most 3 rounds each). -->
+<!-- Filled by issue-implement after its fresh-context code and security reviewer subagents (at most 3 rounds each). Round 3 is the last review: all its findings are fixed and nothing is sent for another review; only a fix that needs the author's product decision is handed over, with the reason. -->
 - code-review: <N> round(s)
 - security-review: <N> round(s)
+<!-- If round 3 ran, keep this line: -->
+- Round 3 findings all fixed; not sent for another review.
 
 | Review | Severity | Location | Outcome |
 |---|---|---|---|
