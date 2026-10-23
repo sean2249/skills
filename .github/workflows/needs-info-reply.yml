@@ -3,13 +3,12 @@
 # Called from each repo's .github/workflows/needs-info-reply.yml (written by issue-workflow-setup),
 # on `issue_comment: created` and `issues: edited`.
 #
-# Comment path: the comment is on an issue (not a PR); the commenter is the repo owner or the
-# issue's author, not a bot, and is a maintainer (author_association OWNER / MEMBER / COLLABORATOR);
-# the comment doesn't start with "🤖 AI".
-# Edit path: the editor is the repo owner, or the issue's author when that author is a maintainer;
-# not a bot; the body was edited; it has a `## Pending decisions` section and every decision in it
-# has at least one ticked box.
-# The maintainer checks keep outside users of a public repo from moving issues around.
+# Comment path: the comment is on an issue (not a PR); the commenter is the repo owner
+# (author_association OWNER), not a bot; the comment doesn't start with "🤖 AI".
+# Edit path: the editor is the repo owner (by login, or the issue's author when that author is
+# OWNER); not a bot; the body was edited; it has a `## Pending decisions` section and every
+# decision in it has at least one ticked box.
+# Only the owner counts, same as the skills: nobody else can move an issue around.
 # The AI posts and edits with the author's login, so only markers tell them apart: AI comments
 # start with "🤖 AI", and the AI writes decisions with empty boxes and never ticks one.
 name: needs-info-reply
@@ -59,7 +58,6 @@ jobs:
           owner = ((ev.get("repository") or {}).get("owner") or {}).get("login")
           author = (issue.get("user") or {}).get("login")
           labels = [l["name"] for l in issue.get("labels", [])]
-          maintainer = ("OWNER", "MEMBER", "COLLABORATOR")
           common = {
               "on an issue, not a PR": not issue.get("pull_request"),
               "issue has status: needs-info": "status: needs-info" in labels,
@@ -69,9 +67,7 @@ jobs:
               user = comment.get("user") or {}
               checks = {**common,
                   "commenter is not a bot": user.get("type") != "Bot",
-                  "commenter is owner or issue author": comment.get("author_association") == "OWNER"
-                      or user.get("login") == author,
-                  "commenter is a maintainer": comment.get("author_association") in maintainer,
+                  "commenter is the owner": comment.get("author_association") == "OWNER",
                   "comment is not an AI comment": not (comment.get("body") or "").lstrip().startswith("🤖 AI"),
               }
           else:
@@ -79,9 +75,8 @@ jobs:
               checks = {**common,
                   "issue was edited": ev.get("action") == "edited",
                   "editor is not a bot": sender.get("type") != "Bot",
-                  "editor is owner or issue author": sender.get("login") in (author, owner),
-                  "editor is owner, or issue author is a maintainer": sender.get("login") == owner
-                      or issue.get("author_association") in maintainer,
+                  "editor is the owner": sender.get("login") == owner
+                      or (sender.get("login") == author and issue.get("author_association") == "OWNER"),
                   "body was edited": "body" in (ev.get("changes") or {}),
                   "every pending decision has a ticked box": all_ticked(issue.get("body") or ""),
               }

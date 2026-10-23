@@ -1,6 +1,6 @@
 # Caller for the shared issue-status workflow. Written by issue-workflow-setup.
 # <skills-repo> is the <owner>/<repo> that hosts the reusable workflows.
-# Maintainers' new issues get `status: raw`; anyone else's get `external` and stay out of the flow.
+# The owner's new issues get `status: raw`; anyone else's get `external` and stay out of the flow; bots are skipped.
 name: issue-status
 
 on:
