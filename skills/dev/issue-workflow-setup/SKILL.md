@@ -44,15 +44,24 @@ Check what already exists, without changing anything:
 | `CLAUDE.md` `## Article conventions` (article repo only) | `grep -n '^## Article conventions' CLAUDE.md` |
 | `.github/pull_request_template.md` (also `.github/PULL_REQUEST_TEMPLATE/`, root, `docs/`) | file exists? |
 | `.github/low-risk-paths.txt` | file exists? |
+| `.claude/settings.json` `permissions.deny` | file exists? which secret-file rules are already there (`python3 -c "import json;print(json.load(open('.claude/settings.json')).get('permissions',{}).get('deny',[]))"`) |
+| Secret files this repo actually uses | command below the table |
 | `CLAUDE.md` issue-workflow keys | second command below the table. They may sit in a top-level `## Issue workflow`, or (older installs) inside `## Workflow`, e.g. under `### Issue workflow` |
 | CI **job** names (needed for branch protection) | `jobs:` keys (or each job's `name:`) in `.github/workflows/*.yml` |
 
 ```bash
-# open issues that predate the workflow (no status label yet)
-gh issue list --state open --limit 500 --json number,title,labels \
-  --jq '.[] | select([.labels[].name | startswith("status: ")] | any | not) | "#\(.number) \(.title)"'
+# open issues that predate the workflow (no status label yet), with who opened them
+gh api --paginate "repos/<owner>/<repo>/issues?state=open&per_page=100" --jq '
+  .[] | select(.pull_request | not)
+  | select([.labels[].name | startswith("status: ")] | any | not)
+  | "#\(.number) [\(.author_association)] \(.title)"'
 # where the issue-workflow keys live today (headings + key lines, with line numbers)
 grep -nE '^#+ .*[Ww]orkflow|Merge mode:|Article target:|Verify command:' CLAUDE.md
+# secret files in the working tree (tracked or not), for the deny rules in Step 7
+find . \( -name node_modules -o -name .git \) -prune -o \
+  \( -name '.env*' -o -name '.dev.vars*' -o -name '*.pem' -o -name '*.key' -o -name '*.p12' \
+     -o -name 'credentials*.json' -o -name 'service-account*.json' -o -name '.npmrc' \
+     -o -type d -name secrets \) -print
 ```
 
 The section is `## Issue workflow`, not `## Workflow`: many repos already use `## Workflow` for local dev commands. Leave that one alone.
@@ -70,6 +79,7 @@ done
 
 **Repair / upgrade mode.** For an already-set-up repo, plan:
 
+- Missing `external` label → add it (Step 5); open issues by non-maintainers that already carry `status: raw` → list them in the plan, and on the author's OK swap them to `external` (Step 6). Missing secret-file deny rules in `.claude/settings.json` → add them (Step 7).
 - Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it; an existing one without an `issues: types: [edited]` trigger (check: `grep -A3 '^  issues:' .github/workflows/needs-info-reply.yml`) → add that trigger, so ticking the Pending-decisions boxes in an issue body also switches it back. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `post-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: pending` / `article-status: requested` labels (Step 5).
 - **Old CLAUDE.md layout.** If the issue-workflow keys (`Verify command`, `Merge mode`, `Article target`, …) sit inside `## Workflow` (e.g. under `### Issue workflow`), **move** them: create a top-level `## Issue workflow` from `assets/claude-md-workflow.md` with the existing values, then delete the old sub-section. Never add a second copy beside it. Leave the rest of `## Workflow` (local dev commands) untouched.
 - **Required check rename**, in this order (Step 9). Reversing it leaves the upgrade PR waiting forever on the old `risk-guard` check, and auto-merge stalls with it:
@@ -98,8 +108,10 @@ List, and ask the author to confirm:
 - Old-name article labels to rename (Step 4 migration table), with how many issues/PRs carry each.
 - GitHub's default labels to delete (Step 4): unused ones are simply listed; for ones in use, list the affected issues/PRs.
 - Each overlapping existing label, with a choice per label: **keep** (leave as is), **rename** into one of the workflow labels (keeps its issues), or **delete**.
-- The open issues that will get `status: raw` (Step 6). The author may exclude some.
+- The open issues that will get `status: raw` (Step 6): only ones opened by a maintainer (`OWNER` / `MEMBER` / `COLLABORATOR`). The author may exclude some. Issues by anyone else get `external` instead.
 - Each file to create or merge, and what will be added.
+- The exact `permissions.deny` rules for `.claude/settings.json` (Step 7), one per line. The author confirms or edits the list before anything is written.
+- **Public repo only** (`visibility` is `PUBLIC`), a reminder for the author: the `issue-assets` branch is public like the rest of the repo, so every mockup, screenshot and run output the skills post (issues, PRs, `issue-assets`) must use made-up data. Issues opened by outsiders get `external` and are never worked on by the skills (see the README's "Public repos").
 - The `## Issue workflow` keys to add, and the merge-mode result.
 
 Ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none"), and which paths count as low risk.
@@ -216,7 +228,10 @@ mk "article-status: request"   5319e7 "Write an article about this after it ship
 mk "article-status: pending"   fbca04 "Merged; waiting for article-request"
 mk "article-status: handoff"   0e8a16 "Handed to the article repo; done here"
 mk "grill"                     d93f0b "Author asks issue-enhance to run the Grill review"
+mk "external"                  d4c5f9 "Opened by someone outside the repo; the maintainer triages it by hand"
 ```
+
+`external` is added by the `issue-status` workflow to issues opened by anyone who isn't `OWNER` / `MEMBER` / `COLLABORATOR`. Those issues get no `status:` label, so `issue-enhance` and `issue-implement` never work on them. To act on one, the author opens their own issue in their own words and links the outside one. Don't put `status:` labels in issue templates: the workflow strips them from outside issues anyway.
 
 Article progress is one label: the author adds `article-status: request` to an issue (`issue-implement` copies it to the PR); `article-pending` swaps it to `article-status: pending` when the PR merges; `article-request` swaps that to `article-status: handoff`. There is no separate `article` label.
 
@@ -234,7 +249,8 @@ mk "post-type: research" bfdadc "Article explores a topic, reasoning kept"
 `issue-status.yml` only labels issues opened after it's installed, and `issue-enhance` only picks up `status: raw`. Label the open issues the author confirmed in Step 3:
 
 ```bash
-gh issue edit <N> --add-label "status: raw"   # once per confirmed issue
+gh issue edit <N> --add-label "status: raw"   # once per confirmed maintainer issue
+gh issue edit <N> --add-label external        # once per issue opened by anyone else
 ```
 
 Verify with JSON and filter locally. `gh issue list --label` uses the search index, which lags right after a bulk edit and undercounts:
@@ -243,7 +259,7 @@ Verify with JSON and filter locally. `gh issue list --label` uses the search ind
 gh issue list --state open --limit 500 --json number,labels \
   --jq '[.[] | select([.labels[].name] | index("status: raw"))] | length'
 gh issue list --state open --limit 500 --json number,labels \
-  --jq '.[] | select([.labels[].name | startswith("status: ")] | any | not) | .number'   # should print nothing left over
+  --jq '.[] | select([.labels[].name | startswith("status: ") or . == "external"] | any | not) | .number'   # should print nothing left over
 ```
 
 ## Step 7 — Files
@@ -260,8 +276,45 @@ Source files live in this skill's `assets/` directory.
 | `assets/low-risk-paths.txt` | `.github/low-risk-paths.txt` | Keep; append only globs the author asked for |
 | `assets/claude-md-workflow.md` | `CLAUDE.md` | Top-level `## Issue workflow` exists → add only missing keys. Keys only inside `## Workflow` → move them into a new top-level `## Issue workflow` and delete the old sub-section (repair mode). Neither → append the section. No `CLAUDE.md` → create it with just this section |
 | `assets/claude-md-article-conventions.md` (article repo only) | `CLAUDE.md` | No `## Article conventions` → append with `<fill in>` values, then ask the author to fill them (`post-write` won't run until they do). Exists → leave it |
+| Secret-file deny rules (below) | `.claude/settings.json` | Merge into `permissions.deny`; keep every other key and existing rule. No file → create it with just these rules |
 
 In all four callers, replace `<skills-repo>` with the real `<owner>/<repo>`.
+
+**Secret-file deny rules.** Stop Claude Code from reading secret files in this repo, so a session working on an issue can't leak them into an issue, PR or screenshot. Start from this set, then fit it to what the Step 1 `find` turned up: add a rule for any other secret file it found, and drop ones the repo has no use for. Show the final list in the Step 3 plan and write only what the author confirmed.
+
+```text
+Read(**/.env)
+Read(**/.env.*)
+Read(**/.dev.vars)
+Read(**/.dev.vars.*)
+Read(**/*.pem)
+Read(**/*.key)
+Read(**/secrets/**)
+```
+
+- `Read(**/.env.*)` also blocks `.env.example` / `.env.sample`. If the repo has one and sessions need it, replace that rule with the real files the `find` listed (e.g. `Read(**/.env.local)`, `Read(**/.env.production)`) and say so in the plan.
+- `.npmrc` / `credentials*.json` / `service-account*.json`: add a rule only if the file holds a token or key.
+- Read rules also cover Grep and Glob, but not a shell command like `cat .env`. They are a guard against accidents and steering, not a sandbox.
+
+Merge (pass the confirmed rules as arguments; existing rules and keys stay, duplicates are skipped):
+
+```bash
+python3 - "Read(**/.env)" "Read(**/.env.*)" <…confirmed rules> <<'PY'
+import json, os, sys
+p = ".claude/settings.json"
+d = json.load(open(p)) if os.path.exists(p) else {}   # invalid JSON → this fails; show the author, don't overwrite
+deny = d.setdefault("permissions", {}).setdefault("deny", [])
+added = [r for r in sys.argv[1:] if r not in deny]
+deny.extend(added)
+os.makedirs(".claude", exist_ok=True)
+with open(p, "w") as f:
+    json.dump(d, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+print("added:", added or "nothing")
+PY
+```
+
+Repair mode runs the same merge: it only adds the confirmed rules that are missing.
 
 `low-risk-paths.txt`: keep the header comment, and replace the example globs below it with the author's list from Step 3.
 
@@ -286,8 +339,8 @@ Branch: if you're already on a non-default branch (e.g. a worktree session's bra
 
 ```bash
 [ "$(git branch --show-current)" = "<default>" ] && git switch -c chore/issue-workflow-setup
-git add .github CLAUDE.md
-git commit -m "Set up issue workflow (labels, status/risk-guard workflows, PR template)"
+git add .github CLAUDE.md .claude/settings.json
+git commit -m "Set up issue workflow (labels, status/risk-guard workflows, PR template, secret-file deny rules)"
 git push -u origin HEAD
 gh pr create --fill --label "risk: high"
 ```
@@ -343,8 +396,10 @@ JSON
 - [ ] GitHub's default labels are gone (in-use ones only after the author confirmed the affected issues/PRs); bot labels such as `dependencies` are kept.
 - [ ] No existing label's color or description was changed (no `--force`).
 - [ ] No old article labels remain (`article`, `article: pending`, … migrated per the Step 4 table; article-repo markers removed).
-- [ ] All 11 workflow labels exist (`gh label list`), including `grill` and `article-status: request` / `pending` / `handoff`; no `article` label.
-- [ ] Every confirmed pre-existing open issue has `status: raw` (checked with `--json`, not `--label`).
+- [ ] All 12 workflow labels exist (`gh label list`), including `grill`, `external` and `article-status: request` / `pending` / `handoff`; no `article` label.
+- [ ] Every confirmed pre-existing open issue by a maintainer has `status: raw`, and every one by anyone else has `external` and no `status:` label (checked with `--json`, not `--label`).
+- [ ] `.claude/settings.json` has the secret-file `permissions.deny` rules the author confirmed, merged with whatever was there before.
+- [ ] Public repo: the author was reminded that `issue-assets` is public and that posted mockups, screenshots and output use made-up data.
 - [ ] `needs-info-reply.yml` triggers on both `issue_comment: created` and `issues: edited`.
 - [ ] The six `.github` files exist, all four workflows (issue-status, risk-guard, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>`, and their YAML parses.
 - [ ] Non-article repo: no `post-type:` / `article-type:` / `article: <type>` labels left (deleted, in-use ones after confirmation).
