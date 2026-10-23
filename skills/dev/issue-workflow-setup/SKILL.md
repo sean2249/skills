@@ -7,12 +7,28 @@ description: Use when installing the AI-assisted GitHub issue workflow (raw → 
 
 One-time install of the issue workflow used by `issue-enhance`, `issue-implement`, `article-request`, and `post-write`.
 
-The workflow logic lives once, as reusable workflows in the skills repo (`.github/workflows/issue-status.yml`, `risk-guard.yml`, `article-pending.yml`, and `needs-info-reply.yml`, all `on: workflow_call`). Each repo gets only short callers, so fixes ship to every repo without re-running setup. `<skills-repo>` below is the `<owner>/<repo>` hosting those reusable workflows: the repo this skill came from, or the author's fork. Ask if unsure, and write it into the callers.
+The workflow logic lives once, as reusable workflows in the skills repo (`.github/workflows/issue-status.yml`, `risk-guard.yml`, `article-pending.yml`, and `needs-info-reply.yml`, all `on: workflow_call`). Each repo gets only short callers. `<skills-repo>` below is the `<owner>/<repo>` hosting those reusable workflows: the repo this skill came from, or the author's fork. Ask if unsure, and write it into the callers.
 
-**Callers pin `@main` by default.** The upside: change the skills repo once and every repo picks it up on its next run. The cost: these workflows can write issues, labels, and PR comments, so a mistake on the skills repo's `main` hits every repo at once. To lock a repo to a known version instead, change the ref in its callers:
+**Callers pin a release tag, never `@main`.** These workflows can write issues, labels and PR comments, so a repo only runs a version the author chose. Release tags are `v1`, `v2`, `v3`, … (a plain whole number, one per release) and are never moved or re-pushed once published. `<tag>` in the callers is the latest one:
 
-- `uses: <skills-repo>/.github/workflows/risk-guard.yml@v1` (a tag), or `@<full commit sha>` (immutable; safest).
-- To upgrade a locked repo: read the skills repo's changes since that ref (`gh api repos/<skills-repo>/compare/<old>...<new>`), then bump the ref in all four callers in one PR (it touches `.github/workflows`, so `risk: high`).
+```bash
+gh api --paginate repos/<skills-repo>/tags --jq '.[].name' | grep -E '^v[0-9]+$' | sort -V | tail -1
+```
+
+No tag yet → stop and tell the author to tag a release in the skills repo first (README → Versions); don't fall back to `@main`.
+
+This only pins the reusable workflows. The skills themselves (the plugin) still update from the skills repo's `main`.
+
+**Upgrading a repo** (repair / upgrade mode): read what changed (`gh api repos/<skills-repo>/compare/<old tag>...<new tag> --jq '.commits[].commit.message'`, and the release notes), then bump the ref in all four callers in one PR (it touches `.github/workflows`, so `risk: high`):
+
+```bash
+for f in .github/workflows/{issue-status,risk-guard,article-pending,needs-info-reply}.yml; do
+  [ -f "$f" ] && sed -i.bak -E 's#(uses: *[^ ]+/\.github/workflows/[a-z-]+\.yml)@[^ ]+#\1@<new tag>#' "$f" && rm "$f.bak"
+done
+grep -n 'uses:' .github/workflows/{issue-status,risk-guard,article-pending,needs-info-reply}.yml   # all four on <new tag>
+```
+
+A caller still on `@main` (repos set up before tags) is upgraded the same way, to the latest tag.
 
 **Never overwrite.** Missing files are created; existing files are merged. Show the plan and get the author's OK before changing anything.
 
@@ -86,6 +102,8 @@ done
 ```
 
 **Repair / upgrade mode.** For an already-set-up repo, plan:
+
+- Callers on `@main`, or on an older tag than the latest → bump all four to the latest tag ("Upgrading a repo" above), after showing the author the compare output.
 
 - Missing `external` label → add it (Step 5); open issues not opened by the owner that already carry a `status:` label (the repair-mode query in Step 1) → list them in the plan, and on the author's OK swap them to `external` (Step 6). Missing secret-file deny rules in `.claude/settings.json` → add them (Step 7).
 - Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it; an existing one without an `issues: types: [edited]` trigger (check: `grep -A3 '^  issues:' .github/workflows/needs-info-reply.yml`) → add that trigger, so ticking the Pending-decisions boxes in an issue body also switches it back. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `post-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: request` / `article-status: pending` labels (Step 5).
@@ -278,9 +296,9 @@ Source files live in this skill's `assets/` directory.
 
 | Asset | Target | If target exists |
 |---|---|---|
-| `assets/issue-status.yml` (caller) | `.github/workflows/issue-status.yml` | Old full copy → replace with the caller (repair mode). Already a caller → keep; fix `<skills-repo>` / ref if wrong |
+| `assets/issue-status.yml` (caller) | `.github/workflows/issue-status.yml` | Old full copy → replace with the caller (repair mode). Already a caller → keep; fix `<skills-repo>` if wrong; `@main` or an older tag → the latest tag |
 | `assets/risk-guard.yml` (caller) | `.github/workflows/risk-guard.yml` | Same |
-| `assets/article-pending.yml` (caller) | `.github/workflows/article-pending.yml` | Missing → add. Already a caller → keep; fix `<skills-repo>` / ref if wrong |
+| `assets/article-pending.yml` (caller) | `.github/workflows/article-pending.yml` | Missing → add. Already a caller → keep; fix `<skills-repo>` if wrong; `@main` or an older tag → the latest tag |
 | `assets/needs-info-reply.yml` (caller) | `.github/workflows/needs-info-reply.yml` | Same; also make sure it has both triggers (`issue_comment: created` and `issues: edited`). Switches a `status: needs-info` issue back to `status: raw` (no comment) when the author replies, or ticks a box for every decision in the body's `## Pending decisions` |
 | `assets/pull_request_template.md` | `.github/pull_request_template.md` (or the existing template's location) | Append only the sections it lacks |
 | `assets/low-risk-paths.txt` | `.github/low-risk-paths.txt` | Keep; append only globs the author asked for |
@@ -288,7 +306,7 @@ Source files live in this skill's `assets/` directory.
 | `assets/claude-md-article-conventions.md` (article repo only) | `CLAUDE.md` | No `## Article conventions` → append with `<fill in>` values, then ask the author to fill them (`post-write` won't run until they do). Exists → leave it |
 | Secret-file deny rules (below) | `.claude/settings.json` | Merge into `permissions.deny`; keep every other key and existing rule. No file → create it with just these rules |
 
-In all four callers, replace `<skills-repo>` with the real `<owner>/<repo>`.
+In all four callers, replace `<skills-repo>` with the real `<owner>/<repo>` and `<tag>` with the latest release tag (top of this file).
 
 **Secret-file deny rules.** Stop Claude Code from reading secret files in this repo, so a session working on an issue can't leak them into an issue, PR or screenshot. Start from this set, then fit it to what the Step 1 `find` turned up: add a rule for any other secret file it found, and drop ones the repo has no use for. Show the final list in the Step 3 plan and write only what the author confirmed.
 
@@ -431,7 +449,7 @@ JSON
 - [ ] `.claude/settings.json` has the secret-file `permissions.deny` rules the author confirmed, merged with whatever was there before.
 - [ ] Public repo: the author was reminded that `issue-assets` is public and that posted mockups, screenshots and output use made-up data.
 - [ ] `needs-info-reply.yml` triggers on both `issue_comment: created` and `issues: edited`.
-- [ ] The six `.github` files exist, all four workflows (issue-status, risk-guard, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>`, and their YAML parses.
+- [ ] The six `.github` files exist, all four workflows (issue-status, risk-guard, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>` on the latest release tag (no `@main`), and their YAML parses.
 - [ ] Non-article repo: no `post-type:` / `article-type:` / `article: <type>` labels left (deleted, in-use ones after confirmation).
 - [ ] Article repo: the four mode labels (`post-type: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
 - [ ] `CLAUDE.md` has `## Issue workflow` with merge mode set and the author's values (or `<fill in>` placeholders).

@@ -1,5 +1,5 @@
 # Caller for the shared needs-info-reply workflow. Written by issue-workflow-setup.
-# <skills-repo> is the <owner>/<repo> that hosts the reusable workflows.
+# <skills-repo> is the <owner>/<repo> that hosts the reusable workflows; <tag> is its latest release tag (v1, v2, …).
 name: needs-info-reply
 
 on:
@@ -13,4 +13,4 @@ permissions:
 
 jobs:
   needs-info-reply:
-    uses: <skills-repo>/.github/workflows/needs-info-reply.yml@main
+    uses: <skills-repo>/.github/workflows/needs-info-reply.yml@<tag>

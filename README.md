@@ -220,9 +220,25 @@ flowchart TD
 ```yaml
 jobs:
   risk-guard:
-    uses: <owner>/skills/.github/workflows/risk-guard.yml@main
+    uses: <owner>/skills/.github/workflows/risk-guard.yml@v1
 ```
 
 In the calling repo the required check is named `risk-guard / check`.
 
-Callers pin `@main`: one change here reaches every repo on its next run. The trade-off is that these workflows can write issues, labels and PR comments, so a mistake on `main` hits every repo at once. To lock a repo, point its callers at a tag (`@v1`) or a full commit SHA (`@<sha>`). To upgrade later, review `gh api repos/<owner>/skills/compare/<old>...<new>` and bump the ref in all callers in one PR.
+### Versions
+
+Callers pin a release tag (`@v1`), never `@main`. These workflows can write issues, labels and PR comments, so each repo runs only a version I chose; a mistake on `main` doesn't reach any repo until I bump it.
+
+- **Tags are `v1`, `v2`, `v3`, …**: one plain whole number per release. A published tag is never moved or re-pushed; a fix is always a new tag.
+- **Only the reusable workflows are pinned.** The skills themselves (the `kiwi-skills` plugin) still update from `main` as usual (Install, above).
+
+Releasing:
+
+1. Merge the change to `main`.
+2. Tag the merge commit with the next number and write release notes (what changed for calling repos, and whether anything needs repair mode):
+   ```bash
+   gh release create v<N> --target main --title v<N> --notes-file <notes.md>
+   ```
+3. In each repo, run `issue-workflow-setup` in repair mode. It shows `gh api repos/<owner>/skills/compare/v<old>...v<N>` for review, then opens one PR bumping all four callers to `v<N>` (`risk: high`, merged by me).
+
+The first tag, `v1`, is created by hand after the change that introduced tags is merged (the command in step 2). Until it exists, `issue-workflow-setup` stops instead of writing callers. Repos whose callers still say `@main` move to the latest tag the next time repair mode runs.
