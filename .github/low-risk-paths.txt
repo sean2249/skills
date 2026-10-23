@@ -4,3 +4,4 @@
 # a trailing `/` means "everything under this directory". Lines starting with # are ignored.
 # Anything under .github/ or .claude/, and any CLAUDE.md, is always rejected, whatever is listed here.
 README.md
+README.zh-TW.md

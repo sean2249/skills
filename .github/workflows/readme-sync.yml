@@ -1,0 +1,40 @@
+# This repo's own check, not a reusable workflow: fails a PR that changes README.md without
+# README.zh-TW.md (CLAUDE.md → Issue workflow). Logic lives in .github/scripts/readme_sync.py.
+# In-tree, not pinned to a tag, so a PR can edit this check; tamper resistance comes from
+# risk-guard rejecting .github/ from risk: low, so the author reviews any PR touching either file.
+# The "readme-sync: skip" label is added by the author only and never together with risk: low.
+# Required status check name: "readme-sync". To remove this check, FIRST drop it from the
+# required checks (gh api -X DELETE repos/sean2249/skills/branches/main/protection/required_status_checks/contexts -f 'contexts[]=readme-sync'),
+# THEN delete this file and the script; otherwise every PR waits on "Expected" forever.
+name: readme-sync
+
+# No `paths:` filter: a required check that doesn't run leaves the PR waiting on "Expected".
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+# Own group (not risk-guard's), queued rather than cancelled, as in self-risk-guard.yml.
+concurrency:
+  group: readme-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  readme-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check that README.zh-TW.md changes with README.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: python3 .github/scripts/readme_sync.py

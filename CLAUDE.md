@@ -5,7 +5,7 @@
 Issues move `status: raw` → (`status: needs-info`) → `status: ai-enhanced` → `status: approved`.
 Only the author sets `status: approved`. Skills: `issue-enhance`, `issue-implement`.
 
-- Verify command: `python3 -c "import glob,yaml;[yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+glob.glob('skills/**/assets/*.yml',recursive=True)]" && python3 -m py_compile $(git ls-files 'skills/**/*.py')`
+- Verify command: `python3 -c "import glob,yaml;[yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+glob.glob('skills/**/assets/*.yml',recursive=True)]" && python3 -m py_compile $(git ls-files 'skills/**/*.py' '.github/scripts/*.py')`
 - Preview URL: none
 - Low-risk paths: `.github/low-risk-paths.txt`
 - Merge mode: `auto`
@@ -14,6 +14,8 @@ Only the author sets `status: approved`. Skills: `issue-enhance`, `issue-impleme
 - Mockup path: `<N>/<file>` (inside the issue assets branch; `<N>` = issue number)
 
 This repo is public: only the owner's issues enter the flow, outside issues get `external`, security findings stay out of public PRs and issues, and every mockup, screenshot and run output uses made-up data (README → Public repos). Never name the author's private repos in anything committed or posted here.
+
+README is bilingual: `README.md` (English, the GitHub front page) and `README.zh-TW.md` (Traditional Chinese). A PR that changes `README.md` updates `README.zh-TW.md` in the same PR; the `readme-sync` check fails otherwise. Sections that stay English-only in the Chinese version (Shared workflows, Versions) still count: if a change really needs only one side, say why in the PR description, don't label it `risk: low`, and leave it to the author, who may add the `readme-sync: skip` label and merge by hand. Never add that label yourself.
 
 Changes to skills (`skills/**`, `.claude-plugin/`) are never `risk: low`: every SKILL.md runs in all of the author's repos with the author's `gh` login.
 
