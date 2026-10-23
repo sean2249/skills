@@ -14,13 +14,22 @@ SKIP = "readme-sync: skip"
 def base_zh_status():
     if "BASE_ZH_STATUS" in os.environ:
         return os.environ["BASE_ZH_STATUS"].strip(), ""
-    # Ask about the base branch by name, not the event's base.sha: that sha can predate the
-    # Chinese file landing on the base branch, and a later run on the same PR would still pass.
+    # Resolve the base branch to its current sha, not the event's base.sha: that sha can predate
+    # the Chinese file landing on the base branch, and a later run on the same PR would still pass.
+    # Resolving first also keeps a missing branch from looking like a missing file (both are 404).
+    repo = os.environ["REPO"]
+    b = subprocess.run(
+        ["gh", "api", f"repos/{repo}/branches/{urllib.parse.quote(os.environ['BASE_REF'], safe='')}",
+         "--jq", ".commit.sha"],
+        capture_output=True, text=True,
+    )
+    sha = b.stdout.strip()
+    if b.returncode != 0 or not sha:
+        return "", f"could not resolve base branch: {b.stderr.strip()}"
     # -i prints the status line first; gh exits 1 on 404 and on every other error alike,
     # so the status line, not the exit code, tells "not set up yet" apart from a failure.
-    ref = urllib.parse.quote(os.environ["BASE_REF"], safe="")
     r = subprocess.run(
-        ["gh", "api", "-i", f"repos/{os.environ['REPO']}/contents/{ZH}?ref={ref}"],
+        ["gh", "api", "-i", f"repos/{repo}/contents/{ZH}?ref={sha}"],
         capture_output=True, text=True,
     )
     first = r.stdout.splitlines()[0] if r.stdout else ""
