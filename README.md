@@ -97,6 +97,18 @@ flowchart TD
 
 </details>
 
+### Code and security review
+
+Every PR from `issue-implement` is reviewed before any merge, and the implementing session never reviews its own work.
+
+1. **Two reviewers in parallel:** fresh-context subagents, one for code (correctness, missed acceptance criteria, regressions) and one for security. Each gets only the PR URL, with no conversation or hints, and never comments on the PR or pushes commits.
+2. **The implementing session handles the findings:** it checks each one against the code, fixes the real ones, and gives a reason for the rest.
+3. **New reviewers every round.** Rounds 1–2: fix, then review again.
+4. **Round 3 is the last review.** All its findings are fixed and nothing is sent for another review. Only a fix that needs my product decision is handed to me, with the reason.
+5. **Risk:** any unfixed security finding means the PR can't be `risk: low`.
+
+The cap exists because every round of fixes can bring in new problems, so reviewing until clean never converges.
+
 ### How I run it
 
 This is how I personally operate the workflow day to day: parallel child sessions, with GitHub issues as the only handoff. It needs no extra skill. The parallelism comes from asking Claude, in a main session, to start child sessions.
