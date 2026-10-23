@@ -1,0 +1,17 @@
+# Caller for this repo's own needs-info-reply workflow. Written by issue-workflow-setup.
+# Named self-*.yml because needs-info-reply.yml here is the reusable workflow itself.
+# Pinned to a release tag like every other repo; bump it after each release (CLAUDE.md → Releasing shared workflows).
+name: needs-info-reply (self)
+
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [edited]   # the author ticks Pending decisions boxes in the issue body
+
+permissions:
+  issues: write
+
+jobs:
+  needs-info-reply:
+    uses: sean2249/skills/.github/workflows/needs-info-reply.yml@v2
