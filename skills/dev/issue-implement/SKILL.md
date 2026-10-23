@@ -27,7 +27,7 @@ Refuse and explain if any of these hold:
 | No `status: approved` label | Current status is `<label>`; only the author can approve. Suggest `issue-enhance` for `raw` / `needs-info`, or author review for `ai-enhanced`. |
 | Any issue in `blockedBy` is still open | Blocked by #M (list each open blocker); implement those first. |
 | `subIssuesSummary.total` > 0 (it's a parent) | It's a parent issue; implement its sub-issues instead. |
-| Has any `post-type:` label, and this is the article repo | Use `article-write`. `article-status: request` is fine: it means "write an article after this ships" (Step 5). |
+| Has any `post-type:` label, and this is the article repo | Use `post-write`. `article-status: request` is fine: it means "write an article after this ships" (Step 5). |
 | Has a `post-type:` label but this **isn't** the article repo | Mislabelled: `post-type:` exists only in the article repo. Stop and tell the author; a card that should become an article uses `article-status: request`. |
 
 Never add `status: approved` yourself, even if asked.
@@ -105,16 +105,35 @@ gh pr edit <PR> --add-label "article-status: request"   # only if the issue has 
 
 ## Step 5b — Review (code + security), before any merge
 
-Run both reviews on the open PR, using the built-in skills via the Skill tool:
+**You don't review your own PR.** Two fresh-context subagents review it, like a reviewer on a pull request; you, the implementing session, handle what they find.
 
-- `code-review` on this PR (`<PR number>`): correctness problems in the diff.
-- `security-review`: security review of the branch's diff against the default branch.
+**1. Dispatch both reviewers in one message** (Agent tool, `general-purpose`), in parallel. Give each **only** the prompt below: no conversation, reasoning, plan notes, or hints about what you think is weak. The PR body must already be written (Step 5).
 
-Don't pass `--comment` (its comments wouldn't carry the 🤖 marker). Collect the findings and handle them here. **If either skill isn't available in the session**, dispatch a fresh-context subagent (Agent tool, `general-purpose`) for that review instead. Give it only the PR URL and the repo, not your reasoning, and ask for findings with severity and `file:line`. Note in the PR that the fallback was used.
+```text
+You are reviewing a pull request as a <code reviewer | security reviewer>.
+PR: <PR url>   Repo: <local path, or <owner>/<repo>>
+Read it yourself: `gh pr view <PR url>`, `gh pr diff <PR url>`, the linked issue
+(`gh issue view <N> --comments`), and any code you need for context.
+<code reviewer>: find correctness bugs in the diff: wrong behaviour, missed acceptance criteria,
+  broken edge cases, regressions. You may run the `code-review` skill if it's available.
+<security reviewer>: find security problems the diff introduces: injection, auth / permission
+  gaps, secrets, unsafe input handling, risky dependencies. You may run the `security-review`
+  skill if it's available.
+Do not comment on the PR, push, or change any file.
+Return findings, most severe first, exactly in this format ("None" if there are none):
+## Findings
+1. <one-sentence problem>
+   - Where: `file:line`
+   - Severity: high | medium | low
+   - Why: <concrete input / state → wrong result>
+   - Suggested fix: <one line>
+```
 
-**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). After fixes, push and run both reviews again **on the new changes only**. **At most 3 rounds.** If findings are still unhandled after round 3, stop and hand the PR to the author.
+**2. Handle the findings here**, in this session, without asking the author first: check each one against the code; real ones you fix and commit, the rest get a reason.
 
-**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran (and whether the fallback was used). For each finding, give its severity, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
+**Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). After fixes, push and dispatch **new** fresh-context reviewers on the new changes only (`<base sha>..HEAD` in the prompt), never the same subagent again. **At most 3 rounds.** If findings are still unhandled after round 3, stop and hand the PR to the author.
+
+**Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran. For each finding, give its severity, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
 
 **Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), or a **high-severity** code-review finding is left unfixed. Swap the label:
 
@@ -167,6 +186,6 @@ If the PR has `article-status: request` and merged during this session, run `art
 - [ ] If the issue has Risks / Opportunities (grilled issues): every Risk has its mitigation accounted for, and every "this time" Opportunity is mapped, in the Behaviour summary.
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
-- [ ] Both reviews (code + security) ran, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.
+- [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; the PR has `## Review` and a 🤖 summary comment.
 - [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
 - [ ] Only `risk: low` was merged or queued for auto-merge.

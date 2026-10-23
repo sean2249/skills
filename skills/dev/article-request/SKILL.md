@@ -5,7 +5,7 @@ description: Use when work should become an article in the repo where articles a
 
 # article-request
 
-Hands material to the article repo as a raw issue. There, `issue-enhance` drafts an outline, the author approves it, and `article-write` writes the article.
+Hands material to the article repo as a raw issue. There, `issue-enhance` drafts an outline, the author approves it, and `post-write` writes the article.
 
 Article progress in a project repo is one label, `article-status:`: **request** (the work should become an article; the author adds it to the issue, `issue-implement` copies it to the PR) → **pending** (the PR merged; set by the `article-pending` workflow) → **handoff** (this skill opened the article issue; done on this side). In the article repo, an article issue carries only a `post-type:` label.
 
@@ -99,7 +99,7 @@ gh label create "post-type: research" -R <target> --color bfdadc --description "
 
 ## Step 4 — Open the issue
 
-Body. Keep `## Sources` with its read instructions; `article-write` reads only what's listed there:
+Body. Keep `## Sources` with its read instructions; `post-write` reads only what's listed there:
 
 ````markdown
 🤖 AI <YYYY-MM-DD> (article-request)

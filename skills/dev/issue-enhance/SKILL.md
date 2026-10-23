@@ -231,7 +231,7 @@ gh issue edit <N> --remove-label "status: raw" --remove-label "status: needs-inf
 
 ## Step 5a — Article issues: an outline, not an implementation plan
 
-An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `article-write` Step 2 for how). Never search a source repo for other files. If it has more than one `post-type:` label, ask the author which one applies and remove the others. The type was already chosen with the author when the card was opened (see the body's `## Post type`, written by `article-request`): write the outline for that type and **don't ask about the type again**.
+An article-writing issue (see Step 1) gets an article outline. Read only the sources listed in its `## Sources` section (see `post-write` Step 2 for how). Never search a source repo for other files. If it has more than one `post-type:` label, ask the author which one applies and remove the others. The type was already chosen with the author when the card was opened (see the body's `## Post type`, written by `article-request`): write the outline for that type and **don't ask about the type again**.
 
 Same rules as Step 5 (author text untouched, one AI section, 🤖 comment), with this AI section:
 
@@ -245,6 +245,12 @@ One of: `post-type: devlog` (reconstruct a decision path), `post-type: intro` (i
 
 ## Main thread
 - The one thread the article follows, in a sentence or two.
+
+## Frontmatter
+<!-- Keys per the article repo's `## Article conventions`. -->
+- Title: <one working title>
+- <other keys the conventions require: date / series number / category / tags …>
+- Cover: <the source image to use> / <diagram of <what part of the post>, drawn per the conventions> — always planned; when the sources have no image, plan a diagram from the post's own content. Never "no cover".
 
 ## Sections
 1. <section>: <what it says>. Material: <which source / which part of 文章素材>.
