@@ -2,8 +2,9 @@
 
 Run by .github/workflows/readme-sync.yml. Inputs are environment variables:
 LABELS (JSON array of label names), REPO, PR, BASE_REF, GH_TOKEN.
-For local tests, FILES_JSON (JSON array of {filename, status, previous_filename}) and
-BASE_ZH_STATUS (HTTP status, e.g. 200 / 404 / 500) replace the two API calls.
+For local tests, FILES_JSON (JSON array of {filename, status, previous_filename}) replaces the
+changed-files call, and BASE_ZH_STATUS (HTTP status, e.g. 200 / 404 / 500) replaces both base-branch
+calls (resolving BASE_REF and looking up the Chinese file).
 """
 import json, os, subprocess, sys, urllib.parse
 
