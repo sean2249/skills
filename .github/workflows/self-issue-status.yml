@@ -1,0 +1,16 @@
+# Caller for this repo's own issue-status workflow. Written by issue-workflow-setup.
+# Named self-*.yml because issue-status.yml here is the reusable workflow itself.
+# Pinned to a release tag like every other repo; bump it after each release (CLAUDE.md → Releasing shared workflows).
+# The owner's new issues get `status: raw`; anyone else's get `external` and stay out of the flow; bots are skipped.
+name: issue-status (self)
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  issue-status:
+    uses: sean2249/skills/.github/workflows/issue-status.yml@v2
