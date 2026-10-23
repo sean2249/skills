@@ -11,7 +11,7 @@ Turns a raw issue into a plan a fresh session can implement without this convers
 
 - **Never add `status: approved`.** Only the author sets it — even if asked to "finish" or "complete" the issue. Say so and stop.
 - **Keep the author's original text verbatim.** Never rewrite or delete it.
-- **One AI section in the body, always overwritten.** Everything you write goes below `---` and the `> 🤖 AI-enhanced (Claude Code), <YYYY-MM-DD>` header. It is the latest complete plan: each revision replaces that whole section; never stack a second one. The implementing session reads only the body.
+- **One AI section in the body, always overwritten.** Everything you write goes below `---` and the `> 🤖 AI-enhanced (Claude Code), <YYYY-MM-DD>` header (the only exception is the parent-issue line at the top, Step 6). It is the latest complete plan: each revision replaces that whole section; never stack a second one. The implementing session reads only the body.
 - **One AI comment per body change.** Every time you change the body (Step 5 first enhancement, each Step 5b grill round, each Step 5c revision, Step 6 split, Step 7 rejection) or ask needs-info questions (Step 3), post a `gh issue comment` whose first line is `🤖 AI <YYYY-MM-DD>`, followed by what changed this round and why. Other AI comments (e.g. already-done evidence) use the same first line. The author's comments have no prefix, so any comment not starting with 🤖 is the author's.
 - **Why markers:** the AI posts with the author's `gh` login, so GitHub's author field can't tell AI from author; only these fixed markers can.
 - **Every decision for the author goes in the issue body**, under `## Pending decisions` in the AI section, answered with checkboxes (Step 3). Never ask in chat, even when the author is in the session. **Never tick a box yourself**: a ticked box means the author answered.
@@ -22,15 +22,17 @@ Turns a raw issue into a plan a fresh session can implement without this convers
 ```bash
 # one issue
 gh issue view <N> --json number,title,body,labels,comments
-# batch: every raw / needs-info issue, minus those already answered with an "Already done" comment
-# the author hasn't replied to. Filter --json locally (`--label` uses the search index, which lags).
-gh issue list --state open --limit 500 --json number,title,labels,comments --jq '
+# batch: every raw / needs-info issue, minus parents (Step 6) and those already answered with an
+# "Already done" comment the author hasn't replied to. Filter --json locally (`--label` uses the
+# search index, which lags).
+gh issue list --state open --limit 500 --json number,title,labels,comments,subIssuesSummary --jq '
   .[] | select([.labels[].name] | index("status: raw") or index("status: needs-info"))
+  | select(.subIssuesSummary.total == 0)
   | select((.comments[-1].body // "") as $b | ($b | startswith("🤖 AI")) and ($b | contains("**Already done**")) | not)
   | "#\(.number) [\(.labels | map(.name) | map(select(startswith("status: "))) | join(","))] \(.title)"'
 ```
 
-The filter skips issues whose **latest** comment is the AI's "Already done" evidence (Step 1). They wait for the author to close them. Any newer author comment brings the issue back into the batch. Normally an author's reply on a `needs-info` issue switches it back to `status: raw` automatically (the `needs-info-reply` workflow). The `needs-info` branch of the filter is a fallback for when that workflow didn't run: such an issue is only worth picking up when the author has replied after the AI's question.
+The filter skips parent issues: they stay `status: raw` on purpose (Step 6). It also skips issues whose **latest** comment is the AI's "Already done" evidence (Step 1). They wait for the author to close them. Any newer author comment brings the issue back into the batch. Normally an author's reply on a `needs-info` issue switches it back to `status: raw` automatically (the `needs-info-reply` workflow). The `needs-info` branch of the filter is a fallback for when that workflow didn't run: such an issue is only worth picking up when the author has replied after the AI's question.
 
 **Resuming a `needs-info` issue.** Read the answers first:
 
@@ -129,6 +131,8 @@ In the chat, tell the author only the issue link and the number of pending decis
 
 For any UI change, or any choice that isn't settled yet, show **2–3 versions side by side in the same round** and ask the author to pick one (a pending decision, Step 3) **before** writing the plan. Never one version per round: the author should see the failures and the compromises together. Only the chosen option goes into the issue.
 
+**User-visible text and flows: show the exact words.** Whenever the plan adds or changes something the user sees or reads (a confirmation dialog, toast, error message, empty state, hint), the Mockup shows the **exact text** and **when it appears**: what triggers it, and what each button or choice does next. A one-line description in Approach ("ask the user to confirm") is not enough. The author can only judge whether the prompt is needed at all, and whether the wording is right, by reading the real text; finding that out in the PR wastes a whole review round. Draw it like any other UI (a screenshot), or, for a message with no layout of its own, a quoted block with its trigger. Then copy that text **word for word** into Acceptance criteria (Step 5).
+
 **375px screenshots (UI).** Render each version (an HTML mockup, or the running app) at phone width into a temp dir outside the repo:
 
 ```bash
@@ -200,10 +204,11 @@ flowchart TD
 ```
 
 ## Mockup
-<chosen option image; UI issues only>
+<chosen option image; UI issues, and any plan with user-visible text or flows: the exact text and when it appears (Step 4)>
 
 ## Acceptance criteria
 - [ ] Observable behaviour, testable by a person or a command. Not file paths.
+- [ ] User-visible text from the Mockup, copied word for word, with when it appears.
 
 ## Verification
 - Commands: `<verify command from CLAUDE.md>`, plus any targeted test.
@@ -433,7 +438,17 @@ gh issue view <N> --json parent,subIssuesSummary,blockedBy,blocking
 
 Each child body is all AI-written, so it starts with the 🤖 header and follows the Step 5 template. The parent/child link and the dependencies live in GitHub, not in the text: no `Part of #N`, no `Blocked by #N`, no `## Slices` checklist.
 
-The original becomes the parent: keep the author's text, label it `status: ai-enhanced`, and comment `🤖 AI <YYYY-MM-DD>` with the split and the reason. A parent has no acceptance criteria of its own and isn't implemented directly. Its progress is the sub-issue summary.
+The original becomes the parent. A parent has no acceptance criteria of its own and isn't implemented directly. Its progress is the sub-issue summary.
+
+- **First line of its body**, above the author's text (which stays untouched), so the author doesn't try to approve it. `#<N>` is the first sub-issue to review, the one not blocked by any other:
+
+  ```markdown
+  > 🤖 This is a parent issue; no approval needed. Next to review: #<N>
+  ```
+
+- **Label stays `status: raw`.** Don't move it to `status: ai-enhanced`: there's nothing on it to approve. Step 0 skips parents. It's closed once every sub-issue is done; this skill doesn't close it.
+- Comment `🤖 AI <YYYY-MM-DD>` with the split and the reason.
+- In the chat report, tell the author plainly which sub-issue to approve next (`#<N>`), not just that the issue was split.
 
 ## Step 7 — Author rejects an idea
 
@@ -447,9 +462,11 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 
 ## Done when (per issue)
 
-- [ ] Either: the fixed-format "Already done" comment (all done); or that comment **plus** a plan for the rest (partly done); or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI; article issues use the Step 5a outline).
+- [ ] Either: the fixed-format "Already done" comment (all done); or that comment **plus** a plan for the rest (partly done); or `status: needs-info` with specific questions; or `status: ai-enhanced` with every section filled (Mockup only for UI or user-visible text / flows; article issues use the Step 5a outline).
+- [ ] Any user-visible text (dialog, toast, error, empty state, hint) is in the Mockup with its exact words and trigger, and copied word for word into Acceptance criteria.
 - [ ] Questions answered in the session are in **Decisions**, marked `(author)` with the date.
 - [ ] Splits are native sub-issues; order is native blocked-by; no `Blocked by #N` / `## Slices` text.
+- [ ] A split parent starts with the `> 🤖 This is a parent issue; no approval needed. Next to review: #<N>` line, stays `status: raw`, and the chat report names the sub-issue to approve.
 - [ ] Original text is intact; exactly one AI section, below `---` and the 🤖 header.
 - [ ] Every body change has a matching `🤖 AI <date>` comment saying what changed and why.
 - [ ] **Conditions the description left out** lists every condition you added.
