@@ -32,7 +32,7 @@ Then turn on auto-update for `kiwi-skills` as above.
 This is my personal development workflow. The skills are designed around it, so adjust it to your own habits if you use them.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as A/B decisions with checkboxes in the issue body) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review (up to 3 rounds; in round 3, low findings are all fixed with no further review, and any medium+ finding sends it back to the author), risk: low auto-merges and medium/high is merged by the author; work cards labelled article-status: request move to pending on merge (article-pending) and to handoff with article-request, which opens a post-type: article card in the article repo; that card runs the same flow and post-write writes it with a source map.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue goes from status: raw through issue-enhance and a Grill by fresh reviewer subagents (negotiated with the planner; disputes go to the author as A/B decisions with checkboxes in the issue body) and a plan check (every issue: one fresh subagent checks the plan against the code once, and the AI fixes what it finds without asking the author, unless it clashes with an author decision) to status: ai-enhanced and author approval; issue-implement opens a PR and runs code and security review (up to 3 rounds; in round 3, low findings are all fixed with no further review, and any medium+ finding sends it back to the author), risk: low auto-merges and medium/high is merged by the author; work cards labelled article-status: request move to pending on merge (article-pending) and to handoff with article-request, which opens a post-type: article card in the article repo; that card runs the same flow and post-write writes it with a source map.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: ticking a box for each pending decision in the issue body (needs-info questions and the Grill's A/B items; never asked in chat), approving an issue, reviewing and merging `risk: medium` / `high` PRs, and merging article PRs. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -56,8 +56,10 @@ flowchart TD
       R2 --> R3(["A / B tables in the issue body<br/>author ticks · no planner recommendation"]):::author
     end
     P -->|"grill label or<br/>high-risk paths"| R1
-    P -->|default| G
-    R3 --> G["status: ai-enhanced<br/>plan (+ Risks / Opportunities if grilled)"]
+    P -->|default| PC
+    R3 --> PC["Plan check · every issue · 1 round<br/>fresh subagent vs. the code<br/>AI fixes (AI default in Decisions)"]
+    PC -->|"clashes with an<br/>author decision"| D
+    PC --> G["status: ai-enhanced<br/>plan (+ Risks / Opportunities if grilled)"]
     G --> H(["Author approves<br/>sets status: approved"]):::author
   end
 
@@ -80,7 +82,7 @@ flowchart TD
       X["Any file<br/>(e.g. a notes page)"]
     end
     subgraph CARD["Article card · post-type: (article repo only)"]
-      S["Article card<br/>post-type: devlog / intro / review / research<br/>outline → Grill → approved"]
+      S["Article card<br/>post-type: devlog / intro / review / research<br/>outline → Grill → plan check → approved"]
       U["post-write<br/>devlog · intro · review · research + source map<br/>kiwi-voice 套用 → author edits → (整併 if over limit) → 收納 → PR"]
       V(["Author merges the article<br/>checks the source map"]):::author
     end
@@ -207,7 +209,7 @@ flowchart TD
 | Skill | Use when |
 |---|---|
 | `dev/issue-workflow-setup` | Installing (or repairing) the issue workflow in a repo: labels, callers for the shared workflows, PR template, CLAUDE.md section |
-| `dev/issue-enhance` | Turning a `status: raw` issue into a reviewable plan (or an article outline), split into sub-issues |
+| `dev/issue-enhance` | Turning a `status: raw` issue into a reviewable plan (or an article outline), split into sub-issues; every plan is fact-checked once against the code by a fresh subagent and fixed by the AI before the author reviews it |
 | `dev/issue-implement` | Implementing a `status: approved` issue: PR with evidence, risk label, merge only `risk: low` |
 | `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR and the issues it closes `article-status: handoff` |
 | `writing/post-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a cover, blog links for `wiki:` targets, and a source map for note sources; hands the draft to the author to edit before opening the PR |
