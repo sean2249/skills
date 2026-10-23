@@ -1,11 +1,11 @@
 """readme-sync check: fails a PR that changes README.md without README.zh-TW.md.
 
 Run by .github/workflows/readme-sync.yml. Inputs are environment variables:
-LABELS (JSON array of label names), REPO, PR, BASE_SHA, GH_TOKEN.
+LABELS (JSON array of label names), REPO, PR, BASE_REF, GH_TOKEN.
 For local tests, FILES_JSON (JSON array of {filename, status, previous_filename}) and
 BASE_ZH_STATUS (HTTP status, e.g. 200 / 404 / 500) replace the two API calls.
 """
-import json, os, subprocess, sys
+import json, os, subprocess, sys, urllib.parse
 
 EN, ZH = "README.md", "README.zh-TW.md"
 SKIP = "readme-sync: skip"
@@ -14,10 +14,13 @@ SKIP = "readme-sync: skip"
 def base_zh_status():
     if "BASE_ZH_STATUS" in os.environ:
         return os.environ["BASE_ZH_STATUS"].strip(), ""
+    # Ask about the base branch by name, not the event's base.sha: that sha can predate the
+    # Chinese file landing on the base branch, and a later run on the same PR would still pass.
     # -i prints the status line first; gh exits 1 on 404 and on every other error alike,
     # so the status line, not the exit code, tells "not set up yet" apart from a failure.
+    ref = urllib.parse.quote(os.environ["BASE_REF"], safe="")
     r = subprocess.run(
-        ["gh", "api", "-i", f"repos/{os.environ['REPO']}/contents/{ZH}?ref={os.environ['BASE_SHA']}"],
+        ["gh", "api", "-i", f"repos/{os.environ['REPO']}/contents/{ZH}?ref={ref}"],
         capture_output=True, text=True,
     )
     first = r.stdout.splitlines()[0] if r.stdout else ""
