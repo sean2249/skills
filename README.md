@@ -1,5 +1,7 @@
 # skills
 
+English | [繁體中文](README.zh-TW.md)
+
 Cross-project Claude Code skills.
 
 ## Install
