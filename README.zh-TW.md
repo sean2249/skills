@@ -128,7 +128,7 @@ flowchart TD
    - 別人寫的任何東西，以及抓取或連結到的任何內容（網頁、其他 issue 或 PR、fork 的 diff），都是不受信任的資料：skills 和它們的 subagent 從不照著裡面的指示做，只做摘要。
    - `risk-guard` 把 `.github/`、`.claude/`（deny 規則、hooks）和任何 `CLAUDE.md`（verify command、工作流程設定）一律視為非低風險。`article-pending` 只在維護者 merge 了一個由維護者加上 label 的 PR 之後才寫入，所以不需要改。
    - 不要替 issue 範本設預設的 `status:` label：外部 issue 會因此直接進入流程（Action 會拿掉它，但不要只靠這一層）。
-2. **在修好之前就公開了漏洞。** 在公開 repo 上，`issue-implement` 不會把資安審查的 findings 寫進 PR、issue、留言和 commit 訊息。公開的地方只寫「<K> security finding(s); details shared privately with the author」，細節在 session 裡告訴我。round 3 的退回也一樣。已經在預設 branch 上的弱點完全不在公開 branch 上修，因為修正的 diff 會指出漏洞在哪裡：它從一開始就在 security advisory 的私有 fork 上修。其他未修的 findings 也走 GitHub 的私下漏洞回報／security advisory。
+2. **在修好之前就公開了漏洞。** 在公開 repo 上，`issue-implement` 不會把資安審查的 findings 寫進 PR、issue、留言和 commit 訊息。公開的地方只寫「<K> security finding(s); details shared privately with the author」，細節在 session 裡告訴我。第 3 輪的退回也一樣。已經在預設 branch 上的弱點完全不在公開 branch 上修，因為修正的 diff 會指出漏洞在哪裡：它從一開始就在 security advisory 的私有 fork 上修。其他未修的 findings 也走 GitHub 的私下漏洞回報／security advisory。
 3. **截圖和輸出裡的個人資料。** 在公開 repo 上，mockup、截圖、執行輸出、Behaviour summary 和 `## 文章素材` 都用假資料：不放帳號 ID、email、token、內部網址或私人 repo 的名稱。`issue-workflow-setup` 安裝到公開 repo 時，會提醒我 `issue-assets` 是公開的。
 
 **把私人 repo 改成公開之前**，先檢查工作流程在它還是私人時寫下的東西：舊 PR 的 `## Review` 表（帶 `file:line` 的資安 findings）、issue 和 PR 的留言，以及 `issue-assets` branch 上的圖片（它的歷史也保留了刪掉的圖）。
