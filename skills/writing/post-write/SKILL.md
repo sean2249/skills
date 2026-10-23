@@ -1,6 +1,6 @@
 ---
 name: post-write
-description: Use when, in a blog repo, an issue with a `post-type:` label and `status: approved` should be written up as a post, handed to the author to edit, and opened as a PR. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, links `wiki:` targets that already exist on the blog, always ships a cover, runs `kiwi-voice` before and after the author's edits, and attaches a source map so nothing from notes is silently dropped.
+description: Use when, in a blog repo, an issue with a `post-type:` label and `status: approved` should be written up as a post, handed to the author to edit, and opened as a PR. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, links vault pages the blog already covers in a section of another post, always ships a cover, runs `kiwi-voice` before and after the author's edits, and attaches a source map so nothing from notes is silently dropped.
 ---
 
 # post-write
@@ -10,7 +10,7 @@ Turns an approved post issue into a post PR, with one round of author edits befo
 ## Hard rules
 
 - **Only `status: approved` issues.** Never add `status: approved` yourself, even if asked.
-- **Read only the sources the issue names.** Never search a source repo for other files: it may hold private material. (Searching the blog repo itself for `wiki:` targets, Step 2b, is fine.)
+- **Read only the sources the issue names.** Never search a source repo for other files: it may hold private material. (Searching the blog repo itself for pages it already covers, Step 2b, is fine.)
 - **Faithful to notes.** Applies to every source that is a personal note, and always to `review` and `research`. When a source is a personal note, you may smooth sentences and drop internal links and frontmatter. Don't add opinions or conclusions the author didn't write. Never present anything the note marks as AI speculation, or as unconfirmed by the author, as the author's view.
 - **Author edits win.** Over the outline, the acceptance criteria, and the voice rules. Never revert an author edit; if it breaks a criterion, say so in the PR (Step 7).
 - **The author never commits.** You commit their working-tree edits for them (Step 6).
@@ -61,19 +61,21 @@ Use the issue body: the `## Sources` list (from `article-request`) and the appro
 
 Anything you need that isn't in the sources → ask the author; don't go looking.
 
-## Step 2b — Look up every `wiki:` target on the blog
+## Step 2b — Find `wiki:` targets the link resolver can't see
 
-Before writing, take every vault page the post would link (the outline's `wiki:` links, and any the sources link) and look for it on the blog itself. A page can exist in two forms:
+A `wiki:<page>` link already resolves at build time to the post whose `wiki:` front matter holds that page name (see the repo's conventions); a post that isn't published yet makes it pending, and it turns into a real link once that post is out. Keep those as `wiki:` links; don't replace them with paths.
 
-- **A post**: its front matter has `wiki: <page>` (or its title is that page).
-- **A section inside a post**: a heading in an existing post covers it. E.g. vault page 真正的樂趣 is the `### 真正的樂趣` section of the 《FUN 的力量》 review → link `/blogs/books/FUN的力量/#真正的樂趣`.
+What the resolver can't see, so look for it on the blog before writing, for every vault page the post would link (the outline's `wiki:` links, and any the sources link) that doesn't resolve now:
+
+- **A section inside a post**: a heading in an existing post covers the page. E.g. vault page 真正的樂趣 is the `### 真正的樂趣` section of the 《FUN 的力量》 review → link `/blogs/books/FUN的力量/#真正的樂趣`.
+- **A post that covers the page without listing it** in its `wiki:` front matter (e.g. under another name). Link it by path and tell the author; adding the name to that post's `wiki:` is their call.
 
 ```bash
-grep -rn "^wiki:" content/            # posts that are a wiki page
-grep -rn "^#\+ <page title>" content/  # sections that cover one
+<list pending links>                           # the repo's command for it, per its conventions
+grep -rn "^#\+ .*<page title>" content/       # sections that cover one
 ```
 
-Link what exists, with the anchor for a section (use the anchor the site actually generates; check it in the build). Only pages truly missing from the blog stay as `wiki:` (pending) links. The outline may have marked some as pending only because it checked front matter; the blog wins.
+Link what you find, with the anchor for a section (use the anchor the site actually generates; check it in the build). Pages truly missing from the blog stay `wiki:` (pending). The outline may mark some as pending only because nothing has that `wiki:` front matter; the blog wins.
 
 ## Step 3 — Write
 
@@ -180,7 +182,7 @@ Fill the repo's PR template (it's `issue-implement`'s) this way:
 - **Author edits**: name the `edit: 作者編修` commit (short sha) and summarise what the author changed. List voice-file commits and other AI commits after it.
 - **Acceptance criteria — evidence**: one line per criterion with evidence (section, preview link, screenshot). A criterion the author's edit overrode stays `- [ ]` with "author's decision: <what they changed>".
 - **Source map** (Step 3b, with the 作者編修 labels) when a source is a note-like file.
-- **Not verified**, and **Deviations from the approved plan** with reasons (outline points changed by the voice pass or by `wiki:` targets found on the blog).
+- **Not verified**, and **Deviations from the approved plan** with reasons (outline points changed by the voice pass or by pages found on the blog in Step 2b).
 - **Risk**: `risk: low`, reason "content only".
 - **Review**: run `code-review` on the PR, focused on the text: facts against the sources, links and anchors, front matter and format. Fill the table with its findings and outcomes. security-review: "not applicable (content only)".
 
@@ -192,7 +194,7 @@ When the author asks for more changes: same branch, separate commits, a `🤖 AI
 
 - [ ] Post follows `## Article conventions` and the approved outline (or the author's edits); mode matches the label.
 - [ ] Issue comments were read; only the named sources were read; nothing from notes was turned into an opinion the author didn't state.
-- [ ] Every `wiki:` target that exists on the blog (as a post or a section) is linked; only missing ones stay pending.
+- [ ] Every vault page the blog already covers is linked: `wiki:` for posts that list it, a path + anchor for a section or a post that doesn't; only missing ones stay pending.
 - [ ] The post has a cover (a source image, or a diagram from the post's own content).
 - [ ] `kiwi-voice` 套用 ran before hand-over; 收納 ran after the author's edits, and approved rules are a separate commit in this PR.
 - [ ] Source map rechecked after the voice pass and after the author's edits, with author changes labelled.
