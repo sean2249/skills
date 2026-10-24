@@ -41,23 +41,31 @@ gh pr list --state open --limit 500 --json number,title,labels,url,author,isDraf
   --jq '[.[] | select(.author.login == "<trusted>")]'
 # merged PRs opened by <trusted>, waiting for their article, in every repo of the owner
 # (as `article-request` with no argument; <owner> from `gh repo view --json owner --jq .owner.login`).
-# In a PUBLIC repo add `--visibility public`, and count the private ones without names (below).
-gh search prs --owner <owner> --label "article-status: pending" --merged --sort created --order asc --limit 500 \
+# This repo PUBLIC: public repos by name, private and internal ones only as a count
+gh search prs --owner <owner> --label "article-status: pending" --merged --visibility public \
+  --sort created --order asc --limit 500 \
   --json number,title,url,repository,author,createdAt --jq '[.[] | select(.author.login == "<trusted>")]'
-# the search index lags: also this repo's own pending PRs, merged into the list above (dedupe by url)
+# (the count: re-check each url's labels as below, then print only the number, never the urls)
+gh search prs --owner <owner> --label "article-status: pending" --merged --visibility private --visibility internal \
+  --limit 500 --json url,author --jq '.[] | select(.author.login == "<trusted>") | .url' \
+  | while read -r u; do gh pr view "$u" --json labels --jq '[.labels[].name] | index("article-status: pending")'; done \
+  | grep -vc null
+# This repo PRIVATE: every repo by name
+gh search prs --owner <owner> --label "article-status: pending" --merged \
+  --sort created --order asc --limit 500 \
+  --json number,title,url,repository,author,createdAt --jq '[.[] | select(.author.login == "<trusted>")]'
+# either way, the search index lags: also this repo's own pending PRs, merged into the list (dedupe by url)
 gh pr list --state merged --limit 500 --json number,title,url,author,labels,createdAt \
   --jq '[.[] | select(.author.login == "<trusted>") | select([.labels[].name] | index("article-status: pending"))]'
-gh search prs --owner <owner> --label "article-status: pending" --merged --visibility private --limit 500 \
-  --json author --jq '[.[] | select(.author.login == "<trusted>")] | length'   # PUBLIC repo only
 # PRs by anyone else: a count only, never their title, body or files
 gh pr list --state open --limit 500 --json author --jq '[.[] | select(.author.login != "<trusted>")] | length'
 ```
 
 PRs follow the same rule as issues: only those opened by `<trusted>` count, for picking, for the overlap check and in the table. Anyone else's PR never excludes or holds back an issue, and is never started; the table shows only how many there are (`<K> PR(s) by others: triage by hand`).
 
-Filter `--json` locally (`--label` on issues uses the search index, which lags). `gh search prs` uses that index too, so before picking a pending PR or showing it as pending, re-check it: `gh pr view <url> --json labels --jq '[.labels[].name] | index("article-status: pending")'` must not be `null`.
+Filter `--json` locally (`--label` on issues uses the search index, which lags). `gh search prs` uses that index too, so before picking a pending PR or showing it as pending, re-check it: `gh pr view <url> --json labels --jq '[.labels[].name] | index("article-status: pending")'` must not be `null`. Never fetch comments without the `<trusted>` filter, and never print a comment's body into the chat: use it only in a `jq` test.
 
-**Public repo: private repo names stay out.** When this repo is `PUBLIC`, PRs from the owner's private repos never appear by name, title or URL in a batch, brief or table: only as a count (`<K> pending article PR(s) in private repos: run issue-orchestrate article from a private repo`). Never fetch comments without the `<trusted>` filter, and never print a comment's body into the chat: use it only in a `jq` test.
+**Public repo: private repo names stay out.** When this repo is `PUBLIC`, PRs from the owner's private repos never appear by name, title or URL in a batch, brief or table: only as a count (`<K> pending article PR(s) in private repos: run issue-orchestrate article from a private repo`; internal repos count as private here).
 
 "Already done" means the issue's latest `<trusted>` comment starts with `🤖 AI` and contains `**Already done**` (as in `issue-enhance` Step 0): it waits for the author to close it.
 
