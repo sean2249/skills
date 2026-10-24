@@ -139,7 +139,7 @@ gh issue comment <N> --body "🤖 AI <YYYY-MM-DD>
 <K> decision(s) pending in the issue body. Tick one box per decision."
 ```
 
-In the chat, tell the author only the issue link and the number of pending decisions. When every decision has a ticked box, the `needs-info-reply` workflow switches the issue back to `status: raw`. A comment reply from the author does the same. The next run resumes from Step 0.
+In the chat, report as in `## Report back` (`next: tick <K> decision(s)`). When every decision has a ticked box, the `needs-info-reply` workflow switches the issue back to `status: raw`. A comment reply from the author does the same. The next run resumes from Step 0.
 
 ## Step 4 — UI work and open choices: options side by side
 
@@ -574,7 +574,7 @@ The original becomes the parent. A parent has no acceptance criteria of its own 
 
 - **Label stays `status: raw`.** Don't move it to `status: ai-enhanced`: there's nothing on it to approve. Step 0 skips parents. It's closed once every sub-issue is done; this skill doesn't close it.
 - Comment `🤖 AI <YYYY-MM-DD>` with the split and the reason.
-- In the chat report, tell the author plainly which sub-issue to approve next (`#<N>`), not just that the issue was split.
+- In the chat report, tell the author plainly which sub-issue to approve next (`#<N>`), not just that the issue was split: the `Report:` line says `next: review #<N>` (`## Report back`).
 
 ## Step 7 — Author rejects an idea
 
@@ -585,6 +585,21 @@ gh issue close <N> --reason "not planned" --comment "🤖 AI <YYYY-MM-DD>
 
 Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 ```
+
+## Report back
+
+Every time you stop and hand back to the author (needs-info, ai-enhanced, split, "Already done", or any other stop), the **first line** of your final message is a `Report:` line. If the host has its own end-of-turn summary field, it starts with the same line. A main session running `issue-orchestrate` may scan it; GitHub labels stay the source of truth. From the second line on, write as usual and leave nothing out: the author may be talking to you in this session directly, and answers here stay complete.
+
+```
+Report: #<N> · <status label, or why you stopped> · next: <what the author does> · <issue url>
+```
+
+- At most 300 characters, one line, starting `Report:`.
+- `needs-info` → `status: needs-info · next: tick <K> decision(s)`. `ai-enhanced` → `status: ai-enhanced · next: review the plan`. Split → `#<N>` is the parent: `status: raw (parent) · next: review #<M>`. All done → `already done · next: close the issue`.
+- Any other stop (e.g. an issue someone else opened, `gh` too old, a `post-type:` card outside the article repo): the status is why you stopped, `next` is what the author does, and the URL is the issue concerned.
+- On a public repo, made-up data rules apply here too.
+
+Example (made-up): `Report: #42 · status: needs-info · next: tick 2 decision(s) · https://github.com/example/demo/issues/42`
 
 ## Done when (per issue)
 
@@ -609,3 +624,4 @@ Rejected by the author on <YYYY-MM-DD>: <their reason, in their words>."
 - [ ] Answers are in Decisions (A / B / other + date) / Risks / Opportunities; unclear-body items were fixed; each round's 🤖 comment lists changed, withdrawn (with reasons), asked, and unreviewed angles.
 - [ ] Every author decision was asked in the body's `## Pending decisions` with checkboxes (never in chat); no box was ticked by you; answered ones moved to Decisions.
 - [ ] No `status: approved` added.
+- [ ] Every stop's final message starts with the `Report:` line (`## Report back`, ≤ 300 characters); everything after it is as complete as before.

@@ -139,19 +139,26 @@ On a public repo anyone can open an issue or comment, and everything the skills 
 
 ### How I run it
 
-This is how I personally operate the workflow day to day: parallel child sessions, with GitHub issues as the only handoff. It needs no extra skill. The parallelism comes from asking Claude, in a main session, to start child sessions.
+This is how I personally operate the workflow day to day: parallel child sessions, with GitHub issues as the only handoff. The main session runs `issue-orchestrate`, which picks a batch and starts the child sessions. Children talk as usual; when one stops, the first line of its final message is a short `Report:` line the main session can scan.
+
+**What the main session does.** It handles only what spans several issues; anything about one issue belongs in that issue's child session or in the issue body.
+
+- **Does:** decide what this batch is, start the work (`enhance` / `implement` / `article`), show the whole picture (`status`), cross-issue housekeeping (duplicates, sub-issues, order, overlaps), and turn a new idea into a raw issue instead of discussing it.
+- **Doesn't:** discuss one issue's plan in depth, read full plans, PR diffs or review results, implement or write articles.
+- **How to tell:** about one issue → that issue's child session or its body; about several issues, or "what next" → the main session, which answers a one-issue question with a link to that child session or issue.
+- **Use it, then start a new one:** everything it knows can be rebuilt from GitHub labels, so each batch gets a fresh main session, started only once the previous batch's children have stopped (running work doesn't show on GitHub yet). My decisions always go in the issue body, not in either session's chat.
 
 <p align="center">
-  <img src="docs/operating.svg" width="960" alt="How the author runs the workflow: a main session picks a batch of about three raw issues and starts one child session per issue running issue-enhance; children write plans and Pending decisions into the issue bodies and never talk to each other. The main session reports what waits; the author reviews, ticks boxes and approves (adding article-status: request for articles). A new main session picks approved, unblocked issues (at most one or two per repo) and starts child sessions running issue-implement, which open PRs. The author merges; an Action sets article-status: pending; the author runs article-request in the main session, which opens a post-type: article card in the article repo that goes through the same steps.">
+  <img src="docs/operating.svg" width="960" alt="How the author runs the workflow with issue-orchestrate. In the main session, issue-orchestrate has four modes: enhance picks a batch of about three raw issues and starts one child session per issue; status reads only GitHub labels and prints a table of what waits for the author; implement picks approved, unblocked issues, checks that their plans don't change the same files, takes at most three per repo, and starts child sessions; article picks merged PRs labelled article-status: pending. Child sessions run issue-enhance, issue-implement or post-write, and article-request; they talk as usual, the author can talk to any of them directly, and the first line of each final message is a Report line, only a hint for the main session (dashed). The GitHub issues and labels are the source of truth the main session reads (solid). The author reviews, ticks and approves, then looks at PRs and merges; an Action sets article-status: pending; article-request, in a child session or started from any file such as a notes page, has the author confirm a post-type and opens an article card in the article repo, which goes through the same steps.">
 </p>
 
-1. **Main session:** find `status: raw` issues and start one child session per issue running `issue-enhance`. Each batch is only as many as I can review in a day or two (about 3).
-2. **Child sessions** write each plan into its issue body; decisions for me go in `## Pending decisions` as checkboxes. Children never talk to each other: the issue (labels + body) is the only handoff.
-3. **Main session** reports what waits for me: `status: ai-enhanced` (review the plan), `status: needs-info` (tick the boxes), and PRs to look at.
+1. **Main session, `issue-orchestrate enhance`:** picks `status: raw` issues and starts one child session per issue running `issue-enhance`. Each batch is only as many as I can review in a day or two (3).
+2. **Child sessions** write each plan into its issue body; decisions for me go in `## Pending decisions` as checkboxes. Children never talk to each other: the issue (labels + body) is the only handoff. I can talk to any child directly.
+3. **Main session, `issue-orchestrate status`:** shows what waits for me (`status: ai-enhanced`: review the plan; `status: needs-info`: tick the boxes; PRs to look at), rebuilt from GitHub labels, not from the children's `Report:` lines.
 4. **I review**, set `status: approved`, and add `article-status: request` to anything that should become an article.
-5. **A new main session** picks approved issues, skips any blocked by an open issue, takes at most 1–2 per repo at a time, and starts a child session per issue running `issue-implement`. Each opens a PR with screenshots, preview, behaviour summary and review.
+5. **A new main session, `issue-orchestrate implement`:** picks approved issues, skips any blocked by an open issue or already with an open PR, checks that no two plans (or an open PR) change the same file, takes at most 3 per repo at a time, and starts a child session per issue running `issue-implement`. Each opens a PR with screenshots, preview, behaviour summary and review.
 6. **I look and merge.** The Action switches the label to `article-status: pending`.
-7. **I run `article-request` in the main session.** The AI suggests a `post-type:` with its reasoning and I confirm, which opens an article card in the article repo. It can also start from any file, such as a notes page.
+7. **Main session, `issue-orchestrate article`:** starts a child session per pending PR (in any of my repos) running `article-request`. In that child, the AI suggests a `post-type:` with its reasoning and I confirm, which opens an article card in the article repo. It can also start from any file, such as a notes page: I open a session and run `article-request <file>` there.
 8. **The article card goes back to step 1:** `issue-enhance` drafts the outline, I approve, a child session runs `post-write` and hands me the draft; I edit it in place and say I'm done, the AI commits my edits and opens the PR, and I check the preview and merge.
 
 <details>
@@ -159,36 +166,44 @@ This is how I personally operate the workflow day to day: parallel child session
 
 ```mermaid
 flowchart TD
-  subgraph MAIN["Main session"]
-    M1["Pick raw issues<br/>a batch of ~3 (1–2 days of review)"]
-    M2["Report what waits<br/>ai-enhanced · needs-info · PRs"]
-    M3["New session: pick approved<br/>skip blocked · ≤ 1–2 per repo"]
-    M5["article-request<br/>AI suggests post-type + reasons; author confirms"]
+  subgraph MAIN["Main session · issue-orchestrate · cross-issue only · read-only on GitHub"]
+    M1["enhance<br/>pick raw · a batch of ~3 · start child sessions"]
+    M2["status<br/>read labels only · table of what waits for you"]
+    M3["implement<br/>pick approved · skip blocked · check file overlap · ≤ 3 per repo"]
+    M4["article<br/>pick merged PRs with article-status: pending"]
   end
-  subgraph CHILD["Child sessions · one per issue, in parallel"]
+  subgraph CHILD["Child sessions · one per issue or PR, in parallel · talk as usual · final message starts with Report:"]
     C1["issue-enhance ×3<br/>plan into the issue body"]
-    C3["issue-implement ×1–2<br/>PR · screenshots · preview · summary · review"]
+    C3["issue-implement · post-write ×≤ 3<br/>PR · screenshots · preview · summary · review"]
+    C5["article-request<br/>AI suggests post-type + reasons; author confirms"]
+    X["Any file<br/>(e.g. a notes page)<br/>in a session you open"]
   end
-  subgraph BOARD["GitHub issues & labels · the handoff board"]
+  subgraph BOARD["GitHub issues & labels · the handoff board · source of truth"]
     B1["Plan in the body<br/>ai-enhanced, or needs-info + ☐ decisions"]
     B2["status: approved<br/>+ article-status: request"]
     B3["Pull request"]
     B4["Merged<br/>Action sets article-status: pending"]
     B5["Article card<br/>post-type: · article repo · back to step 1 → post-write"]
   end
+  A0(["Author: talk to a child session directly (optional)"]):::author
   A2(["Author: review · tick · approve"]):::author
   A4(["Author: look at it · merge"]):::author
-  A5(["Author: confirm post-type · merge the article"]):::author
+  A5(["Author: merge the article"]):::author
 
-  M1 --> M2 --> M3 --> M5
+  M1 --> M2 --> M3 --> M4
   M1 -->|spawn| C1 -->|write| B1
   B1 --> A2 -->|approve| B2
   B2 -->|pick| M3
   M3 -->|spawn| C3 --> B3
   B3 --> A4 -->|merge| B4
-  B4 -->|pending| M5
-  X["Any file<br/>(e.g. a notes page)"] -->|or a file| M5
-  M5 -->|opens| B5 --> A5
+  B4 -->|pending| M4
+  M4 -->|spawn| C5
+  X -->|or a file| C5
+  C5 -->|opens| B5 --> A5
+
+  M2 <-.-|"Report: line (only a hint)"| C1
+  B1 ==>|"read labels (source of truth)"| M2
+  C1 <-.-|"talk directly"| A0
 
   classDef author fill:#fde68a,stroke:#b45309,color:#1f2937,stroke-width:2px
 ```
@@ -214,6 +229,7 @@ flowchart TD
 | `dev/issue-workflow-setup` | Installing (or repairing) the issue workflow in a repo: labels, callers for the shared workflows, PR template, CLAUDE.md section |
 | `dev/issue-enhance` | Turning a `status: raw` issue into a reviewable plan (or an article outline), split into sub-issues; every plan is fact-checked once against the code by a fresh subagent and fixed by the AI before the author reviews it |
 | `dev/issue-implement` | Implementing a `status: approved` issue: PR with evidence, risk label, merge only `risk: low` |
+| `dev/issue-orchestrate` | Running the workflow in parallel from a main session: picks a batch (`enhance` / `implement` / `article`), checks implement candidates for file overlap, starts one child session per issue or PR, and shows what waits for the author (`status`) from GitHub labels only, without reading issue bodies or PR diffs |
 | `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR and the issues it closes `article-status: handoff` |
 | `writing/post-write` | Writing an approved article issue in one of four modes (devlog, intro, review, research), following the article repo's conventions, with a cover, blog links for `wiki:` targets, and a source map for note sources; hands the draft to the author to edit before opening the PR |
 | `writing/kiwi-voice` | Applying the repo's voice rules to a post (套用); after the author's edits, proposing new rules or examples for the author to approve (收納); when the rules file passes its size limit (default 8 KB / 25 rules), proposing merges, generalisations and retirements, and listing rule/example conflicts for the author to decide (整併). Rules live in each repo's voice rules file (`Voice file:`), extra examples in its examples directory (`Voice examples:`), not in the skill |

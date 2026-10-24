@@ -155,7 +155,7 @@ git add <post files>
 git commit -m "<title>"
 ```
 
-**Hand over and stop.** Give the author a clickable markdown link to the post file, e.g. `[index.md](content/blogs/<category>/<slug>/index.md)`; they edit it in the app's built-in editor. **Don't call `open_in_editor`.** Say in a line or two which voice rules were applied (from Step 4), what's not verified, on a public repo anything in the draft that looks private, and that you'll continue when they say they're done. Then end the turn.
+**Hand over and stop.** Give the author a clickable markdown link to the post file, e.g. `[index.md](content/blogs/<category>/<slug>/index.md)`; they edit it in the app's built-in editor. **Don't call `open_in_editor`.** Say in a line or two which voice rules were applied (from Step 4), what's not verified, on a public repo anything in the draft that looks private, and that you'll continue when they say they're done. Start that message with the `Report:` line (`## Report back`). Then end the turn.
 
 **When the author says they're done** (「改好了」, "done", …):
 
@@ -198,6 +198,21 @@ Fill the repo's PR template (it's `issue-implement`'s) this way:
 
 When the author asks for more changes: same branch, separate commits, a `🤖 AI <YYYY-MM-DD>` comment with what changed and why, and update the Behaviour summary. If the author edits the file themself again, repeat Step 6 (commit `edit: 作者編修`, source map, `kiwi-voice` 收納).
 
+## Report back
+
+Every time you stop and hand back to the author (draft handed over, PR open, refused at the gate, or any other stop), the **first line** of your final message is a `Report:` line. If the host has its own end-of-turn summary field, it starts with the same line. A main session running `issue-orchestrate` may scan it; GitHub labels stay the source of truth. From the second line on, write as usual and leave nothing out: the author may be talking to you in this session directly, and answers here stay complete.
+
+```
+Report: #<N> · <draft ready, PR #<M> risk: low, or why you stopped> · next: <what the author does> · <issue or PR url>
+```
+
+- At most 300 characters, one line, starting `Report:`.
+- Step 6 hand-over → `draft ready · next: edit the draft`, with the issue URL. Step 7 → `PR #<M> risk: low · next: check preview and merge`, with the PR URL.
+- Any other stop (refused at the gate, a source that can't be read, a question to the author): the status is why you stopped, `next` is what the author does, and the URL is the issue or PR concerned.
+- On a public repo, made-up data rules apply here too.
+
+Example (made-up): `Report: #46 · draft ready · next: edit the draft · https://github.com/example/blog/issues/46`
+
 ## Done when
 
 - [ ] Post follows `## Article conventions` and the approved outline (or the author's edits); mode matches the label.
@@ -211,3 +226,4 @@ When the author asks for more changes: same branch, separate commits, a `🤖 AI
 - [ ] The author's edits are one `edit: 作者編修` commit, named in the PR; no AI change is mixed into it or reverts it.
 - [ ] Three titles were offered from the final text.
 - [ ] PR is `risk: low`, fills the template (review table from a fresh-context reviewer, security-review "not applicable (content only)", acceptance evidence), and is left for the author to merge.
+- [ ] Every stop's final message starts with the `Report:` line (`## Report back`, ≤ 300 characters); everything after it is as complete as before.
