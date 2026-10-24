@@ -61,7 +61,7 @@ Suggested: post-type: <type>
 Runner-up: <type>. Difference: <what would change, e.g. "intro would treat the 'not found yet' and experiment sections as noise">
 ```
 
-A suggestion is fine here: no plan exists yet, so the "no recommendation" rule for A/B decisions doesn't apply. **Wait for the author to confirm or pick another type in the session** before Step 4. Choosing the wrong type is expensive. A comparison page treated as `research` kept hitting "the title promises content that was cut" during review until it became `intro`. A page with a core question and experiments treated as `intro` kept asking whether to keep the "not found yet" parts, and as `research` those answered themselves.
+A suggestion is fine here: no plan exists yet, so the "no recommendation" rule for A/B decisions doesn't apply. **Wait for the author to confirm or pick another type in the session** before Step 4 (that message starts with the `Report:` line, `## Report back`). Choosing the wrong type is expensive. A comparison page treated as `research` kept hitting "the title promises content that was cut" during review until it became `intro`. A page with a core question and experiments treated as `intro` kept asking whether to keep the "not found yet" parts, and as `research` those answered themselves.
 
 
 ## Step 1 — Find the target
@@ -147,6 +147,23 @@ gh pr comment <PR url> --body "🤖 AI <YYYY-MM-DD>
 Article request: <new issue url>"
 ```
 
+## Report back
+
+Every time you stop and hand back to the author (waiting for the post type, the card opened, a duplicate found, or any other stop), the **first line** of your final message is a `Report:` line. If the host has its own end-of-turn summary field, it starts with the same line. A main session running `issue-orchestrate` may scan it; GitHub labels stay the source of truth. From the second line on, write as usual and leave nothing out: the author may be talking to you in this session directly, and answers here stay complete.
+
+```
+Report: <PR #<M> or file <path>> · <article-status, or why you stopped> · next: <what the author does> · <url>
+```
+
+- At most 300 characters, one line, starting `Report:`.
+- Step 0b, waiting → `waiting for post-type · next: confirm the post type in this session`, with the PR URL (file mode: the permalink).
+- PR mode, after Step 5 → `article-status: handoff · next: enhance the new card in the article repo`, with the new card's URL.
+- File mode, after Step 4 → `article card opened · next: enhance the new card in the article repo`, with the new card's URL.
+- Any other stop (Step 0: PR not merged, no `article-status:`, `## 文章素材` missing; Step 1: the target to name, or the private → public OK; Step 2: a card already exists): the status is why you stopped, `next` is what the author does, and the URL is the PR, file or existing card concerned.
+- On a public repo, made-up data rules apply here too.
+
+Example (made-up): `Report: PR #50 · article-status: handoff · next: enhance the new card in the article repo · https://github.com/example/blog/issues/12`
+
 ## Done when
 
 - [ ] Exactly one issue in the target for this source, labelled `status: raw` and one `post-type:` label (no `article` label).
@@ -155,3 +172,4 @@ Article request: <new issue url>"
 - [ ] If the source is private and the target public, the author confirmed.
 - [ ] PR mode: the source PR has `article-status: handoff` (no longer `pending` / `request`) and a comment linking to the issue.
 - [ ] PR mode: every issue the PR closes that had `article-status: request` / `pending` now has `article-status: handoff` instead.
+- [ ] Every stop's final message starts with the `Report:` line (`## Report back`, ≤ 300 characters); everything after it is as complete as before.
