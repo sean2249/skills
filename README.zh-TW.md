@@ -146,7 +146,7 @@ flowchart TD
 - **做：** 決定這一批做什麼、派工（`enhance` / `implement` / `article`）、看全局（`status`）、跨 issue 的整理（重複、sub-issue、順序、檔案重疊），以及把新想法開成 raw issue，不當場展開討論。
 - **不做：** 深入討論某一張 issue 的計畫，讀完整計畫、PR diff 或審查結果，實作或寫文章。
 - **判斷規則：** 只關於一張 issue → 去那張的子 session 或 issue 本文；關於好幾張 issue 或「接下來做什麼」→ 留在主 session，被問到單張 issue 的細節時，主 session 給出那張子 session 或 issue 的連結。
-- **用完就開新的：** 它知道的一切都能從 GitHub labels 重建，所以每一批都開新的主 session。我的決定一律寫在 issue 本文，不在任何一個 session 的對話裡。
+- **用完就開新的：** 它知道的一切都能從 GitHub labels 重建，所以每一批都開新的主 session，而且要等上一批的子 session 都停下來才開（進行中的工作還不會出現在 GitHub 上）。我的決定一律寫在 issue 本文，不在任何一個 session 的對話裡。
 
 <p align="center">
   <img src="docs/operating.svg" width="960" alt="作者如何用 issue-orchestrate 運作這個工作流程。主 session 裡的 issue-orchestrate 有四個模式：enhance 挑一批大約三張 raw issue，每張開一個子 session；status 只讀 GitHub labels，輸出等作者處理的表格；implement 挑已核准、沒被擋住的 issue，檢查它們的計畫不會改到同一個檔案，每個 repo 最多三張，並開子 session；article 挑已 merge 且標 article-status: pending 的 PR。子 session 跑 issue-enhance、issue-implement 或 post-write，以及 article-request；它們照常說話，作者可以直接進任何一個對話，每則最後訊息的第一行是 Report 行，對主 session 只是提示（虛線）。GitHub issues 與 labels 才是主 session 讀取的依據（實線）。作者審查、勾選並核准，再看 PR 並 merge；Action 設定 article-status: pending；article-request 在子 session 裡跑，或從任何檔案（例如一頁筆記）開始，由作者確認 post-type，並在文章 repo 開一張文章卡，那張卡會走同樣的步驟。">
@@ -158,7 +158,7 @@ flowchart TD
 4. **我審查**，設為 `status: approved`，並替要寫成文章的加上 `article-status: request`。
 5. **新的主 session，`issue-orchestrate implement`：** 挑出已核准的 issue，略過被未關閉 issue 擋住、或已經有 open PR 的，檢查沒有兩份計畫（或一個 open PR）改到同一個檔案，每個 repo 同時最多 3 張，每張 issue 開一個子 session 跑 `issue-implement`。每個子 session 開一個 PR，附截圖、預覽、行為摘要和審查結果。
 6. **我看過後 merge。** Action 把 label 換成 `article-status: pending`。
-7. **主 session，`issue-orchestrate article`：** 每個 pending 的 PR 開一個子 session 跑 `article-request`。在那個子 session 裡，AI 建議一個 `post-type:` 並說明理由，我確認後，它會在文章 repo 開一張文章卡。它也可以從任何檔案開始，例如一頁筆記：我自己開一個 session，在裡面跑 `article-request <file>`。
+7. **主 session，`issue-orchestrate article`：** 每個 pending 的 PR（我任何一個 repo 裡的）開一個子 session 跑 `article-request`。在那個子 session 裡，AI 建議一個 `post-type:` 並說明理由，我確認後，它會在文章 repo 開一張文章卡。它也可以從任何檔案開始，例如一頁筆記：我自己開一個 session，在裡面跑 `article-request <file>`。
 8. **文章卡回到第 1 步：** `issue-enhance` 擬大綱，我核准，子 session 跑 `post-write` 把草稿交給我；我直接在原檔編輯、說我改好了，AI commit 我的修改並開 PR，我看過預覽後 merge。
 
 <details>
