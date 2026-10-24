@@ -149,10 +149,10 @@ flowchart TD
 - **用完就開新的：** 它知道的一切都能從 GitHub labels 重建，所以每一批都開新的主 session，而且要等上一批的子 session 都停下來才開（進行中的工作還不會出現在 GitHub 上）。我的決定一律寫在 issue 本文，不在任何一個 session 的對話裡。
 
 <p align="center">
-  <img src="docs/operating.svg" width="960" alt="作者如何用 issue-orchestrate 運作這個工作流程。主 session 裡的 issue-orchestrate 有四個模式：enhance 挑一批大約三張 raw issue，每張開一個子 session；status 只讀 GitHub labels，輸出等作者處理的表格；implement 挑已核准、沒被擋住的 issue，檢查它們的計畫不會改到同一個檔案，每個 repo 最多三張，並開子 session；article 挑已 merge 且標 article-status: pending 的 PR。子 session 跑 issue-enhance、issue-implement 或 post-write，以及 article-request；它們照常說話，作者可以直接進任何一個對話，每則最後訊息的第一行是 Report 行，對主 session 只是提示（虛線）。GitHub issues 與 labels 才是主 session 讀取的依據（實線）。作者審查、勾選並核准，再看 PR 並 merge；Action 設定 article-status: pending；article-request 在子 session 裡跑，或從任何檔案（例如一頁筆記）開始，由作者確認 post-type，並在文章 repo 開一張文章卡，那張卡會走同樣的步驟。">
+  <img src="docs/operating.svg" width="960" alt="作者如何用 issue-orchestrate 運作這個工作流程。主 session 裡的 issue-orchestrate 有四個模式：enhance 先整理 raw issue（作者確認後合併重複的、關閉已完成的），再挑一批大約三張，每張開一個子 session；status 只讀 GitHub labels，輸出等作者處理的表格；implement 挑已核准、沒被擋住的 issue，檢查它們的計畫不會改到同一個檔案，每個 repo 最多三張，並開子 session；article 挑已 merge 且標 article-status: pending 的 PR。子 session 跑 issue-enhance、issue-implement 或 post-write，以及 article-request；它們照常說話，作者可以直接進任何一個對話，每則最後訊息的第一行是 Report 行，對主 session 只是提示（虛線）。GitHub issues 與 labels 才是主 session 讀取的依據（實線）。作者審查、勾選並核准，再看 PR 並 merge；Action 設定 article-status: pending；article-request 在子 session 裡跑，或從任何檔案（例如一頁筆記）開始，由作者確認 post-type，並在文章 repo 開一張文章卡，那張卡會走同樣的步驟。">
 </p>
 
-1. **主 session，`issue-orchestrate enhance`：** 挑出 `status: raw` 的 issue，每張開一個子 session 跑 `issue-enhance`。每一批只放我一兩天內審得完的量（3 張）。
+1. **主 session，`issue-orchestrate enhance`：** 先整理所有 `status: raw` 的 issue：一個 subagent 讀過後，提議哪些要合併（重複的）、哪些要關閉（明顯已經做完的），我確認那一張表後，由它合併和關閉。接著每張開一個子 session 跑 `issue-enhance`。每一批只放我一兩天內審得完的量（3 張）。
 2. **子 session** 把計畫寫進各自的 issue 本文；需要我決定的事以核取方塊寫在 `## Pending decisions`。子 session 之間從不溝通：issue（labels + 本文）是唯一的交接管道。我可以直接進任何一個子 session 對話。
 3. **主 session，`issue-orchestrate status`：** 列出有哪些在等我（`status: ai-enhanced`：審計畫；`status: needs-info`：勾方塊；要看的 PR），內容從 GitHub labels 重建，不是從子 session 的 `Report:` 行。
 4. **我審查**，設為 `status: approved`，並替要寫成文章的加上 `article-status: request`。
@@ -166,8 +166,8 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  subgraph MAIN["主 session · issue-orchestrate · 只處理跨 issue 的事 · 對 GitHub 只讀"]
-    M1["enhance<br/>挑 raw · 一批約 3 張 · 開子 session"]
+  subgraph MAIN["主 session · issue-orchestrate · 只處理跨 issue 的事 · 對 GitHub 只做你確認過的整理"]
+    M1["enhance<br/>整理 raw（合併 · 關閉已完成）· 一批約 3 張 · 開子 session"]
     M2["status<br/>只讀 labels · 等你處理的表格"]
     M3["implement<br/>挑 approved · 略過被擋住的 · 檢查檔案重疊 · 每個 repo ≤ 3 張"]
     M4["article<br/>挑已 merge、標 article-status: pending 的 PR"]
@@ -229,7 +229,7 @@ flowchart TD
 | `dev/issue-workflow-setup` | 在 repo 安裝（或修復）issue 工作流程：labels、共用 workflow 的 caller、PR 範本、CLAUDE.md 段落 |
 | `dev/issue-enhance` | 把 `status: raw` 的 issue 變成可審查的計畫（或文章大綱），並拆成 sub-issue；每份計畫都會由全新 subagent 對照程式碼查核一次，AI 修好後才交給作者審查 |
 | `dev/issue-implement` | 實作 `status: approved` 的 issue：附證據的 PR、risk label，只 merge `risk: low` |
-| `dev/issue-orchestrate` | 在主 session 平行運作工作流程：挑出一批（`enhance` / `implement` / `article`）、替 implement 候選檢查檔案重疊、每張 issue 或 PR 開一個子 session，並只用 GitHub labels 列出等作者處理的事（`status`），不讀 issue 本文或 PR diff |
+| `dev/issue-orchestrate` | 在主 session 平行運作工作流程：整理 raw issue（作者確認後合併重複的、關閉已完成的）、挑出一批（`enhance` / `implement` / `article`）、替 implement 候選檢查檔案重疊、每張 issue 或 PR 開一個子 session，並只用 GitHub labels 列出等作者處理的事（`status`），不讀 issue 本文或 PR diff |
 | `dev/article-request` | 把已 merge 的 `article-status: pending` PR，或任何檔案，以 raw issue 交給文章 repo；把該 PR 和它關閉的 issue 標成 `article-status: handoff` |
 | `writing/post-write` | 用四種模式之一（devlog、intro、review、research）撰寫已核准的文章 issue，遵循文章 repo 的慣例，附封面、替 `wiki:` 目標加上部落格連結，並替筆記來源附來源對照表；開 PR 前先把草稿交給作者編輯 |
 | `writing/kiwi-voice` | 把 repo 的語氣規則套用到文章上（套用）；作者編輯後，提出新的規則或範例讓作者核准（收納）；規則檔超過大小上限（預設 8 KB / 25 條規則）時，提出合併、一般化與淘汰的建議，並列出規則與範例的衝突交給作者決定（整併）。規則放在各 repo 的語氣規則檔（`Voice file:`），額外範例放在它的範例資料夾（`Voice examples:`），不在 skill 裡 |
