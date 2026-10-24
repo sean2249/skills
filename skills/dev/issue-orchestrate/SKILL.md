@@ -96,7 +96,7 @@ Pick `status: approved` issues opened by `<trusted>`, minus:
 
 - parents (`subIssuesSummary.total > 0`);
 - issues blocked by an issue that's still open (`gh issue view <M> --json state` for each `blockedBy` entry);
-- issues that already have an open PR by `<trusted>`, i.e. appear in the `closingIssuesReferences` of an open PR from the trusted query above (`issue-implement` leaves the label at `approved` once the PR is open). If that PR is a draft (sent back after review round 3) and the author has re-approved the issue, it still isn't started, so two PRs never close one issue: the table shows `waiting: close old draft PR #<M>` until the author closes it.
+- issues that already have an open PR by `<trusted>`, i.e. appear in the `closingIssuesReferences` of an open PR from the trusted query above (`issue-implement` leaves the label at `approved` once the PR is open). If that PR is a draft (sent back after review round 3) and the author has re-approved the issue, it still isn't started, so two PRs never close one issue: the table shows `waiting: close old draft PR #<M>`. The author closes the old draft by hand (its branch stays, so the earlier work can still be read); only then is the issue started again, as a new `issue-implement` run on a new branch. There's no path that resumes the draft itself.
 
 At most 3 per repo, oldest first, after the overlap check below.
 
@@ -170,7 +170,7 @@ When the children of a batch have all stopped, or the author asks for status, re
 | `status: needs-info` | tick the decisions |
 | `status: ai-enhanced` | review the plan, then approve |
 | `status: approved`, no open PR | run issue-orchestrate implement, or the `waiting:` / `overlap not checked` / `mislabelled` note from the checks `status` runs |
-| `status: approved`, open draft PR closing it | `waiting: close old draft PR #<M>` |
+| `status: approved`, open draft PR closing it | `waiting: close old draft PR #<M>` (close it by hand; the next `implement` batch starts the issue again) |
 | open non-draft PR closing the issue (`#<N> → PR #<M>`), its `risk:` label | review and merge |
 | `status: raw`, latest `<trusted>` comment is "Already done" | close the issue |
 | merged PR with `article-status: pending` (any repo of the owner; in a public repo, public repos only) | run issue-orchestrate article |
