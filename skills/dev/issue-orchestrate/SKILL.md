@@ -40,16 +40,24 @@ gh issue list --state open --limit 500 \
 gh pr list --state open --limit 500 --json number,title,labels,url,author,isDraft,closingIssuesReferences \
   --jq '[.[] | select(.author.login == "<trusted>")]'
 # merged PRs opened by <trusted>, waiting for their article, in every repo of the owner
-# (as `article-request` with no argument; <owner> from `gh repo view --json owner --jq .owner.login`)
-gh search prs --owner <owner> --label "article-status: pending" --merged --limit 500 \
-  --json number,title,url,repository,author --jq '[.[] | select(.author.login == "<trusted>")]'
+# (as `article-request` with no argument; <owner> from `gh repo view --json owner --jq .owner.login`).
+# In a PUBLIC repo add `--visibility public`, and count the private ones without names (below).
+gh search prs --owner <owner> --label "article-status: pending" --merged --sort created --order asc --limit 500 \
+  --json number,title,url,repository,author,createdAt --jq '[.[] | select(.author.login == "<trusted>")]'
+# the search index lags: also this repo's own pending PRs, merged into the list above (dedupe by url)
+gh pr list --state merged --limit 500 --json number,title,url,author,labels,createdAt \
+  --jq '[.[] | select(.author.login == "<trusted>") | select([.labels[].name] | index("article-status: pending"))]'
+gh search prs --owner <owner> --label "article-status: pending" --merged --visibility private --limit 500 \
+  --json author --jq '[.[] | select(.author.login == "<trusted>")] | length'   # PUBLIC repo only
 # PRs by anyone else: a count only, never their title, body or files
 gh pr list --state open --limit 500 --json author --jq '[.[] | select(.author.login != "<trusted>")] | length'
 ```
 
 PRs follow the same rule as issues: only those opened by `<trusted>` count, for picking, for the overlap check and in the table. Anyone else's PR never excludes or holds back an issue, and is never started; the table shows only how many there are (`<K> PR(s) by others: triage by hand`).
 
-Filter `--json` locally (`--label` on issues uses the search index, which lags). Never fetch comments without the `<trusted>` filter, and never print a comment's body into the chat: use it only in a `jq` test.
+Filter `--json` locally (`--label` on issues uses the search index, which lags). `gh search prs` uses that index too, so before picking a pending PR or showing it as pending, re-check it: `gh pr view <url> --json labels --jq '[.labels[].name] | index("article-status: pending")'` must not be `null`.
+
+**Public repo: private repo names stay out.** When this repo is `PUBLIC`, PRs from the owner's private repos never appear by name, title or URL in a batch, brief or table: only as a count (`<K> pending article PR(s) in private repos: run issue-orchestrate article from a private repo`). Never fetch comments without the `<trusted>` filter, and never print a comment's body into the chat: use it only in a `jq` test.
 
 "Already done" means the issue's latest `<trusted>` comment starts with `🤖 AI` and contains `**Already done**` (as in `issue-enhance` Step 0): it waits for the author to close it.
 
@@ -80,7 +88,7 @@ Pick `status: approved` issues opened by `<trusted>`, minus:
 
 - parents (`subIssuesSummary.total > 0`);
 - issues blocked by an issue that's still open (`gh issue view <M> --json state` for each `blockedBy` entry);
-- issues that already have an open, non-draft PR by `<trusted>`, i.e. appear in the `closingIssuesReferences` of an open PR from the trusted query above with `isDraft` false (`issue-implement` leaves the label at `approved` once the PR is open). A draft PR is one `issue-implement` sent back after review round 3; once the author has re-approved the issue it's started again, and the table notes the old draft (`old draft PR #<M>: close it`).
+- issues that already have an open PR by `<trusted>`, i.e. appear in the `closingIssuesReferences` of an open PR from the trusted query above (`issue-implement` leaves the label at `approved` once the PR is open). If that PR is a draft (sent back after review round 3) and the author has re-approved the issue, it still isn't started, so two PRs never close one issue: the table shows `waiting: close old draft PR #<M>` until the author closes it.
 
 At most 3 per repo, oldest first, after the overlap check below.
 
@@ -95,7 +103,7 @@ At most 3 per repo, oldest first, after the overlap check below.
      | grep -oE '[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*\.[A-Za-z0-9]+' | sort -u
    ```
 2. Keep a path only if (a) `git ls-files --error-unmatch <path>` succeeds, or (b) it contains `/` and its first directory already exists in the repo (a new file such as `skills/dev/new-skill/SKILL.md`). URL fragments, `HTTP/2.0` and code identifiers such as `glob.glob` drop out here.
-3. Files open PRs already change, compared by repo-relative path (`files[].path`), not by file name. A candidate's own PR and draft PRs don't count:
+3. Files open PRs already change, compared by repo-relative path (`files[].path`), not by file name. A candidate's own PR and draft PRs don't count (a draft is sent back to the author and isn't heading for a merge):
    ```bash
    gh pr list --state open --limit 500 --json number,author,isDraft,files,closingIssuesReferences \
      --jq '.[] | select(.author.login == "<trusted>" and (.isDraft | not))
@@ -103,20 +111,20 @@ At most 3 per repo, oldest first, after the overlap check below.
    ```
    A PR that returns exactly 100 files may be truncated: for that PR, mark every candidate `overlap not checked`.
 4. `README.md` and `README.zh-TW.md` count as one file (the `readme-sync` check needs them changed together), but only when one of them appears in `## Approach`.
-5. Pick in two passes. First, a candidate sharing a path with an open PR waits: `waiting: overlaps PR #<M> on <file>`. Then go through the rest in issue-number order, keeping a candidate only if it shares no path with one already kept, until 3 are kept; one that shares a path waits: `waiting: overlaps #<N> on <file>` (`#<N>` the kept issue). Waiting candidates go in the next batch.
-6. A candidate with no paths extracted is started anyway, with `overlap not checked` in the table.
+5. Pick in two passes. First, a candidate sharing a path with an open PR waits: `waiting: overlaps PR #<M> on <file>`. Then go through the rest in issue-number order, keeping a candidate only if it shares no path with one already kept, until 3 are kept (a candidate with no paths extracted, step 6, is kept too and counts toward the 3); one that shares a path waits: `waiting: overlaps #<N> on <file>` (`#<N>` the kept issue). Waiting candidates go in the next batch.
+6. A candidate with no paths extracted can't be checked: it's kept in its turn in step 5, with `overlap not checked` in the table.
 
 Known limit: a file the plan names only by skill or component name, without its path, can't be extracted, so an overlap through it can be missed.
 
 ### `article`
 
-Pick merged PRs opened by `<trusted>` and labelled `article-status: pending` in any repo of the owner (the `gh search prs` query above). At most 3 per batch, oldest first. Each child runs `article-request <PR url>`; the author confirms the `post-type:` in that child session. The main session doesn't read the PR diff or its `## 文章素材`.
+Pick merged PRs opened by `<trusted>` and labelled `article-status: pending` in any repo of the owner (the two queries above, labels re-checked). At most 3 per batch, oldest `createdAt` first. Each child runs `article-request <PR url>`; the author confirms the `post-type:` in that child session. The main session doesn't read the PR diff or its `## 文章素材`.
 
 Starting from a file (a notes page) isn't a batch: the author opens a session and runs `article-request <file>` there directly.
 
 ### `status`
 
-Starts nothing. Rebuild the table below from the metadata queries and print it. For approved issues with no open non-draft PR, also run the `implement` exclusions, the "which skill" check and the overlap check (path lists only, as above) without starting anything, so `waiting:`, `overlap not checked` and `mislabelled` notes show here too.
+Starts nothing. Rebuild the table below from the metadata queries and print it. For approved issues with no open PR, also run the `implement` exclusions, the "which skill" check and the overlap check (path lists only, as above) without starting anything, so `waiting:`, `overlap not checked` and `mislabelled` notes show here too.
 
 ## Starting child sessions
 
@@ -153,15 +161,17 @@ When the children of a batch have all stopped, or the author asks for status, re
 |---|---|
 | `status: needs-info` | tick the decisions |
 | `status: ai-enhanced` | review the plan, then approve |
-| `status: approved`, no open non-draft PR | run issue-orchestrate implement, or the `waiting:` / `overlap not checked` / `mislabelled` note from the checks `status` runs |
+| `status: approved`, no open PR | run issue-orchestrate implement, or the `waiting:` / `overlap not checked` / `mislabelled` note from the checks `status` runs |
+| `status: approved`, open draft PR closing it | `waiting: close old draft PR #<M>` |
 | open non-draft PR closing the issue (`#<N> → PR #<M>`), its `risk:` label | review and merge |
 | `status: raw`, latest `<trusted>` comment is "Already done" | close the issue |
-| merged PR with `article-status: pending` (any repo of the owner) | run issue-orchestrate article |
+| merged PR with `article-status: pending` (any repo of the owner; in a public repo, public repos only) | run issue-orchestrate article |
+| pending article PRs in private repos (public repo only) | `<K> pending article PR(s) in private repos: run issue-orchestrate article from a private repo` (a count, no names) |
 | PRs by anyone else | `<K> PR(s) by others: triage by hand` (a count, no titles) |
 
-One row per issue: the issue's status label decides the row, except that an approved issue with an open non-draft PR gets the PR row. An open draft PR closing the issue (sent back after review round 3) only adds a note to the issue's row: `old draft PR #<M>` while the issue is being re-planned, `old draft PR #<M>: close it` once it's approved again.
+One row per issue: the issue's status label decides the row, except that an approved issue with an open non-draft PR gets the PR row. While an issue with an open draft PR (sent back after review round 3) is being re-planned, its row adds `old draft PR #<M>`.
 
-`status: raw` issues aren't listed (they wait for `enhance`, not for the author), except a parent, shown with `review #<M>` when its first line names the next sub-issue (read with `--jq '.body | split("\n")[0]'`, nothing more).
+`status: raw` issues aren't listed (they wait for `enhance`, not for the author), except an "Already done" one, one with an open draft PR (`old draft PR #<M>`, waits for `enhance`), and a parent, shown with `review #<M>` when its first line names the next sub-issue (read with `--jq '.body | split("\n")[0]'`, nothing more).
 
 ## Done when
 
@@ -169,6 +179,6 @@ One row per issue: the issue's status label decides the row, except that an appr
 - [ ] No issue body (beyond the `## Approach` path list and a parent's first line), PR diff, review result or child conversation was read into the main session.
 - [ ] Nothing was changed on GitHub by the main session.
 - [ ] No batch started while children of the previous one might still be running.
-- [ ] `enhance` / `article`: at most 3 per batch. `implement`: at most 3 per repo; parents, blocked issues and issues with an open non-draft PR were skipped; the overlap check ran, and every skipped or unchecked candidate is in the table with its reason.
+- [ ] `enhance` / `article`: at most 3 per batch. `implement`: at most 3 per repo; parents, blocked issues and issues with an open PR (draft or not) were skipped; the overlap check ran, and every skipped or unchecked candidate is in the table with its reason.
 - [ ] Each child got the brief word for word; with no way to start sessions, the briefs were printed and nothing ran here.
 - [ ] The table was rebuilt from GitHub, not from the children's `Report:` lines.
