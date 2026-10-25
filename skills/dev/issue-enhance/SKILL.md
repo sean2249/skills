@@ -152,10 +152,11 @@ For any UI change, or any choice that isn't settled yet, show **2–3 versions s
 **375px screenshots (UI).** Render each version (an HTML mockup, or the running app) at phone width into a temp dir outside the repo:
 
 ```bash
+# pinned versions: a run uses what was checked, not whatever npm serves today
 shots=$(mktemp -d)
-npx -y playwright install chromium            # first time only
-npx -y playwright screenshot --viewport-size=375,812 --full-page "file://$PWD/mockup-a.html" "$shots/a.png"
-npx -y playwright screenshot --viewport-size=375,812 --full-page "<preview url>" "$shots/b.png"
+npx -y playwright@1.64.0 install chromium            # first time only
+npx -y playwright@1.64.0 screenshot --viewport-size=375,812 --full-page "file://$PWD/mockup-a.html" "$shots/a.png"
+npx -y playwright@1.64.0 screenshot --viewport-size=375,812 --full-page "<preview url>" "$shots/b.png"
 # alternative without Playwright (Chrome/Chromium on PATH):
 #   chromium --headless --hide-scrollbars --window-size=375,812 --screenshot="$shots/a.png" "file://$PWD/mockup-a.html"
 ```
@@ -241,7 +242,8 @@ flowchart TD
 **Validate mermaid before posting.** Render it locally and fix errors:
 
 ```bash
-npx -y @mermaid-js/mermaid-cli -i flow.mmd -o flow.svg
+# pinned version: a run uses what was checked
+npx -y @mermaid-js/mermaid-cli@12.0.0 -i flow.mmd -o flow.svg
 ```
 
 The first run downloads a headless browser and can take a minute or two; that's normal. Write `flow.mmd` / `flow.svg` to a temp dir, not the repo.
