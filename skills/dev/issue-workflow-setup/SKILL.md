@@ -36,11 +36,13 @@ A caller still on `@main` (repos set up before tags) is upgraded the same way, t
 
 ```bash
 gh auth status
-gh repo view --json nameWithOwner,visibility,defaultBranchRef \
-  --jq '{repo: .nameWithOwner, visibility, default: .defaultBranchRef.name}'
+gh repo view --json nameWithOwner,visibility,defaultBranchRef,isInOrganization \
+  --jq '{repo: .nameWithOwner, visibility, default: .defaultBranchRef.name, org: .isInOrganization}'
 ```
 
 Stop if `gh` is not logged in or the cwd is not a GitHub repo.
+
+Also stop if the repo belongs to an organisation (`org` is `true`), and tell the author why: the shared workflows recognise the author by `author_association` `OWNER`, which GitHub gives only on a repo owned by a personal account. On an organisation's repo the author shows as `MEMBER` like everyone else in it, so `issue-status` would mark the author's own issues `external` and `needs-info-reply` would never switch them back. Nothing would enter the flow until the workflows can recognise the author another way.
 
 ## Step 1 — Inventory
 
@@ -139,6 +141,7 @@ List, and ask the author to confirm:
 - The exact `permissions.deny` rules for `.claude/settings.json` (Step 7), one per line. The author confirms or edits the list before anything is written.
 - **Public repo only** (`visibility` is `PUBLIC`), a reminder for the author: the `issue-assets` branch is public like the rest of the repo, so every mockup, screenshot and run output the skills post (issues, PRs, `issue-assets`) must use made-up data. Issues opened by outsiders get `external` and are never worked on by the skills (see the README's "Public repos").
 - The `## Issue workflow` keys to add, and the merge-mode result.
+- Repo settings (Step 9): turning on auto-merge, and the branch protection change. If the default branch is already protected, list what it has now (required checks, review rules, admin and push rules) and that only the new required checks are added.
 
 Ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none"), and which paths count as low risk.
 
@@ -257,7 +260,7 @@ mk "grill"                     d93f0b "Author asks issue-enhance to run the Gril
 mk "external"                  d4c5f9 "Not opened by the repo owner; the owner triages it by hand"
 ```
 
-`external` is added by the `issue-status` workflow to issues opened by anyone whose `author_association` isn't `OWNER` (collaborators included; bots are skipped entirely). On an organisation-owned repo, members' issues usually show as `MEMBER`, so they get `external` too; to work on one, the author opens their own issue. Those issues get no `status:` label, so `issue-enhance` and `issue-implement` never work on them. To act on one, the author opens their own issue in their own words and links the outside one. Don't put `status:` labels in issue templates: the workflow strips them from outside issues anyway.
+`external` is added by the `issue-status` workflow to issues opened by anyone whose `author_association` isn't `OWNER` (collaborators included; bots are skipped entirely). That is why the skill only installs into a repo owned by a personal account (Preconditions). Those issues get no `status:` label, so `issue-enhance` and `issue-implement` never work on them. To act on one, the author opens their own issue in their own words and links the outside one. Don't put `status:` labels in issue templates: the workflow strips them from outside issues anyway.
 
 Article progress is one label: the author adds `article-status: request` to an issue (`issue-implement` copies it to the PR); `article-pending` swaps it to `article-status: pending` when the PR merges; `article-request` swaps that to `article-status: handoff`. There is no separate `article` label.
 
@@ -340,6 +343,7 @@ Bash(printenv*)
 
 - `Read(**/.env.*)` also blocks `.env.example` / `.env.sample`. If the repo has one and sessions need it, replace that rule with the real files the `find` listed (e.g. `Read(**/.env.local)`, `Read(**/.env.production)`) and say so in the plan.
 - `.npmrc` / `credentials*.json` / `service-account*.json`: add a rule only if the file holds a token or key.
+- **Public repo:** `.claude/settings.json` is committed, so anyone can read the rules. Write every rule as a pattern by file type (`Read(**/*.p12)`, `Read(**/.npmrc)`), never a path the `find` turned up, so the rules don't list which secret files this repo keeps or where. For the `.env.example` case above, use the common variants (`Read(**/.env.local)`, `Read(**/.env.development)`, `Read(**/.env.production)`, `Read(**/.env.test)`, `Read(**/.env.*.local)`) instead of the ones found. The found files appear only in the Step 3 plan the author reads in the session, not in the commit or the PR.
 - `Bash(gh auth token*)` and `Bash(printenv*)` stop the two most direct ways to print the `gh` token or the environment.
 - **Limits.** These rules block Claude Code's own file tools (Claude Code's docs say Read rules also apply to Grep and Glob; not tested here). They do **not** stop a shell command such as `cat .env`, `grep -r KEY .`, or `env`, and a Bash prefix rule is easy to get around. Treat them as a guard against accidents and casual steering, not a sandbox. For a real boundary, recommend the author turn on Claude Code's sandbox for Bash (see Claude Code's sandboxing docs) in repos with secrets, and say so in the Step 3 plan.
 
@@ -423,7 +427,19 @@ gh api -X PATCH repos/<owner>/<repo>/branches/<default>/protection/required_stat
 JSON
 ```
 
-**New install:**
+**New install.** Read the current protection first (`gh api repos/<owner>/<repo>/branches/<default>/protection`). `PUT` replaces the whole protection, so use it only when the branch has none; a protected branch gets the new checks added and keeps everything else.
+
+Already protected, with required status checks → add the contexts (existing ones stay):
+
+```bash
+gh api -X POST repos/<owner>/<repo>/branches/<default>/protection/required_status_checks/contexts --input - <<'JSON'
+{ "contexts": ["risk-guard / check", "<ci-job-name>"] }
+JSON
+```
+
+Already protected, but without required status checks → this endpoint returns `404`. Don't fall back to `PUT`; show the author the current protection and ask them to turn on "Require status checks" with these checks in Settings → Branches.
+
+Not protected (`404 Branch not protected`):
 
 ```bash
 gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input - <<'JSON'
@@ -456,4 +472,5 @@ JSON
 - [ ] Setup PR is open with `risk: high`.
 - [ ] `risk-guard / check` ran on the setup PR and passed (`gh pr checks <PR>`).
 - [ ] Repair mode: required check swapped to `risk-guard / check` **before** the upgrade PR merged; the CLAUDE.md keys live only in a top-level `## Issue workflow`.
-- [ ] Merge mode auto: auto-merge enabled and branch protection set with job names (or the author has the Step 9 commands).
+- [ ] Merge mode auto: auto-merge enabled and branch protection set with job names, with any protection the branch already had kept (or the author has the Step 9 commands).
+- [ ] Public repo: the deny rules in `.claude/settings.json` are patterns by file type, with no path taken from the `find`.
