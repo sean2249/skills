@@ -48,7 +48,7 @@ Every comment you post on the PR or the issue starts with the line `🤖 AI <YYY
 - **Made-up data only** in everything you post (PR body, Behaviour summary run output, screenshots, evidence, `## 文章素材`, comments): no real account IDs, emails, tokens, internal URLs or hostnames, real user content, or names of the author's private repos. Run the app with a test account or seed data before taking screenshots, and redact real values from command output.
 - **No security details in public.** See Step 5b.
 
-Read `CLAUDE.md` `## Issue workflow`: verify command, preview URL, low-risk paths file, merge mode.
+Read `CLAUDE.md` `## Issue workflow`: verify command, preview URL, low-risk paths file, merge mode. Also note any rule elsewhere in `CLAUDE.md` about risk labels (some repos say certain paths or kinds of change are never `risk: low`); Step 4 applies them.
 
 ## Step 1 — Branch
 
@@ -81,7 +81,7 @@ git diff --name-only origin/<default-branch>...HEAD
 Apply in order; the first match wins:
 
 1. **`risk: high`** if any file touches auth, database migrations, `.github/workflows/`, secrets/credentials, or billing/payments.
-2. **`risk: low`** if every file matches a glob in `.github/low-risk-paths.txt` and none is under `.github/` or `.claude/` or is a `CLAUDE.md` (`*` stays in one directory, `**` crosses directories, trailing `/` = whole directory). The `risk-guard` workflow enforces the same rule on the PR.
+2. **`risk: low`** if every file matches a glob in `.github/low-risk-paths.txt` and none is under `.github/` or `.claude/` or is a `CLAUDE.md` (`*` stays in one directory, `**` crosses directories, trailing `/` = whole directory), **and** no rule in the repo's `CLAUDE.md` keeps the change off `risk: low`. A `CLAUDE.md` rule that raises the risk wins over the allowlist: the allowlist only lists paths that are safe by default, and the repo's own rules know about exceptions it doesn't. The `risk-guard` workflow enforces the allowlist part on the PR, not the `CLAUDE.md` rules, so applying those is up to you.
 3. **`risk: medium`** otherwise.
 
 This is the starting label. Step 5b can raise it, never lower it.
@@ -158,6 +158,8 @@ Return findings, most severe first, exactly in this format ("None" if there are 
 
 **Handle every finding**: fix it, or decide not to and give the reason (false positive, out of scope, deliberate trade-off). **Fix by category, not by line**: fix every finding of one category together, then search the rest of the change for the same class of problem and fix those too, not just the line the reviewer pointed at. After fixes, push and dispatch **new** fresh-context reviewers on the new changes only (`<base sha>..HEAD` in the prompt), never the same subagent again.
 
+**After every round of fixes, verify and classify again.** Run the verify command again and update the evidence in the PR, so it describes the code that will merge, not the code before the fixes. Re-run Step 4 on the new file list, since a fix can touch files that raise the risk; keep whichever label is higher. Round 3's fixes get no further review, so this verify run is their only check: if it fails, take the PR off `risk: low` and hand it to the author instead of merging.
+
 **At most 3 rounds; round 3 is the last review.**
 
 - **Rounds 1–2**: handle the findings as above, then review again with new reviewers.
@@ -184,7 +186,7 @@ Private repos record findings as below.
 
 **Record it.** Add a `## Review` section to the PR body. For each review, give how many rounds ran; if round 3 ran, add either "Round 3 findings all fixed; not sent for another review." or "Round 3 found medium+ findings; sent back to the author to rethink the approach." For each finding, give its severity, category, `file:line`, and outcome: fixed (commit), or not fixed plus the reason. After a scope change, keep the old-scope rounds in their own group headed "old scope, not counted". Then post a PR comment starting with `🤖 AI <YYYY-MM-DD>` that summarises it.
 
-**Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), or a **high-severity** code-review finding is left unfixed. Swap the label:
+**Re-check the risk label.** The PR can't be `risk: low`, and isn't merged automatically, if **any** security finding is left unfixed (even one the author agreed to skip), a **high-severity** code-review finding is left unfixed, or a finding waits on the author's product decision (the exception above): merging first would ship the answer before the author gives it. Swap the label:
 
 ```bash
 gh pr edit <PR> --remove-label "risk: low" --add-label "risk: medium"
@@ -255,6 +257,7 @@ Example (made-up): `Report: #44 · PR #51 risk: medium · next: review and merge
 - [ ] PR has exactly one risk label, and `Closes #<N>`.
 - [ ] `article-status: request` issues: PR has `## 文章素材` and the `article-status: request` label.
 - [ ] Both reviews (code + security) ran as fresh-context subagents, at most 3 rounds, before any merge; every finding is fixed or has a reason; findings carry a category and were fixed a category at a time, with the rest of the change checked for the same class; if round 3 ran with only low findings, all are fixed (except unfixable security findings, or ones needing an author product decision, each with its reason) and no further review was dispatched; if round 3 had any medium+ finding, nothing was patched or merged, the PR is a draft, PR and issue each have a 🤖 comment (findings by category, why it's the approach, 2–3 alternatives), and the issue is back at `status: needs-info` with the decision in the body; the PR has `## Review` and a 🤖 summary comment. After an author scope change, the count restarted at round 1 and the old-scope rounds are listed apart as "old scope, not counted".
-- [ ] No `risk: low` with an unfixed security finding or unfixed high-severity code finding.
+- [ ] No `risk: low` with an unfixed security finding, an unfixed high-severity code finding, a finding waiting on the author's product decision, or a change the repo's `CLAUDE.md` keeps off `risk: low`.
+- [ ] After each round of fixes, verify ran again, evidence was updated, and Step 4 was re-run on the new file list.
 - [ ] Only `risk: low` was merged or queued for auto-merge.
 - [ ] Every stop's final message starts with the `Report:` line (`## Report back`, ≤ 300 characters, no security finding details); everything after it is as complete as before.
