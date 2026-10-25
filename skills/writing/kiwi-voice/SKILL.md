@@ -18,6 +18,8 @@ Read the rules there and write them there; never keep rules in this skill.
 
 **AI finds, the author decides.** Whenever rules conflict with each other, with an example, or with a new edit, your job is to find it and lay out the options. Don't pick one, don't resolve it silently.
 
+**Voice changes get their own PR.** Every voice commit (`voice: 標記待整併`, `voice: 整併`, `voice: 收納 <post>`) goes on a branch of its own from the default branch, `voice/<post slug>`, never on the post's branch. A worktree keeps the post branch checked out while you do it: `git worktree add ../voice-<post slug> -b voice/<post slug> origin/<default-branch>`. Open one PR for it after the round's last voice commit, with `Refs #<N>` (not `Closes`, so the post issue stays open) and the approved items in the body, risk classified from its files as in `issue-implement` Step 4, and leave it for the author to merge. Two reasons: the rules file shapes every later post, so a rule change deserves a review of its own rather than riding inside one post; and a post PR can only be `risk: low` while every file is in the blog's low-risk allowlist, which lists posts, not the voice files. Tell the author the voice PR's link so the post PR can name it.
+
 ## Size limit
 
 Default: the rules file stays under **8 KB** and **25 rules**. A repo can override either in `CLAUDE.md` with `Voice limits: <KB> KB / <N> rules`.
@@ -56,7 +58,7 @@ Run before handing over any post, new or revised.
 1. Read the whole rules file (not the examples directory). Done when: you can say what each rule governs.
 2. Settle the draft's content and facts first.
 3. Check the draft against every rule in `所有文章`, and every rule in the section for this post's type. Fix what doesn't fit. Done when: every rule was checked and you can list which rules changed which sentences.
-4. **Rule and example disagree** → follow the rule, and append `（待整併：<one line on the mismatch>）` to that example. Commit it on its own (`voice: 標記待整併`), never mixed with the post.
+4. **Rule and example disagree** → follow the rule, and append `（待整併：<one line on the mismatch>）` to that example. Commit it on its own (`voice: 標記待整併`) on the voice branch, never mixed with the post.
 5. **Keep the author's own words.** Sentences the author already edited stay exactly as they are, slang and typos included. When the post is transcribed from the author's own note (a vault or personal note), you may adjust wording, but **never delete a sentence the author wrote**, even if a rule (e.g. 重複) seems to call for it. Flag it to the author instead.
 6. On hand-over, tell the author in a line or two which rules changed the post, and any example you marked 待整併.
 
@@ -70,6 +72,7 @@ Run after **each round** of the author's edits to an AI-written post (in `post-w
 4. **Classify every hunk:**
    - **Style**: different wording, tone, structure, title, a sentence removed, with the facts unchanged.
    - **Fact**: the author corrected content. Not a voice rule; don't repeat the mistake.
+   - **Private**: the author removed something that shouldn't be public (a name, a private project, a personal detail). Not a voice rule, and its words never go into an example: the voice files are read in full for every later post, and git keeps them even after a later edit. Unsure whether a removal was style or privacy → ask the author.
    - **One-off**: a choice that only holds for this post.
    Done when: every hunk has a class.
 5. **Match each style hunk against the rules file**, reading the rule's examples file when needed:
@@ -84,8 +87,9 @@ Run after **each round** of the author's edits to an AI-written post (in `post-w
    - **衝突**: the rule, the edit, and these options, with no recommendation: 縮小規則範圍 (rewrite the rule so it no longer covers this case) / 加例外 (keep the rule, add `例外：…`) / 舊規則退場 (remove the rule; this edit may become a new rule) / 只算這篇的特例 (change nothing).
    - **暫緩** (only when step 1 left it over the limit): new rules not written this round.
    - **只屬這篇不收**: one-offs, and why they're not general.
+   Every 改前 is quoted from the AI draft, which may hold details the author then cut. Keep only the words that show the change, and replace anything the published post doesn't contain with `…`, so an example never publishes what the post left out.
    Present them as a list the author can approve or reject item by item.
-7. **Write only what the author approves**: rules under their section, examples under their rule, displaced examples into `<examples dir>/<rule name>.md`. Commit the voice files **as a separate commit in the same post PR**: `voice: 收納 <post>`. Never mix it into the author-edit commit or the post's own changes. Nothing approved → no commit; say so in the PR.
+7. **Write only what the author approves**: rules under their section, examples under their rule, displaced examples into `<examples dir>/<rule name>.md`. Commit the voice files **on the voice branch** (see the top): `voice: 收納 <post>`. Never mix it into the author-edit commit or the post's own changes. Nothing approved → no commit and no voice PR; say so in the post PR.
 
 ## 整併 (consolidate)
 
@@ -101,4 +105,4 @@ Run when 收納 step 1 finds the rules file over its limit, when the author asks
    - **舊格式**: a `收納紀錄` table → drop it (git has the history). More than 3 examples on a rule → keep the 3 that show the most different facets, move the rest to the examples directory.
 3. **Present a checklist**, one item per candidate, each with its before → after text and its options when it has more than one. Don't choose between options. End with the size and rule count if everything were approved. Done when: the author has ticked or rejected every item.
 4. **Apply only what was approved.** Moved examples keep their date and post. A retired rule's examples file is deleted with it (git keeps it). Merged rules' examples files are merged into one.
-5. **Commit** `voice: 整併` (in a post PR: before that round's `voice: 收納`). Report the new size and rule count. Still over the limit → say so; 收納 then holds new rules as 暫緩.
+5. **Commit** `voice: 整併` (on the voice branch, before that round's `voice: 收納`). Report the new size and rule count. Still over the limit → say so; 收納 then holds new rules as 暫緩.
