@@ -23,5 +23,3 @@ permissions:
 jobs:
   risk-guard:
     uses: sean2249/skills/.github/workflows/risk-guard.yml@v2
-    with:
-      allowlist: .github/low-risk-paths.txt

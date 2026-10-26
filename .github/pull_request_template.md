@@ -32,7 +32,7 @@ Closes #<!-- issue number; one line per issue, for a spec the spec and each tick
 
 <!-- Exactly one risk label goes on the PR. -->
 - Level: `risk: low` / `risk: medium` / `risk: high`
-- Reason: <!-- low = two-way door and every changed file in the low-risk allowlist; high = one-way door or a blast radius across repos -->
+- Reason: <!-- low = two-way door, a clean review, and nothing under .github/, .claude/, CLAUDE.md or the agent docs; high = one-way door or a blast radius across repos -->
 
 ## Review
 

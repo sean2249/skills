@@ -22,5 +22,3 @@ permissions:
 jobs:
   risk-guard:
     uses: <skills-repo>/.github/workflows/risk-guard.yml@<tag>
-    with:
-      allowlist: .github/low-risk-paths.txt

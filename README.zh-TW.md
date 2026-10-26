@@ -46,7 +46,7 @@ claude plugin install kiwi-skills@kiwi-skills
 底層是 [mattpocock-skills](https://github.com/mattpocock/skills)：分類、spec、ticket 和實作都直接用他的 skills，不做修改。這個 repo 只補上他沒有的部分：附審查與 risk label 的 PR 出貨、共用的 GitHub workflow，以及把工作寫成文章。
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue 工作流程：issue 從 status: raw 開始；/triage 驗證它、需要時 grill、寫出給 agent 的說明，作者在 session 裡決定：needs-info（問題寫在留言，作者回覆後自動回到 raw）、approved 並加上 type label、ready-for-human 或 wontfix；大工作則由 /to-spec 與 /to-tickets 寫出一張 spec issue 和用 blocked-by 串起來的 ticket sub-issue。/implement 以測試先行做一張 ticket 並跑 code-review；/implement-spec 在整合 branch 上平行做完整份 spec。issue-ship 跑 verify、用 pr skill 寫 PR 本文，用 security-audit 與 code-review 審整個 PR 最多 3 輪，結果在 session 裡（第 3 輪若還有單向門後面的 medium 以上問題就交回作者），並依 Door 與白名單決定 risk label：risk: low 自動 merge，medium 或 high 由作者 merge。標了 article-status: request 的工作卡在 merge 時轉成 pending，再由 article-request 轉成 handoff，並在文章 repo 開一張 post-type: 文章卡；在那裡 post-write 先寫大綱讓作者在 session 裡確認，再寫文章，作者編輯後 merge。">
+  <img src="docs/workflow.svg" width="960" alt="Issue 工作流程：issue 從 status: raw 開始；/triage 驗證它、需要時 grill、寫出給 agent 的說明，作者在 session 裡決定：needs-info（問題寫在留言，作者回覆後自動回到 raw）、approved 並加上 type label、ready-for-human 或 wontfix；大工作則由 /to-spec 與 /to-tickets 寫出一張 spec issue 和用 blocked-by 串起來的 ticket sub-issue。/implement 以測試先行做一張 ticket 並跑 code-review；/implement-spec 在整合 branch 上平行做完整份 spec。issue-ship 跑 verify、用 pr skill 寫 PR 本文，用 security-audit 與 code-review 審整個 PR 最多 3 輪，結果在 session 裡（第 3 輪若還有單向門後面的 medium 以上問題就交回作者），並依 Door 與審查結果決定 risk label：risk: low 自動 merge，medium 或 high 由作者 merge。標了 article-status: request 的工作卡在 merge 時轉成 pending，再由 article-request 轉成 handoff，並在文章 repo 開一張 post-type: 文章卡；在那裡 post-write 先寫大綱讓作者在 session 裡確認，再寫文章，作者編輯後 merge。">
 </p>
 
 標亮的節點（圖中發光、文字版中為黃色）是作者介入的地方：在 `/triage` 的 session 裡做決定、第 3 輪交回時選新方向、merge `risk: medium` / `high` 的 PR、確認文章大綱，以及編輯並 merge 文章。其餘都由 skills 或 GitHub Actions 完成。圖片會跟著系統的淺色／深色設定切換；如果你在作業系統要求減少動態效果，動畫會停止。
@@ -74,7 +74,7 @@ flowchart TD
     IS --> S
     S --> RV["審查 · 最多 3 輪<br/>security-audit + code-review<br/>結果在 session 裡"]
     RV -->|"第 3 輪：單向門後面<br/>還有 medium 以上"| BK(["作者選新方向"]):::author
-    RV --> K{"risk label<br/>Door + 白名單"}
+    RV --> K{"risk label<br/>Door + 審查"}
     K -->|"risk: low<br/>risk-guard / check"| L["Merge"]
     K -->|"risk: medium / high"| M(["作者審查並 merge"]):::author
   end
@@ -91,9 +91,9 @@ flowchart TD
     subgraph CARD["文章卡 · post-type:（只在文章 repo）"]
       U["post-write<br/>大綱 · 由全新 subagent 查核一次"]
       OC(["作者在 session 裡確認大綱<br/>→ approved"]):::author
-      W["post-write<br/>草稿 + 來源對照表 · kiwi-voice 套用"]
+      W["post-write<br/>草稿 + 來源對照表 · writing-voice 套用"]
       E(["作者編輯草稿"]):::author
-      P["post-write<br/>kiwi-voice 收納 · PR"]
+      P["post-write<br/>writing-voice 收納 · PR"]
       V(["作者 merge 文章"]):::author
     end
     N -->|有| O
@@ -117,9 +117,9 @@ flowchart TD
 | 實作 | `/implement`（一張 issue 或 ticket）、`/implement-spec`（整份 spec，平行做） | mattpocock-skills |
 | PR、審查、risk、merge | `issue-ship`（會用到 `pr`、`code-review` 和 `security-audit`） | 這個 repo |
 | 把工作交接成文章 | `article-request` | 這個 repo |
-| 寫文章 | `post-write`，搭配 `kiwi-voice` | 這個 repo |
+| 寫文章 | `post-write`，搭配 `writing-voice` | 這個 repo |
 
-mattpocock-skills 的流程類 skill 只在我自己輸入時才會執行，所以上面每一步都是在 session 裡下一個 slash 指令開始。它們在各 repo 的設定放在 `docs/agents/`（`issue-tracker.md`、`triage-labels.md`、`domain.md`），由 `CLAUDE.md` 的 `## Agent skills` 指過去。`triage-labels.md` 把他的分類角色對應到這個工作流程的 `status:` 和 `type:` label，所以他的 skills 貼的就是下面的 labels。
+上面每個流程類 skill，不論是他的還是我的，都只在我自己輸入時才會執行，所以每一步都是在 session 裡下一個 slash 指令開始。唯一的例外是 `writing-voice`：`post-write` 執行到一半會叫它（交出草稿前、我改完稿後各一次），只能手動觸發的 skill 做不到這點。它們在各 repo 的設定放在 `docs/agents/`（`issue-tracker.md`、`triage-labels.md`、`domain.md`），由 `CLAUDE.md` 的 `## Agent skills` 指過去。`triage-labels.md` 把他的分類角色對應到這個工作流程的 `status:` 和 `type:` label，所以他的 skills 貼的就是下面的 labels。
 
 ### 審查與 risk
 
@@ -137,10 +137,10 @@ mattpocock-skills 的流程類 skill 只在我自己輸入時才會執行，所�
 | Label | 什麼時候 | Merge |
 |---|---|---|
 | `risk: high` | 單向門（機密、資料遺失、auth、計費、共用 workflow 或 skills），或影響範圍跨 repo | 由我 |
-| `risk: low` | 雙向門，而且改到的每個檔案都在 `.github/low-risk-paths.txt` 裡（`.github/`、`.claude/`、`CLAUDE.md` 一律不算） | 自動 |
+| `risk: low` | 雙向門，而且審查沒有留下讓它不能是 low 的問題（改到 `.github/`、`.claude/`、`CLAUDE.md` 或 `docs/agents/` 的 PR 一律不行） | 自動 |
 | `risk: medium` | 其他 | 由我 |
 
-Door 是 AI 的判斷，寫在 PR 裡讓我核對。白名單的部分由 GitHub 上的 `risk-guard` 檢查強制執行，AI 說服不了它：AI 判錯只會讓 PR 變嚴，不會讓白名單外的檔案自己被 merge。只要有未修的 `confirmed` 或 `needs_validation` 資安問題，或未修的 high 程式碼問題，PR 就不能是 `risk: low`。文章用我的名字發佈，本身就是單向門，所以 `post-write` 只依檔案決定 label，而且一律由我 merge。
+沒有路徑白名單：由 Door 和審查結果決定，Door 是 AI 的判斷，寫在 PR 裡讓我核對。只有一條底線由 GitHub 上的 `risk-guard` 檢查守著，AI 說服不了它：`risk: low` 的 PR 永遠不能改到 `.github/`、`.claude/`、`CLAUDE.md` 或 `docs/agents/`，這些檔案決定工作流程怎麼跑、AI 信任什麼。只要有未修的 `confirmed` 或 `needs_validation` 資安問題，或未修的 high 程式碼問題，PR 就不能是 `risk: low`。文章用我的名字發佈，本身就是單向門，所以一律由我 merge；只改到文章本身和它的圖片時，`post-write` 標成 `risk: low`。
 
 ### 公開 repo
 
@@ -166,13 +166,13 @@ Door 是 AI 的判斷，寫在 PR 裡讓我核對。白名單的部分由 GitHub
 一張 issue 一個 session，用 slash 指令推進。每張 issue 走到哪裡都看 GitHub labels，所以沒有需要同步的主 session。
 
 <p align="center">
-  <img src="docs/operating.svg" width="960" alt="作者日常怎麼運作這個工作流程。三條路線，各在自己的 session 裡。小工作：/triage #N，作者在 session 裡決定，/implement #N，/issue-ship，PR 在低風險時自動 merge，否則由作者 merge。大工作：/triage 之後，/to-spec 和 /to-tickets 寫出 spec issue 和 ticket sub-issue，/implement-spec #S 平行做完 ticket，/issue-ship 出貨那一個 PR。文章：在文章 repo 說「請看 #N」，post-write 先寫大綱讓作者確認，再寫草稿讓作者編輯，最後開 PR 由作者 merge；文章卡由 article-request 從 merge 的工作或任何檔案開出來。互不相關的 issue 可以同時開好幾個 session。GitHub 的 issue 和 labels 是共用的狀態。">
+  <img src="docs/operating.svg" width="960" alt="作者日常怎麼運作這個工作流程。三條路線，各在自己的 session 裡。小工作：/triage #N，作者在 session 裡決定，/implement #N，/issue-ship，PR 在低風險時自動 merge，否則由作者 merge。大工作：/triage 之後，/to-spec 和 /to-tickets 寫出 spec issue 和 ticket sub-issue，/implement-spec #S 平行做完 ticket，/issue-ship 出貨那一個 PR。文章：在文章 repo 下 /post-write #N，post-write 先寫大綱讓作者確認，再寫草稿讓作者編輯，最後開 PR 由作者 merge；文章卡由 article-request 從 merge 的工作或任何檔案開出來。互不相關的 issue 可以同時開好幾個 session。GitHub 的 issue 和 labels 是共用的狀態。">
 </p>
 
 1. **小工作：** `/triage #N`。它驗證 issue，需要補充時會 grill 我，並問我怎麼標。我在 session 裡回答，它就寫好給 agent 的說明並設成 `status: approved`。接著 `/implement #N` 和 `/issue-ship`。
 2. **大工作：** `/triage` 之後，`/to-spec` 把 spec 寫成一張新 issue（舊的那張標成被取代後關閉），`/to-tickets` 把它拆成用 blocked-by 串起來的 ticket sub-issue，發出去之前會先給我看拆法。`/implement-spec #<spec>` 在一條整合 branch 上平行做完所有 ticket，`/issue-ship` 出貨它唯一的那個 PR。
 3. **平行：** 互不相關的 issue 各開一個 session，同時進行。同一份 spec 裡的 ticket，`/implement-spec` 本來就會平行做。
-4. **文章：** 要寫成文章的工作我會加上 `article-status: request`。merge 之後，`article-request` 在文章 repo 開一張卡（也可以從任何檔案開始，例如一頁筆記）。我在那裡說「請看 #N」：`post-write` 寫大綱、我確認、它寫草稿、我直接在檔案上編輯並說改好了，它幫我 commit 編輯並開 PR，由我 merge。
+4. **文章：** 要寫成文章的工作我會加上 `article-status: request`。merge 之後，`article-request` 在文章 repo 開一張卡（也可以從任何檔案開始，例如一頁筆記）。我在那裡下 `/post-write #N`：`post-write` 寫大綱、我確認、它寫草稿、我直接在檔案上編輯並說改好了，它幫我 commit 編輯並開 PR，由我 merge。
 
 <details>
 <summary>文字版（mermaid）</summary>
@@ -186,7 +186,7 @@ flowchart LR
     B1["/triage #N"] --> B2["/to-spec → /to-tickets"] --> B3(["作者核准拆法"]):::author --> B4["/implement-spec #S"] --> B5["/issue-ship"]
   end
   subgraph POST["文章 · 文章 repo 裡的一個 session"]
-    P0["article-request<br/>從 merge 的工作或任何檔案"] --> P1(["「請看 #N」"]):::author --> P2["post-write · 大綱"] --> P3(["作者確認"]):::author --> P4["草稿"] --> P5(["作者編輯"]):::author --> P6["PR"]
+    P0["article-request<br/>從 merge 的工作或任何檔案"] --> P1(["/post-write #N"]):::author --> P2["post-write · 大綱"] --> P3(["作者確認"]):::author --> P4["草稿"] --> P5(["作者編輯"]):::author --> P6["PR"]
   end
   BOARD[("GitHub issues 與 labels<br/>共用狀態")]
   S4 --> M(["risk: medium / high：<br/>作者 merge"]):::author
@@ -221,10 +221,10 @@ GitHub 的預設 labels（`bug`、`enhancement`、`wontfix`…）不使用；`is
 | Skill | 什麼時候用 |
 |---|---|
 | `dev/issue-workflow-setup` | 在 `/setup-matt-pocock-skills` 之後，替 repo 安裝（或修復）issue 工作流程：labels、agent 文件裡的 label 對應、共用 workflow 的 caller、PR 範本，以及 `CLAUDE.md` 的 `## Issue workflow` / `## Public repo` 段落 |
-| `dev/issue-ship` | 出貨 `/implement` 或 `/implement-spec` 做完的工作：verify、用 `pr` 寫 PR 本文、用 `security-audit` 和 `code-review` 審查最多 3 輪、依 Door 與白名單決定 risk label，只 merge `risk: low` |
+| `dev/issue-ship` | 出貨 `/implement` 或 `/implement-spec` 做完的工作：verify、用 `pr` 寫 PR 本文、用 `security-audit` 和 `code-review` 審查最多 3 輪、依 Door 與審查結果決定 risk label，只 merge `risk: low` |
 | `dev/article-request` | 把已 merge 的 `article-status: pending` PR，或任何檔案，以 raw issue 交給文章 repo；把該 PR 和它關閉的 issue 標成 `article-status: handoff` |
 | `writing/post-write` | 用四種模式之一（devlog、intro、review、research）撰寫文章 issue：先寫大綱讓作者在 session 裡確認，再依文章 repo 的慣例寫草稿，附封面、替 `wiki:` 目標加上部落格連結，並替筆記來源附來源對照表；開 PR 前先把草稿交給作者編輯 |
-| `writing/kiwi-voice` | 把 repo 的語氣規則套用到文章上（套用）；作者編輯後，提出新的規則或範例讓作者核准（收納）；規則檔超過大小上限（預設 8 KB / 25 條規則）時，提出合併、一般化與淘汰的建議，並列出規則與範例的衝突交給作者決定（整併）。規則放在各 repo 的語氣規則檔（`Voice file:`），額外範例放在它的範例資料夾（`Voice examples:`），不在 skill 裡 |
+| `writing/writing-voice` | 把 repo 的語氣規則套用到文章上（套用）；作者編輯後，提出新的規則或範例讓作者核准（收納）；規則檔超過大小上限（預設 8 KB / 25 條規則）時，提出合併、一般化與淘汰的建議，並列出規則與範例的衝突交給作者決定（整併）。規則放在各 repo 的語氣規則檔（`Voice file:`），額外範例放在它的範例資料夾（`Voice examples:`），不在 skill 裡 |
 
 ## Shared workflows
 

@@ -46,7 +46,7 @@ This is my personal development workflow. The skills are designed around it, so 
 The base is [mattpocock-skills](https://github.com/mattpocock/skills): triage, specs, tickets and implementation are his skills, used as they are. This repo adds only what they don't cover: shipping a PR with a review and a risk label, the shared GitHub workflows, and turning work into articles.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue starts at status: raw; /triage verifies it, grills it if needed and writes an agent brief, and the author decides in the session: needs-info (questions in a comment; the author's reply sends it back to raw), approved with a type label, ready-for-human or wontfix, or, for big work, /to-spec and /to-tickets write a spec issue with ticket sub-issues joined by blocked-by edges. /implement builds one ticket test-first and runs code-review; /implement-spec builds a whole spec in parallel on an integration branch. issue-ship verifies, writes the PR body with the pr skill, reviews the whole PR with security-audit and code-review for up to 3 rounds with the results in the session (in round 3, a medium or high finding behind a one-way door goes back to the author), and sets the risk label from the Door and the allowlist: risk: low merges, medium or high is merged by the author. Work cards labelled article-status: request move to pending on merge and to handoff with article-request, which opens a post-type: card in the article repo; there post-write writes an outline the author confirms in the session, then the post, which the author edits and merges.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue starts at status: raw; /triage verifies it, grills it if needed and writes an agent brief, and the author decides in the session: needs-info (questions in a comment; the author's reply sends it back to raw), approved with a type label, ready-for-human or wontfix, or, for big work, /to-spec and /to-tickets write a spec issue with ticket sub-issues joined by blocked-by edges. /implement builds one ticket test-first and runs code-review; /implement-spec builds a whole spec in parallel on an integration branch. issue-ship verifies, writes the PR body with the pr skill, reviews the whole PR with security-audit and code-review for up to 3 rounds with the results in the session (in round 3, a medium or high finding behind a one-way door goes back to the author), and sets the risk label from the Door and the review: risk: low merges, medium or high is merged by the author. Work cards labelled article-status: request move to pending on merge and to handoff with article-request, which opens a post-type: card in the article repo; there post-write writes an outline the author confirms in the session, then the post, which the author edits and merges.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: deciding in the `/triage` session, picking a new direction when round 3 sends work back, merging `risk: medium` / `high` PRs, confirming an article outline, and editing and merging posts. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -74,7 +74,7 @@ flowchart TD
     IS --> S
     S --> RV["Review · ≤ 3 rounds<br/>security-audit + code-review<br/>results in the session"]
     RV -->|"round 3: medium+<br/>behind a one-way door"| BK(["Author picks a new direction"]):::author
-    RV --> K{"risk label<br/>Door + allowlist"}
+    RV --> K{"risk label<br/>Door + review"}
     K -->|"risk: low<br/>risk-guard / check"| L["Merge"]
     K -->|"risk: medium / high"| M(["Author reviews and merges"]):::author
   end
@@ -91,9 +91,9 @@ flowchart TD
     subgraph CARD["Article card · post-type: (article repo only)"]
       U["post-write<br/>outline · checked once by a fresh subagent"]
       OC(["Author confirms the outline<br/>in the session → approved"]):::author
-      W["post-write<br/>draft + source map · kiwi-voice 套用"]
+      W["post-write<br/>draft + source map · writing-voice 套用"]
       E(["Author edits the draft"]):::author
-      P["post-write<br/>kiwi-voice 收納 · PR"]
+      P["post-write<br/>writing-voice 收納 · PR"]
       V(["Author merges the article"]):::author
     end
     N -->|yes| O
@@ -117,9 +117,9 @@ flowchart TD
 | Build it | `/implement` (one issue or ticket), `/implement-spec` (a whole spec, in parallel) | mattpocock-skills |
 | PR, review, risk, merge | `issue-ship` (uses `pr`, `code-review` and `security-audit`) | this repo |
 | Hand work over as an article | `article-request` | this repo |
-| Write the article | `post-write`, with `kiwi-voice` | this repo |
+| Write the article | `post-write`, with `writing-voice` | this repo |
 
-The mattpocock-skills' workflow skills run only when I type them, so every step above starts with a slash command in a session. Their per-repo settings live in `docs/agents/` (`issue-tracker.md`, `triage-labels.md`, `domain.md`), pointed at by `## Agent skills` in `CLAUDE.md`. `triage-labels.md` maps his triage roles to this workflow's `status:` and `type:` labels, so his skills apply the labels below.
+Every workflow skill above, his and mine, runs only when I type it, so each step starts with a slash command in a session. The one exception is `writing-voice`: `post-write` calls it in the middle of its own run (before handing over the draft, and after my edits), which a typed-only skill can't allow. Their per-repo settings live in `docs/agents/` (`issue-tracker.md`, `triage-labels.md`, `domain.md`), pointed at by `## Agent skills` in `CLAUDE.md`. `triage-labels.md` maps his triage roles to this workflow's `status:` and `type:` labels, so his skills apply the labels below.
 
 ### Review and risk
 
@@ -137,10 +137,10 @@ The mattpocock-skills' workflow skills run only when I type them, so every step 
 | Label | When | Merge |
 |---|---|---|
 | `risk: high` | One-way door (secrets, data loss, auth, billing, shared workflows or skills), or a blast radius across repos | By me |
-| `risk: low` | Two-way door, and every changed file in `.github/low-risk-paths.txt` (never `.github/`, `.claude/` or `CLAUDE.md`) | Automatically |
+| `risk: low` | Two-way door, and nothing from the review keeps it off low (never a PR touching `.github/`, `.claude/`, `CLAUDE.md` or `docs/agents/`) | Automatically |
 | `risk: medium` | Everything else | By me |
 
-The Door is the AI's call, written in the PR where I can check it. The allowlist part is enforced on GitHub by the `risk-guard` check, which the AI can't talk its way past: an AI mistake can make a PR stricter, never let a file outside the allowlist merge by itself. Any unfixed `confirmed` or `needs_validation` security finding, or high code finding, keeps a PR off `risk: low`. Posts are published under my name, a one-way door of their own, so `post-write` labels them by their files only and I always merge them.
+There's no path allowlist: the Door and the review decide, and the Door is the AI's call, written in the PR where I can check it. One line is held on GitHub by the `risk-guard` check, which the AI can't talk its way past: a `risk: low` PR never touches `.github/`, `.claude/`, a `CLAUDE.md` or `docs/agents/`, the files that decide how the workflow runs and what the AI trusts. Any unfixed `confirmed` or `needs_validation` security finding, or high code finding, keeps a PR off `risk: low`. Posts are published under my name, a one-way door of their own, so I always merge them; `post-write` labels a post `risk: low` when it changes only the post and its images.
 
 ### Public repos
 
@@ -166,13 +166,13 @@ On a public repo anyone can open an issue or comment, and everything the skills 
 One session per issue, driven by slash commands. GitHub labels show where every issue stands, so there's no main session to keep in sync.
 
 <p align="center">
-  <img src="docs/operating.svg" width="960" alt="How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, and the PR merges when it's low risk or the author merges it. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author says 請看 #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.">
+  <img src="docs/operating.svg" width="960" alt="How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, and the PR merges when it's low risk or the author merges it. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author runs /post-write #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.">
 </p>
 
 1. **Small work:** `/triage #N`. It verifies the issue, grills me if it needs fleshing out, and asks how to label it. I answer in the session, and it writes the agent brief and sets `status: approved`. Then `/implement #N` and `/issue-ship`.
 2. **Big work:** after `/triage`, `/to-spec` writes the spec as a new issue (the old one is closed as superseded) and `/to-tickets` splits it into ticket sub-issues joined by blocked-by edges; it shows me the split first. `/implement-spec #<spec>` builds the tickets in parallel on one integration branch, and `/issue-ship` ships its single PR.
 3. **In parallel:** independent issues each get their own session, side by side. Inside one spec, `/implement-spec` already runs the tickets in parallel.
-4. **Articles:** I add `article-status: request` to anything that should become an article. After it merges, `article-request` opens a card in the article repo (it can also start from any file, such as a notes page). There I say 「請看 #N」: `post-write` writes the outline, I confirm it, it writes the draft, I edit it in place and say I'm done, and it commits my edits and opens the PR for me to merge.
+4. **Articles:** I add `article-status: request` to anything that should become an article. After it merges, `article-request` opens a card in the article repo (it can also start from any file, such as a notes page). There I say `/post-write #N`: `post-write` writes the outline, I confirm it, it writes the draft, I edit it in place and say I'm done, and it commits my edits and opens the PR for me to merge.
 
 <details>
 <summary>Text version (mermaid)</summary>
@@ -186,7 +186,7 @@ flowchart LR
     B1["/triage #N"] --> B2["/to-spec → /to-tickets"] --> B3(["Author approves the split"]):::author --> B4["/implement-spec #S"] --> B5["/issue-ship"]
   end
   subgraph POST["Article · one session in the article repo"]
-    P0["article-request<br/>from merged work or any file"] --> P1(["「請看 #N」"]):::author --> P2["post-write · outline"] --> P3(["Author confirms"]):::author --> P4["draft"] --> P5(["Author edits"]):::author --> P6["PR"]
+    P0["article-request<br/>from merged work or any file"] --> P1(["/post-write #N"]):::author --> P2["post-write · outline"] --> P3(["Author confirms"]):::author --> P4["draft"] --> P5(["Author edits"]):::author --> P6["PR"]
   end
   BOARD[("GitHub issues & labels<br/>shared state")]
   S4 --> M(["risk: medium / high:<br/>author merges"]):::author
@@ -221,10 +221,10 @@ GitHub's default labels (`bug`, `enhancement`, `wontfix`, …) aren't used; `iss
 | Skill | Use when |
 |---|---|
 | `dev/issue-workflow-setup` | Installing (or repairing) the issue workflow in a repo after `/setup-matt-pocock-skills`: labels, the label mapping in the agent docs, callers for the shared workflows, PR template, and the `## Issue workflow` / `## Public repo` sections of `CLAUDE.md` |
-| `dev/issue-ship` | Shipping work that `/implement` or `/implement-spec` finished: verify, PR body with `pr`, up to 3 review rounds with `security-audit` and `code-review`, risk label from the Door and the allowlist, merge only `risk: low` |
+| `dev/issue-ship` | Shipping work that `/implement` or `/implement-spec` finished: verify, PR body with `pr`, up to 3 review rounds with `security-audit` and `code-review`, risk label from the Door and the review, merge only `risk: low` |
 | `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR and the issues it closes `article-status: handoff` |
 | `writing/post-write` | Writing an article issue in one of four modes (devlog, intro, review, research): an outline the author confirms in the session, then a draft following the article repo's conventions, with a cover, blog links for `wiki:` targets, and a source map for note sources; hands the draft to the author to edit before opening the PR |
-| `writing/kiwi-voice` | Applying the repo's voice rules to a post (套用); after the author's edits, proposing new rules or examples for the author to approve (收納); when the rules file passes its size limit (default 8 KB / 25 rules), proposing merges, generalisations and retirements, and listing rule/example conflicts for the author to decide (整併). Rules live in each repo's voice rules file (`Voice file:`), extra examples in its examples directory (`Voice examples:`), not in the skill |
+| `writing/writing-voice` | Applying the repo's voice rules to a post (套用); after the author's edits, proposing new rules or examples for the author to approve (收納); when the rules file passes its size limit (default 8 KB / 25 rules), proposing merges, generalisations and retirements, and listing rule/example conflicts for the author to decide (整併). Rules live in each repo's voice rules file (`Voice file:`), extra examples in its examples directory (`Voice examples:`), not in the skill |
 
 ## Shared workflows
 

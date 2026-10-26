@@ -1,6 +1,8 @@
-# Reusable workflow: fails a PR labelled `risk: low` if any changed file is outside
-# the calling repo's low-risk allowlist. PRs with any other risk label (or none) pass,
-# so the caller's job can be a required status check.
+# Reusable workflow: fails a PR labelled `risk: low` if it changes any file that controls the
+# workflow or the AI itself: anything under .github/ or .claude/, any CLAUDE.md, or the agent docs
+# under docs/agents/. Whether a change is low risk is otherwise judged in the PR (the Door, and the
+# security review); this check only keeps those files from ever merging as `risk: low`.
+# PRs with any other risk label (or none) pass, so the caller's job can be a required status check.
 # Called from each repo's .github/workflows/risk-guard.yml (written by issue-workflow-setup).
 # The check shows up in the calling repo as "<caller job id> / check", i.e. "risk-guard / check".
 name: risk-guard
@@ -9,9 +11,9 @@ on:
   workflow_call:
     inputs:
       allowlist:
-        description: Path of the low-risk allowlist in the calling repo
+        description: Unused since v3 (there is no allowlist any more); accepted so older callers keep working
         type: string
-        default: .github/low-risk-paths.txt
+        default: ""
 
 permissions:
   contents: read
@@ -21,53 +23,23 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      # Checks out the CALLING repo (github.repository is the caller's) at the PR's base,
-      # so the allowlist comes from the base branch and a PR cannot widen its own allowlist.
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-
-      - name: Check that low-risk PRs stay inside the allowlist
+      - name: Check that low-risk PRs leave the protected files alone
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          ALLOWLIST: ${{ inputs.allowlist }}
         run: |
           python3 - <<'PY'
-          import json, os, re, subprocess, sys
+          import json, os, subprocess, sys
 
           labels = json.loads(os.environ["LABELS"])
           risk = [l for l in labels if l.startswith("risk: ")]
           if len(risk) > 1:
               sys.exit(f"::error::PR has more than one risk label: {risk}")
           if risk != ["risk: low"]:
-              print(f"Risk label is {risk or 'missing'}; allowlist check does not apply.")
+              print(f"Risk label is {risk or 'missing'}; the protected-file check does not apply.")
               sys.exit(0)
-
-          def to_regex(glob):
-              if glob.endswith("/"):
-                  glob += "**"
-              out, i = "", 0
-              while i < len(glob):
-                  if glob.startswith("**/", i):
-                      out += "(?:.*/)?"; i += 3
-                  elif glob.startswith("**", i):
-                      out += ".*"; i += 2
-                  elif glob[i] == "*":
-                      out += "[^/]*"; i += 1
-                  elif glob[i] == "?":
-                      out += "[^/]"; i += 1
-                  else:
-                      out += re.escape(glob[i]); i += 1
-              return re.compile(out + r"\Z")
-
-          path = os.environ["ALLOWLIST"]
-          if not os.path.exists(path):
-              sys.exit(f"::error::{path} not found on the base branch; cannot verify risk: low.")
-          globs = [l.strip() for l in open(path) if l.strip() and not l.lstrip().startswith("#")]
-          patterns = [to_regex(g) for g in globs]
 
           files = subprocess.run(
               ["gh", "api", "--paginate", f"repos/{os.environ['REPO']}/pulls/{os.environ['PR']}/files",
@@ -76,19 +48,19 @@ jobs:
           ).stdout.splitlines()  # one path per line; paths may contain spaces
           files = [f for f in files if f]
 
-          # Never low risk, whatever the allowlist says: .github/ (workflows, templates, the
-          # allowlist itself), .claude/ (permission deny rules, hooks) and CLAUDE.md (verify command,
-          # workflow keys), at any depth.
+          # Never low risk: .github/ (workflows, templates), .claude/ (permission deny rules, hooks,
+          # agent docs moved there), any CLAUDE.md (verify command, workflow keys, public-repo rules),
+          # and docs/agents/ (what every session trusts and which label means approved), at any depth.
           def protected(f):
               parts = f.split("/")
               return parts[0] == ".github" or ".claude" in parts[:-1] \
-                  or parts[-1] in ("CLAUDE.md", "CLAUDE.local.md")
-          bad = [f for f in files
-                 if protected(f) or not any(p.match(f) for p in patterns)]
+                  or parts[-1] in ("CLAUDE.md", "CLAUDE.local.md") \
+                  or f.startswith("docs/agents/")
+          bad = [f for f in files if protected(f)]
           if bad:
-              print("::error::risk: low, but these files are outside the low-risk allowlist:")
+              print("::error::risk: low, but these files are never low risk:")
               for f in bad:
                   print(f"  {f}")
               sys.exit(1)
-          print(f"All {len(files)} changed files are inside the low-risk allowlist.")
+          print(f"None of the {len(files)} changed files is protected.")
           PY

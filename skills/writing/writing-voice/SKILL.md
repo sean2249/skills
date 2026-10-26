@@ -1,9 +1,9 @@
 ---
-name: kiwi-voice
+name: writing-voice
 description: Use to apply, grow or consolidate the author's writing voice in a blog repo. Three branches. 套用 (apply): before handing over any post you wrote or edited (post-write runs it before the author edits), check the draft against the repo's voice rules file rule by rule. 收納 (collect): after each round of the author's edits to an AI-written post, compare the AI draft with the author's version and propose rules or examples for the author to approve. 整併 (consolidate): when the rules file is over its size limit (checked at the start of every 收納) or the author asks, propose merging, generalising or retiring rules and resolving rule/example conflicts. Holds only the process; the rules live in each repo's voice files, named in its CLAUDE.md.
 ---
 
-# kiwi-voice
+# writing-voice
 
 This skill is the process only. The voice lives in **two places per repo**, named in the repo's `CLAUDE.md` (`## Article conventions`):
 
@@ -18,7 +18,7 @@ Read the rules there and write them there; never keep rules in this skill.
 
 **AI finds, the author decides.** Whenever rules conflict with each other, with an example, or with a new edit, your job is to find it and lay out the options. Don't pick one, don't resolve it silently.
 
-**Voice changes get their own PR.** Every voice commit (`voice: 標記待整併`, `voice: 整併`, `voice: 收納 <post>`) goes on a branch of its own from the default branch, `voice/<post slug>`, never on the post's branch. A worktree keeps the post branch checked out while you do it: `git worktree add ../voice-<post slug> -b voice/<post slug> origin/<default-branch>`. Open one PR for it after the round's last voice commit, with `Refs #<N>` (not `Closes`, so the post issue stays open) and the approved items in the body, risk classified from its files as in `issue-ship` Step 3, and leave it for the author to merge. Two reasons: the rules file shapes every later post, so a rule change deserves a review of its own rather than riding inside one post; and a post PR can only be `risk: low` while every file is in the blog's low-risk allowlist, which lists posts, not the voice files. Tell the author the voice PR's link so the post PR can name it.
+**Voice changes get their own PR.** Every voice commit (`voice: 標記待整併`, `voice: 整併`, `voice: 收納 <post>`) goes on a branch of its own from the default branch, `voice/<post slug>`, never on the post's branch. A worktree keeps the post branch checked out while you do it: `git worktree add ../voice-<post slug> -b voice/<post slug> origin/<default-branch>`. Open one PR for it after the round's last voice commit, with `Refs #<N>` (not `Closes`, so the post issue stays open) and the approved items in the body, risk classified from its files as in `issue-ship` Step 3, and leave it for the author to merge. Two reasons: the rules file shapes every later post, so a rule change deserves a review of its own rather than riding inside one post; and a post PR stays `risk: low` only while it changes just the post and its images. Tell the author the voice PR's link so the post PR can name it.
 
 ## Size limit
 

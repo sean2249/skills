@@ -1,6 +1,7 @@
 ---
 name: article-request
 description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article-status: pending` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `status: raw` and one `post-type:` (`devlog`, `intro`, `review`, or `research`) that it suggests from the source with reasons and the author confirms, then marks the source PR and the issues it closes `article-status: handoff`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
+disable-model-invocation: true
 ---
 
 # article-request

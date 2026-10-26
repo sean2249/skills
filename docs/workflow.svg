@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1366" width="960" height="1366" role="img" aria-labelledby="title desc">
 <title id="title">Issue workflow</title>
-<desc id="desc">Issue workflow: an issue starts at status: raw; /triage verifies it, grills it if needed and writes an agent brief, and the author decides in the session: needs-info (questions in a comment; the author&#x27;s reply sends it back to raw), approved with a type label, ready-for-human or wontfix, or, for big work, /to-spec and /to-tickets write a spec issue with ticket sub-issues joined by blocked-by edges. /implement builds one ticket test-first and runs code-review; /implement-spec builds a whole spec in parallel on an integration branch. issue-ship verifies, writes the PR body with the pr skill, reviews the whole PR with security-audit and code-review for up to 3 rounds with the results in the session (in round 3, a medium or high finding behind a one-way door goes back to the author), and sets the risk label from the Door and the allowlist: risk: low merges, medium or high is merged by the author. Work cards labelled article-status: request move to pending on merge and to handoff with article-request, which opens a post-type: card in the article repo; there post-write writes an outline the author confirms in the session, then the post, which the author edits and merges.</desc>
+<desc id="desc">Issue workflow: an issue starts at status: raw; /triage verifies it, grills it if needed and writes an agent brief, and the author decides in the session: needs-info (questions in a comment; the author&#x27;s reply sends it back to raw), approved with a type label, ready-for-human or wontfix, or, for big work, /to-spec and /to-tickets write a spec issue with ticket sub-issues joined by blocked-by edges. /implement builds one ticket test-first and runs code-review; /implement-spec builds a whole spec in parallel on an integration branch. issue-ship verifies, writes the PR body with the pr skill, reviews the whole PR with security-audit and code-review for up to 3 rounds with the results in the session (in round 3, a medium or high finding behind a one-way door goes back to the author), and sets the risk label from the Door and the review: risk: low merges, medium or high is merged by the author. Work cards labelled article-status: request move to pending on merge and to handoff with article-request, which opens a post-type: card in the article repo; there post-write writes an outline the author confirms in the session, then the post, which the author edits and merges.</desc>
 <style>
 svg{--panel:#f6f8fa;--panel-s:#d0d7de;--node:#ffffff;--node-s:#8c959f;--t:#1f2328;--s:#57606a;
 --au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df;--board:#eefbf1;--board-s:#4ac26b;--board-t:#1a7f37}
@@ -93,7 +93,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <text class="s" x="370" y="626.4">results in the session</text>
 <rect class="node" x="498" y="570" width="204" height="72" rx="11"/>
 <text class="t" x="600" y="603.2">risk label</text>
-<text class="s" x="600" y="618.9">Door + allowlist</text>
+<text class="s" x="600" y="618.9">Door + review</text>
 <path class="flow" d="M140 534 V566" marker-end="url(#ah)"/>
 <path class="flow" d="M310 534 V552 H200 V566" marker-end="url(#ah)"/>
 <path class="flow" d="M242 606 H264" marker-end="url(#ah)"/>
@@ -158,7 +158,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <rect class="node" x="498" y="1100" width="204" height="76" rx="11"/>
 <text class="t" x="600" y="1127.7">post-write</text>
 <text class="s" x="600" y="1143.4">draft + source map</text>
-<text class="s" x="600" y="1158.4">kiwi-voice 套用</text>
+<text class="s" x="600" y="1158.4">writing-voice 套用</text>
 <rect class="halo" x="722" y="1094" width="216" height="88" rx="16"/>
 <rect class="author" x="728" y="1100" width="204" height="76" rx="11"/>
 <text class="t" x="830" y="1133.7">Author edits</text>
@@ -169,7 +169,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <path class="flow" d="M702 1138 H724" marker-end="url(#ah)"/>
 <rect class="node" x="728" y="1204" width="204" height="62" rx="11"/>
 <text class="t" x="830" y="1232.2">post-write</text>
-<text class="s" x="830" y="1247.9">kiwi-voice 收納 · PR</text>
+<text class="s" x="830" y="1247.9">writing-voice 收納 · PR</text>
 <rect class="halo" x="492" y="1198" width="216" height="74" rx="16"/>
 <rect class="author" x="498" y="1204" width="204" height="62" rx="11"/>
 <text class="t" x="600" y="1230.7">Author merges</text>

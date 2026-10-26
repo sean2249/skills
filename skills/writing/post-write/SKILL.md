@@ -1,11 +1,12 @@
 ---
 name: post-write
-description: Use when, in a blog repo, an issue with a `post-type:` label should be written up as a post (e.g. the author says 「請看 #N」), handed to the author to edit, and opened as a PR. Starts with an outline the author confirms in the session, unless the issue already has an approved one. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, links vault pages the blog already covers in a section of another post, always ships a cover, runs `kiwi-voice` before and after the author's edits, and attaches a source map so nothing from notes is silently dropped.
+description: Run (as `/post-write #N`) when, in a blog repo, an issue with a `post-type:` label should be written up as a post (`/post-write #N`), handed to the author to edit, and opened as a PR. Starts with an outline the author confirms in the session, unless the issue already has an approved one. Four modes by label: `post-type: devlog` (reconstructs a decision path), `post-type: intro` (introduces a tool, concept or site), `post-type: review` (the author's take on a work: book, exhibition, performance…), `post-type: research` (a topic exploration that keeps the reasoning, not just the conclusion). Reads only the sources the issue names, follows the repo's `## Article conventions`, links vault pages the blog already covers in a section of another post, always ships a cover, runs `writing-voice` before and after the author's edits, and attaches a source map so nothing from notes is silently dropped.
+disable-model-invocation: true
 ---
 
 # post-write
 
-Turns a post issue into a post PR: an outline the author confirms, a draft, one round of author edits, then the PR. The issue usually comes from `article-request`. Repo-specific rules (paths, frontmatter, series, numbering, images, cover diagrams, build, voice file) live in the blog repo's `CLAUDE.md`, not here. Voice rules live in the repo's voice file and are applied by `kiwi-voice`; this skill holds no voice rules of its own.
+Turns a post issue into a post PR: an outline the author confirms, a draft, one round of author edits, then the PR. The issue usually comes from `article-request`. Repo-specific rules (paths, frontmatter, series, numbering, images, cover diagrams, build, voice file) live in the blog repo's `CLAUDE.md`, not here. Voice rules live in the repo's voice file and are applied by `writing-voice`; this skill holds no voice rules of its own.
 
 ## Hard rules
 
@@ -48,7 +49,7 @@ If `gh` rejects the `blockedBy` / `subIssuesSummary` fields, it's too old: ask t
 
 ## Step 1 — Read the repo's conventions
 
-Read the `## Article conventions` section of this repo's `CLAUDE.md`. It defines the output path (and the category/directory for each mode), frontmatter fields, series and numbering, where images go and how a cover diagram is made, the verify/build command, the preview URL, and the voice file (`Voice file: <path>`; `Voice examples:` and `Voice limits:` are optional and only `kiwi-voice` reads them). **If the section is missing, or any key you need is still `<fill in>`, stop and ask the author.** Don't guess conventions from existing files.
+Read the `## Article conventions` section of this repo's `CLAUDE.md`. It defines the output path (and the category/directory for each mode), frontmatter fields, series and numbering, where images go and how a cover diagram is made, the verify/build command, the preview URL, and the voice file (`Voice file: <path>`; `Voice examples:` and `Voice limits:` are optional and only `writing-voice` reads them). **If the section is missing, or any key you need is still `<fill in>`, stop and ask the author.** Don't guess conventions from existing files.
 
 Then branch:
 
@@ -177,11 +178,11 @@ Every section of the source appears as a row. A row with neither a post section 
 
 On a public repo the PR is public but the sources usually aren't, and the parts left out are often the private ones. There, a left-out row names its part by position and kind only (e.g. `§3 第 2 點 · 私人`), never by its heading or words; give the author the full map in this session instead (at hand-over and when the PR opens). The map is checked again after the voice pass (Step 4) and after the author's edits (Step 6), and goes in the PR (Step 7).
 
-## Step 4 — Voice: `kiwi-voice` 套用
+## Step 4 — Voice: `writing-voice` 套用
 
-Run the `kiwi-voice` skill, branch 套用, on the draft. It reads the repo's voice file and owns the rules; don't apply voice rules from memory here.
+Run the `writing-voice` skill, branch 套用, on the draft. It reads the repo's voice file and owns the rules; don't apply voice rules from memory here.
 
-Then **recheck the source map**: the voice pass can drop or merge sentences. Any row whose content is no longer in the post gets a reason (e.g. `kiwi-voice: 重複`), or the content goes back in. A sentence the author wrote in their own note is never dropped by the voice pass (`kiwi-voice` says so); if one was, restore it.
+Then **recheck the source map**: the voice pass can drop or merge sentences. Any row whose content is no longer in the post gets a reason (e.g. `writing-voice: 重複`), or the content goes back in. A sentence the author wrote in their own note is never dropped by the voice pass (`writing-voice` says so); if one was, restore it.
 
 ## Step 5 — Verify
 
@@ -216,7 +217,7 @@ git commit -m "<title>"
    Every later change of yours is a separate commit after this one.
 2. **Recheck the source map** against the edited post. Label each author change in the map: `作者編修刪除` (they removed it), `作者編修改寫` (they rewrote it), `作者新增` (new, not from the source).
 3. **Acceptance criteria.** If an author edit breaks a criterion from the issue (e.g. they removed a caveat the criterion asked for), keep the author's version. The criterion stays unticked in the PR with "author's decision". Never revert.
-4. **`kiwi-voice` 收納.** Run it on this round's author diff. It drafts rule and example proposals; only the ones the author approves are written to the voice files, as a `voice: 收納 <post>` commit in a voice PR of its own (`kiwi-voice` says how), not on this branch. If the voice rules file is over its size limit, `kiwi-voice` first proposes a 整併 (consolidation), which the author also approves item by item and which lands as its own `voice: 整併` commit before the 收納 one, in the same voice PR.
+4. **`writing-voice` 收納.** Run it on this round's author diff. It drafts rule and example proposals; only the ones the author approves are written to the voice files, as a `voice: 收納 <post>` commit in a voice PR of its own (`writing-voice` says how), not on this branch. If the voice rules file is over its size limit, `writing-voice` first proposes a 整併 (consolidation), which the author also approves item by item and which lands as its own `voice: 整併` commit before the 收納 one, in the same voice PR.
 5. **Titles.** Recommend three titles drawn from the final text, following the voice file's 標題 rule, and let the author pick (they can keep the draft's). A changed title is an AI commit of its own.
 6. Make any follow-up fixes the author asked for (separate commits), then rerun Step 5.
 
@@ -229,7 +230,7 @@ git push -u origin HEAD
 gh pr create --title "<post title>" --body-file <pr.md> --label "risk: <level>"
 ```
 
-**Classify risk from the actual files only** (`git diff --name-only origin/<default-branch>...HEAD`): `risk: low` only when every file is in `.github/low-risk-paths.txt`, since `risk-guard` fails the PR otherwise. `issue-ship`'s Door doesn't raise a post's label: publishing under the author's name is a one-way door, and that is handled by the author merging every post (below), whatever its label. The label only says whether the files stayed inside the allowlist. A blog repo lists its post and image directories there, and voice-file changes travel in their own PR, so a post usually lands at `risk: low`; a cover outside the listed directories, or anything else (layouts, config, `.github/`), raises it.
+**Classify risk from what the PR changes.** `risk: low` when it changes only the post and its images, in the places `## Article conventions` names. Anything else (layouts, config, a cover outside those places) gets `issue-ship`'s Door, and the `risk-guard` check fails a `risk: low` PR that touches `.github/`, `.claude/`, a `CLAUDE.md` or the agent docs. Publishing under the author's name is a one-way door in itself; it's handled by the author merging every post (below), whatever its label, so the label only says how much else the PR touches. Voice-file changes travel in their own PR, so a post usually lands at `risk: low`.
 
 Fill the repo's PR template (the one `issue-workflow-setup` installs) this way:
 
@@ -239,13 +240,13 @@ Fill the repo's PR template (the one `issue-workflow-setup` installs) this way:
 - **Author edits**: name the `edit: 作者編修` commit (short sha) and summarise what the author changed. List the AI commits after it, and link the voice PR when 收納 or 整併 wrote anything.
 - **Acceptance criteria — evidence**: one line per criterion with evidence (section, preview link, screenshot). A criterion the author's edit overrode stays `- [ ]` with "author's decision: <what they changed>".
 - **Source map** (Step 3b, with the 作者編修 labels) when a source is a note-like file; on a public repo, left-out rows by position and kind only.
-- **Not verified**, and **Deviations from the approved plan** with reasons (outline points changed by the voice pass or by pages found on the blog in Step 2b).
+- **Not verified**, and **Deviations** with reasons (outline points changed by the voice pass or by pages found on the blog in Step 2b).
 - **Risk**: the level, and the reason (e.g. "content only" for `risk: low`).
 - **Review**: one fresh-context subagent reviews the post as a text reviewer: facts against the sources the issue names, links and anchors, front matter and format. Give it only the PR and those instructions; it changes nothing and posts nothing. You handle its findings here; never revert an author edit to fix one (say it in the PR instead). Record its findings and outcomes. Security review: "not applicable (content only)".
 
 **Don't merge**, even at `risk: low`. The author reads every post before it's published.
 
-When the author asks for more changes: same branch, separate commits, a `🤖 AI <YYYY-MM-DD>` comment with what changed and why, and update the Summary and Evidence. If the author edits the file themself again, repeat Step 6 (commit `edit: 作者編修`, source map, `kiwi-voice` 收納).
+When the author asks for more changes: same branch, separate commits, a `🤖 AI <YYYY-MM-DD>` comment with what changed and why, and update the Summary and Evidence. If the author edits the file themself again, repeat Step 6 (commit `edit: 作者編修`, source map, `writing-voice` 收納).
 
 ## Report back
 
@@ -271,10 +272,10 @@ Example (made-up): `Report: #46 · draft ready · next: edit the draft · https:
 - [ ] Every vault page the blog already covers is linked: `wiki:` for posts that list it, a path + anchor for a section or a post that doesn't; only missing ones stay pending.
 - [ ] The post has a cover (a source image, or a diagram from the post's own content).
 - [ ] Public repo: screenshots, diagrams, run output and the PR body use made-up data (no account IDs, emails, tokens, internal URLs, private repo names).
-- [ ] `kiwi-voice` 套用 ran before hand-over; 收納 ran after the author's edits, and approved rules are in their own voice PR, linked from this one (with a separate `voice: 整併` commit before the 收納 one when the rules file was over its limit).
+- [ ] `writing-voice` 套用 ran before hand-over; 收納 ran after the author's edits, and approved rules are in their own voice PR, linked from this one (with a separate `voice: 整併` commit before the 收納 one when the rules file was over its limit).
 - [ ] Source map rechecked after the voice pass and after the author's edits, with author changes labelled.
 - [ ] Verify passed, including 375px and dark mode, after the last table/image; back-links from published posts checked.
 - [ ] The author's edits are one `edit: 作者編修` commit, named in the PR; no AI change is mixed into it or reverts it.
 - [ ] Three titles were offered from the final text.
-- [ ] PR's risk label matches its files (`risk: low` only when all are in the low-risk allowlist), fills the template (review table from a fresh-context reviewer, security-review "not applicable (content only)", acceptance evidence), and is left for the author to merge.
+- [ ] PR's risk label matches its files (`risk: low` only when it changes just the post and its images), fills the template (review table from a fresh-context reviewer, security-review "not applicable (content only)", acceptance evidence), and is left for the author to merge.
 - [ ] Every stop's final message starts with the `Report:` line (`## Report back`, ≤ 300 characters); everything after it is as complete as before.

@@ -1,6 +1,7 @@
 ---
 name: issue-workflow-setup
 description: Use when installing the AI-assisted GitHub issue workflow (raw → needs-info → approved, risk-labelled PRs, built on the mattpocock-skills) into a repo for the first time, after `/setup-matt-pocock-skills`, or when repairing / upgrading a repo where its labels, workflows, PR template, CLAUDE.md `## Issue workflow` / `## Public repo` sections, or its kiwi notes in the agent docs are missing or outdated (e.g. full copies of the workflows instead of thin callers, or labels from before the mattpocock-skills). Runs once per repo, and again in repair mode whenever a new shared-workflow tag is released (e.g. "bump the callers to v3", "repair the issue workflow in this repo"); creates labels, brings existing issues into the flow, writes .github callers for the shared reusable workflows, and records merge mode.
+disable-model-invocation: true
 ---
 
 # issue-workflow-setup
@@ -64,7 +65,7 @@ Missing → stop and ask the author to run `/setup-matt-pocock-skills` with thes
 | `bug` (category) | `type: bug` |
 | `enhancement` (category) | `type: enhancement` |
 
-The category rows aren't in the setup's template; add them to `triage-labels.md` if they're missing. GitHub's own default names (`bug`, `enhancement`, `wontfix`) aren't used, since Step 4 deletes them.
+The category rows aren't in the setup's template; add them to `triage-labels.md` if they're missing. In `issue-tracker.md`, make **Read an issue** and **List issues** keep only the owner's comments (filter on `authorAssociation` `OWNER`, as in this repo's own `docs/agents/issue-tracker.md`): the template reads everyone's, and on a public repo anyone can post a fake agent brief under an approved issue. GitHub's own default names (`bug`, `enhancement`, `wontfix`) aren't used, since Step 4 deletes them.
 
 **Where the agent docs live.** When the repo's root holds only structural files, or its whole tree is published (a notes vault, a site generator's source), move `docs/agents/` to `.claude/agent-docs/` and update the paths in `## Agent skills`. Not `.claude/agents/`: Claude Code loads every file there as a subagent definition.
 
@@ -85,7 +86,7 @@ Check what already exists, without changing anything:
 | Is this the article repo? | `Article target` in `## Issue workflow` equals this repo (new install: ask in Step 3) |
 | `CLAUDE.md` `## Article conventions` (article repo only) | `grep -n '^## Article conventions' CLAUDE.md` |
 | `.github/pull_request_template.md` (also `.github/PULL_REQUEST_TEMPLATE/`, root, `docs/`) | file exists? |
-| `.github/low-risk-paths.txt` | file exists? |
+| `.github/low-risk-paths.txt` | exists? It's unused since v3 (no allowlist); repair mode deletes it |
 | `.claude/settings.json` `permissions.deny` | file exists? which secret-file rules are already there (`python3 -c "import json;print(json.load(open('.claude/settings.json')).get('permissions',{}).get('deny',[]))"`) |
 | Secret files this repo actually uses | command below the table |
 | `CLAUDE.md` `## Agent skills`, and the files it points at | exists? `triage-labels.md` maps to the labels in the table above? `issue-tracker.md` has the `## This repo's workflow` section (`assets/agents-issue-tracker.md`)? |
@@ -133,7 +134,13 @@ done
 
 - Callers on `@main`, or on an older tag than the latest → bump all four to the latest tag ("Upgrading a repo" above), after showing the author the compare output.
 
-- **Labels from before the mattpocock-skills.** Open issues with `status: ai-enhanced` → list them in the plan and, on the author's OK, swap them to `status: raw`, then delete the `status: ai-enhanced` and `grill` labels (both in Step 6, in that order, since deleting a label first would lose which issues had it). Missing `status: ready-for-human`, `status: wontfix`, `type: bug`, `type: enhancement` → add them (Step 5). `Issue assets branch` and `Mockup path` in `## Issue workflow` → remove those two keys (the `issue-assets` branch itself stays). `## Issue workflow`'s first two lines → replace them with the asset's.
+- **Leftovers from before the mattpocock-skills** (v1–v2 installs):
+  - Open issues with `status: ai-enhanced` → list them in the plan and, on the author's OK, swap them to `status: raw`; then delete the `status: ai-enhanced` and `grill` labels. Both happen in Step 6, in that order: deleting a label first would lose which issues had it.
+  - Missing `status: ready-for-human`, `status: wontfix`, `type: bug`, `type: enhancement` → add them (Step 5).
+  - Old descriptions on `status: raw` ("…not yet enhanced by AI"), `risk: low` ("…allowlisted low-risk paths…") and `risk: high` ("Auth, migrations, …") → update them to Step 5's, on the author's OK. This is the one place a description changes.
+  - `## Issue workflow`: replace its first two lines with the asset's, and remove the `Issue assets branch`, `Mockup path` and `Low-risk paths` keys (the `issue-assets` branch itself stays).
+  - `kiwi-voice` anywhere in `CLAUDE.md` (e.g. `## Article conventions`) → `writing-voice`, the skill's new name.
+  - `.github/low-risk-paths.txt` → delete it, and drop the `with: allowlist:` lines from the `risk-guard` caller: from v3 there's no allowlist.
 - Missing `## Public repo` section on a public repo, or the `## This repo's workflow` section in `issue-tracker.md` → add them (Step 7).
 - Missing `external` label → add it (Step 5); open issues not opened by the owner that already carry a `status:` label (the repair-mode query in Step 1) → list them in the plan, and on the author's OK swap them to `external` (Step 6). Missing secret-file deny rules in `.claude/settings.json` → add them (Step 7).
 - Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it; an existing one without an `issues: types: [edited]` trigger (check: `grep -A3 '^  issues:' .github/workflows/needs-info-reply.yml`) → add that trigger, so ticking the boxes of an older issue's `## Pending decisions` also switches it back. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `post-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: request` / `article-status: pending` labels (Step 5).
@@ -171,7 +178,7 @@ List, and ask the author to confirm:
 - The `## Issue workflow` keys to add, and the merge-mode result.
 - Repo settings (Step 9): turning on auto-merge, and the branch protection change. If the default branch is already protected, list what it has now (required checks, review rules, admin and push rules) and that only the new required checks are added.
 
-Ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none"), and which paths count as low risk.
+Ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none").
 
 ## Step 4 — Tidy existing labels
 
@@ -220,9 +227,9 @@ mk "status: ready-for-human" c5def5 "Specified, but needs a human to do it"
 mk "status: wontfix"     ffffff "Will not be actioned"
 mk "type: bug"           d73a4a "Something is broken"
 mk "type: enhancement"   a2eeef "New feature or improvement"
-mk "risk: low"           c2e0c6 "PR touches only allowlisted low-risk paths; may auto-merge"
+mk "risk: low"           c2e0c6 "Two-way door and a clean review; may auto-merge"
 mk "risk: medium"        fef2c0 "PR needs author review before merge"
-mk "risk: high"          b60205 "Auth, migrations, workflows, secrets or billing; author review required"
+mk "risk: high"          b60205 "One-way door or cross-repo blast radius; author review required"
 mk "article-status: request"   5319e7 "Write an article about this after it ships"
 mk "article-status: pending"   fbca04 "Merged; waiting for article-request"
 mk "article-status: handoff"   0e8a16 "Handed to the article repo; done here"
@@ -277,8 +284,7 @@ Source files live in this skill's `assets/` directory.
 | `assets/risk-guard.yml` (caller) | `.github/workflows/risk-guard.yml` | Same |
 | `assets/article-pending.yml` (caller) | `.github/workflows/article-pending.yml` | Missing → add. Already a caller → keep; fix `<skills-repo>` if wrong; `@main` or an older tag → the latest tag |
 | `assets/needs-info-reply.yml` (caller) | `.github/workflows/needs-info-reply.yml` | Same; also make sure it has both triggers (`issue_comment: created` and `issues: edited`). Switches a `status: needs-info` issue back to `status: raw` (no comment) when the author replies, or ticks a box for every decision in the body's `## Pending decisions` |
-| `assets/pull_request_template.md` | `.github/pull_request_template.md` (or the existing template's location) | Append only the sections it lacks |
-| `assets/low-risk-paths.txt` | `.github/low-risk-paths.txt` | Keep; append only globs the author asked for |
+| `assets/pull_request_template.md` | `.github/pull_request_template.md` (or the existing template's location) | Append only the sections it lacks. Repair mode: replace the retired sections (`## Behaviour summary`, `## Deviations from the approved plan`, and the old `## Review` comment that names `issue-implement`) with the asset's, in the asset's order |
 | `assets/claude-md-workflow.md` | `CLAUDE.md` | Top-level `## Issue workflow` exists → add only missing keys. Keys only inside `## Workflow` → move them into a new top-level `## Issue workflow` and delete the old sub-section (repair mode). Neither → append the section. No `CLAUDE.md` → create it with just this section |
 | `assets/claude-md-public-repo.md` (public repo only) | `CLAUDE.md` | No `## Public repo` → append it. Exists → add only the rules it lacks |
 | `assets/agents-issue-tracker.md` | `issue-tracker.md` (path from `## Agent skills`) | No `## This repo's workflow` section → append it. Exists → leave it |
@@ -344,8 +350,6 @@ PY
 
 Repair mode runs the same merge: it only adds the confirmed rules that are missing.
 
-`low-risk-paths.txt`: keep the header comment, and replace the example globs below it with the author's list from Step 3.
-
 Fill `CLAUDE.md` `## Issue workflow` with the values from Step 3 and the merge mode from Step 2. Leave `<fill in>` for anything the author did not give.
 
 When editing workflow YAML, keep `run:` as a block scalar (`run: |`). A plain inline string containing `"status: raw"` is invalid YAML (`: ` inside a plain scalar). Same for step `name:` values: never put `: ` in them unquoted.
@@ -376,7 +380,7 @@ gh pr create --fill --label "risk: high"
 
 **risk-guard runs twice on a new PR** when it's opened with a label (`opened` + `labeled`). The caller queues the second run behind the first (`cancel-in-progress: false`) instead of cancelling it, so the usual open-with-label case sends no "run cancelled" email, and the last run, which sees the labels, sets the check. GitHub keeps at most one queued run per group, so a third event arriving while one run is queued still cancels that queued run. This is rare (e.g. a push right after opening), and the newest run still decides the check. Dropping `opened` from the triggers would avoid the duplicate, but then a PR opened without a label never reports `risk-guard / check` and stays blocked on the required check. A repo whose caller still has `cancel-in-progress: true` will occasionally email about a cancelled run. That's expected and harmless; switch it to `false` in repair mode.
 
-The `issue-status` workflow only runs once it is on the default branch. `risk-guard` runs on this PR itself; with `risk: high` it passes without reading the allowlist. If the skills repo is private, its reusable workflows can only be called after its Settings → Actions → Access allows this repo.
+The `issue-status` workflow only runs once it is on the default branch. `risk-guard` runs on this PR itself; with `risk: high` it passes without checking files. If the skills repo is private, its reusable workflows can only be called after its Settings → Actions → Access allows this repo.
 
 ## Step 9 — Merge settings (right after the setup PR is opened)
 

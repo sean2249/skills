@@ -7,7 +7,6 @@ Triage, specs, tickets and implementation: the mattpocock-skills (`## Agent skil
 
 - Verify command: `python3 -c "import glob,yaml;[yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+glob.glob('skills/**/assets/*.yml',recursive=True)]" && python3 -m py_compile $(git ls-files 'skills/**/*.py' '.github/scripts/*.py')`
 - Preview URL: none
-- Low-risk paths: `.github/low-risk-paths.txt`
 - Merge mode: `auto`
 - Article target: none
 

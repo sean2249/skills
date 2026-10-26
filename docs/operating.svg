@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 856" width="960" height="856" role="img" aria-labelledby="title desc">
 <title id="title">How I run it</title>
-<desc id="desc">How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, and the PR merges when it&#x27;s low risk or the author merges it. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author says 請看 #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.</desc>
+<desc id="desc">How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, and the PR merges when it&#x27;s low risk or the author merges it. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author runs /post-write #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.</desc>
 <style>
 svg{--panel:#f6f8fa;--panel-s:#d0d7de;--node:#ffffff;--node-s:#8c959f;--t:#1f2328;--s:#57606a;
 --au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df;--board:#eefbf1;--board-s:#4ac26b;--board-t:#1a7f37}
@@ -79,7 +79,7 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <text class="s" x="796" y="221.9">from merged work or any file</text>
 <rect class="halo" x="666" y="260" width="260" height="54" rx="16"/>
 <rect class="author" x="672" y="266" width="248" height="42" rx="11"/>
-<text class="t" x="796" y="291.7">「請看 #N」</text>
+<text class="t" x="796" y="291.7">/post-write #N</text>
 <rect class="node" x="672" y="336" width="248" height="42" rx="11"/>
 <text class="t" x="796" y="361.7">post-write · outline</text>
 <rect class="halo" x="666" y="400" width="260" height="54" rx="16"/>
