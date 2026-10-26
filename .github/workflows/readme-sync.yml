@@ -1,7 +1,7 @@
 # This repo's own check, not a reusable workflow: fails a PR that changes README.md without
 # README.zh-TW.md (CLAUDE.md → Issue workflow). Logic lives in .github/scripts/readme_sync.py.
-# In-tree, not pinned to a tag, so a PR can edit this check; tamper resistance comes from
-# risk-guard rejecting .github/ from risk: low, so the author reviews any PR touching either file.
+# In-tree, not pinned to a tag, so a PR can edit this check; tamper resistance comes from the
+# author merging every PR by hand (nothing merges automatically), so they see any change to it.
 # The "readme-sync: skip" label is added by the author only and never together with risk: low.
 # Required status check name: "readme-sync". To remove this check, FIRST drop it from the
 # required checks (gh api -X DELETE repos/sean2249/skills/branches/main/protection/required_status_checks/contexts -f 'contexts[]=readme-sync'),
@@ -13,7 +13,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
-# Own group (not risk-guard's), queued rather than cancelled, as in self-risk-guard.yml.
+# Own group per PR, queued rather than cancelled: cancelled runs can send failure-style emails.
 concurrency:
   group: readme-sync-${{ github.event.pull_request.number }}
   cancel-in-progress: false

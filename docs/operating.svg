@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 856" width="960" height="856" role="img" aria-labelledby="title desc">
 <title id="title">How I run it</title>
-<desc id="desc">How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, and the PR merges when it&#x27;s low risk or the author merges it. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author runs /post-write #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.</desc>
+<desc id="desc">How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, then the author merges the PR. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author runs /post-write #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.</desc>
 <style>
 svg{--panel:#f6f8fa;--panel-s:#d0d7de;--node:#ffffff;--node-s:#8c959f;--t:#1f2328;--s:#57606a;
 --au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df;--board:#eefbf1;--board-s:#4ac26b;--board-t:#1a7f37}
@@ -100,8 +100,8 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <path class="flow" d="M796 588 V612" marker-end="url(#ah)"/>
 <rect class="halo" x="126" y="718" width="392" height="70" rx="16"/>
 <rect class="author" x="132" y="724" width="380" height="58" rx="11"/>
-<text class="t" x="322" y="750.2">risk: medium / high:</text>
-<text class="s" x="322" y="765.9">author merges</text>
+<text class="t" x="322" y="750.2">Author merges</text>
+<text class="s" x="322" y="765.9">risk label = how closely to read</text>
 <rect class="halo" x="666" y="718" width="260" height="70" rx="16"/>
 <rect class="author" x="672" y="724" width="248" height="58" rx="11"/>
 <text class="t" x="796" y="757.7">Author merges the post</text>

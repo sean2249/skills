@@ -230,13 +230,13 @@ git push -u origin HEAD
 gh pr create --title "<post title>" --body-file <pr.md> --label "risk: <level>"
 ```
 
-**Classify risk from what the PR changes.** `risk: low` when it changes only the post and its images, in the places `## Article conventions` names. Anything else (layouts, config, a cover outside those places) gets `issue-ship`'s Door, and the `risk-guard` check fails a `risk: low` PR that touches `.github/`, `.claude/`, a `CLAUDE.md` or the agent docs. Publishing under the author's name is a one-way door in itself; it's handled by the author merging every post (below), whatever its label, so the label only says how much else the PR touches. Voice-file changes travel in their own PR, so a post usually lands at `risk: low`.
+**Label the risk from what the PR changes**, so the author knows how closely to read it. `risk: low` when it changes only the post and its images, in the places `## Article conventions` names; anything else (layouts, config, a cover outside those places) gets `issue-ship`'s Door, and a change to `.github/`, `.claude/`, a `CLAUDE.md` or the agent docs is never low. Publishing under the author's name is a one-way door in itself, which the author covers by reading every post before merging it. Voice-file changes travel in their own PR, so a post usually lands at `risk: low`.
 
 Fill the repo's PR template (the one `issue-workflow-setup` installs) this way:
 
 - `Closes #<N>`.
 - **Summary**: the main thread, and the "not writing" list. **Evidence**: build output and the preview link(s), and each outline point / criterion → the section that meets it.
-- **Merge Danger**: a one-way door (published under the author's name), so the author merges it; the blast radius is this post and the pages that link to it.
+- **Merge Danger**: a one-way door (published under the author's name); the blast radius is this post and the pages that link to it.
 - **Author edits**: name the `edit: 作者編修` commit (short sha) and summarise what the author changed. List the AI commits after it, and link the voice PR when 收納 or 整併 wrote anything.
 - **Acceptance criteria — evidence**: one line per criterion with evidence (section, preview link, screenshot). A criterion the author's edit overrode stays `- [ ]` with "author's decision: <what they changed>".
 - **Source map** (Step 3b, with the 作者編修 labels) when a source is a note-like file; on a public repo, left-out rows by position and kind only.
@@ -244,7 +244,7 @@ Fill the repo's PR template (the one `issue-workflow-setup` installs) this way:
 - **Risk**: the level, and the reason (e.g. "content only" for `risk: low`).
 - **Review**: one fresh-context subagent reviews the post as a text reviewer: facts against the sources the issue names, links and anchors, front matter and format. Give it only the PR and those instructions; it changes nothing and posts nothing. You handle its findings here; never revert an author edit to fix one (say it in the PR instead). Record its findings and outcomes. Security review: "not applicable (content only)".
 
-**Don't merge**, even at `risk: low`. The author reads every post before it's published.
+**Don't merge.** The author reads every post before it's published, and merges it.
 
 When the author asks for more changes: same branch, separate commits, a `🤖 AI <YYYY-MM-DD>` comment with what changed and why, and update the Summary and Evidence. If the author edits the file themself again, repeat Step 6 (commit `edit: 作者編修`, source map, `writing-voice` 收納).
 

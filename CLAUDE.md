@@ -7,7 +7,6 @@ Triage, specs, tickets and implementation: the mattpocock-skills (`## Agent skil
 
 - Verify command: `python3 -c "import glob,yaml;[yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+glob.glob('skills/**/assets/*.yml',recursive=True)]" && python3 -m py_compile $(git ls-files 'skills/**/*.py' '.github/scripts/*.py')`
 - Preview URL: none
-- Merge mode: `auto`
 - Article target: none
 
 ## Agent skills
@@ -40,9 +39,9 @@ Changes to skills (`skills/**`, `.claude-plugin/`) are never `risk: low`: every 
 
 ## Releasing shared workflows
 
-`.github/workflows/issue-status.yml`, `risk-guard.yml`, `needs-info-reply.yml` and `article-pending.yml` are the reusable workflows every repo calls with a pinned tag. This repo's own callers are `.github/workflows/self-*.yml` (not the usual names, which are taken by the reusable workflows) and are pinned to a tag too.
+`.github/workflows/issue-status.yml`, `needs-info-reply.yml` and `article-pending.yml` are the reusable workflows every repo calls with a pinned tag. This repo's own callers are `.github/workflows/self-*.yml` (not the usual names, which are taken by the reusable workflows) and are pinned to a tag too.
 
-When a PR changes any of those four reusable workflows, its description ends with a reminder, and after it merges:
+When a PR changes any of those three reusable workflows, its description ends with a reminder, and after it merges:
 
 1. Cut the next tag with release notes (README → Versions): `gh release create v<N> --target main --title v<N> --notes-file <notes.md>`.
 2. Bump this repo's `self-*.yml` callers to `@v<N>` in a `risk: high` PR. `issue-workflow-setup` repair mode looks for the usual caller names, so here bump with `sed -i '' -E 's#(uses: *[^ ]+/\.github/workflows/[a-z-]+\.yml)@v[0-9]+#\1@v<N>#' .github/workflows/self-*.yml`.

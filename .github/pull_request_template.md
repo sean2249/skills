@@ -30,9 +30,9 @@ Closes #<!-- issue number; one line per issue, for a spec the spec and each tick
 
 ## Risk
 
-<!-- Exactly one risk label goes on the PR. -->
+<!-- Exactly one risk label goes on the PR. It tells the author how closely to read before merging; nothing merges automatically. -->
 - Level: `risk: low` / `risk: medium` / `risk: high`
-- Reason: <!-- low = two-way door, a clean review, and nothing under .github/, .claude/, CLAUDE.md or the agent docs; high = one-way door or a blast radius across repos -->
+- Reason: <!-- low = two-way door, a clean review, and nothing under .github/, .claude/, CLAUDE.md or the agent docs; high = one-way door or a blast radius across repos; medium = the rest -->
 
 ## Review
 
