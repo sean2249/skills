@@ -74,7 +74,7 @@ Anything you need that isn't in the sources → ask the author; don't go looking
 
 A `wiki:<page>` link already resolves at build time to the post whose `wiki:` front matter holds that page name (see the repo's conventions); a post that isn't published yet makes it pending, and it turns into a real link once that post is out. Keep those as `wiki:` links; don't replace them with paths.
 
-What the resolver can't see, so look for it on the blog before writing, for every vault page the post would link (any the sources link, and the outline's `wiki:` links: when the issue already has an approved outline, check those now; otherwise check the outline's again after Step 2c) that doesn't resolve now:
+What the resolver can't see, so look for it on the blog before writing, for every vault page the post would link (any the sources link, and the outline's `wiki:` links: when the issue already has an approved outline, check those now; otherwise check the outline's `wiki:` links once Step 2c has written it) that doesn't resolve now:
 
 - **A section inside a post**: a heading in an existing post covers the page. E.g. vault page 真正的樂趣 is the `### 真正的樂趣` section of the 《FUN 的力量》 review → link `/blogs/books/FUN的力量/#真正的樂趣`.
 - **A post that covers the page without listing it** in its `wiki:` front matter (e.g. under another name). Link it by path and tell the author; adding the name to that post's `wiki:` is their call.
@@ -126,7 +126,7 @@ The type was chosen with the author when the card was opened (the body's `## Pos
 - <YYYY-MM-DD> — <K> finding(s): <n> fixed, <j> not adopted
 ````
 
-For note-like sources, list **every** source section in the source map, so the author sees what's kept and dropped. `review` and `research` outlines keep the author's evaluations and line of reasoning as sections, not a summary.
+For note-like sources, list **every** source section in the source map, so the author sees what's kept and dropped. Then run Step 2b's blog lookup on the outline's `wiki:` links, and link what it finds. `review` and `research` outlines keep the author's evaluations and line of reasoning as sections, not a summary.
 
 **2. Check it once with a fresh subagent.** Give it only the issue and these instructions: read only the sources under `## Sources` and the repo's `## Article conventions`; check that every section of each note-like source has a source-map row pointing at a real outline section or a reason, that what each section cites exists in the sources and says what the outline claims, that the frontmatter and cover follow the conventions, and that each acceptance criterion can be checked by a reader; change nothing and report only what it confirmed. Check each finding yourself, fix the outline, and record the count under `## Outline check`. One round: nothing is sent for another check.
 
