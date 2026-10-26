@@ -65,7 +65,7 @@ Missing → stop and ask the author to run `/setup-matt-pocock-skills` with thes
 | `bug` (category) | `type: bug` |
 | `enhancement` (category) | `type: enhancement` |
 
-The category rows aren't in the setup's template; add them to `triage-labels.md` if they're missing. In `issue-tracker.md`, make **Read an issue** and **List issues** keep only the owner's comments (filter on `authorAssociation` `OWNER`), and make **List issues** leave out `external` issues, as in this repo's own `docs/agents/issue-tracker.md`. Repair mode adds whichever is missing: the template reads everyone's, and on a public repo anyone can post a fake agent brief under an approved issue. GitHub's own default names (`bug`, `enhancement`, `wontfix`) aren't used, since Step 4 deletes them.
+The category rows aren't in the setup's template; add them to `triage-labels.md` if they're missing. In `issue-tracker.md`, make **Read an issue** and **List issues** keep only the owner's comments (filter on `authorAssociation` `OWNER`), since the template reads everyone's and on a public repo anyone can post a fake agent brief under an approved issue. Also make **List issues** list only the owner's issues and show each issue's author, and **Read an issue** flag an `external` issue, as in this repo's own `docs/agents/issue-tracker.md`. Repair mode adds whichever is missing. GitHub's own default names (`bug`, `enhancement`, `wontfix`) aren't used, since Step 4 deletes them.
 
 **Where the agent docs live.** When the repo's root holds only structural files, or its whole tree is published (a notes vault, a site generator's source), move `docs/agents/` to `.claude/agent-docs/` and update the paths in `## Agent skills`. Not `.claude/agents/`: Claude Code loads every file there as a subagent definition.
 
@@ -139,7 +139,7 @@ done
   - Old descriptions on `status: raw` ("…not yet enhanced by AI"), `risk: low` ("…allowlisted low-risk paths…" or "…may auto-merge"), `risk: medium` ("PR needs author review before merge") and `risk: high` ("Auth, migrations, …" or "…author review required") → update them to Step 5's, on the author's OK. This is the one place a description changes.
   - `## Issue workflow`: replace its first two lines with the asset's, and remove the `Issue assets branch`, `Mockup path`, `Low-risk paths` and `Merge mode` keys (the `issue-assets` branch itself stays).
   - `kiwi-voice` anywhere in `CLAUDE.md` (e.g. `## Article conventions`) → `writing-voice`, the skill's new name.
-  - **The `risk-guard` merge gate is retired** (from v3 the author merges every PR). In this order, since a required check that no longer runs blocks every PR: delete `.github/workflows/risk-guard.yml` and `.github/low-risk-paths.txt` in the upgrade PR, and remove `risk-guard / check` (or an older `risk-guard`) from the default branch's required checks (Step 9) before that PR is merged. Before removing the check, list open PRs that are still queued for auto-merge (from v2's `risk: low` flow) and, on the author's OK, turn auto-merge off for each: once `risk-guard` stops holding them, they'd merge as soon as the other checks pass. Then offer to switch off the repo's "Allow auto-merge" setting too, since nothing in the workflow uses it.
+  - **The `risk-guard` merge gate is retired** (from v3 the author merges every PR). In this order, since a required check that no longer runs blocks every PR: delete `.github/workflows/risk-guard.yml` and `.github/low-risk-paths.txt` in the upgrade PR, and remove `risk-guard / check` (or an older `risk-guard`) from the default branch's required checks (Step 9) before that PR is merged. Before removing the check, switch off the repo's "Allow auto-merge" setting (skip only if the author says no: an older skill version still installed somewhere could otherwise queue a merge once nothing gates it), and turn auto-merge off on every open PR still queued for it (from v2's `risk: low` flow); list them again right after the check is removed, in case one was queued in between.
 - Missing `## Public repo` section on a public repo, or the `## This repo's workflow` section in `issue-tracker.md` → add them (Step 7).
 - Missing `external` label → add it (Step 5); open issues not opened by the owner that already carry a `status:` label (the repair-mode query in Step 1) → list them in the plan, and on the author's OK swap them to `external` (Step 6). Missing secret-file deny rules in `.claude/settings.json` → add them (Step 7).
 - Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it; an existing one without an `issues: types: [edited]` trigger (check: `grep -A3 '^  issues:' .github/workflows/needs-info-reply.yml`) → add that trigger, so ticking the boxes of an older issue's `## Pending decisions` also switches it back. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `post-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: request` / `article-status: pending` labels (Step 5).
@@ -161,7 +161,7 @@ List, and ask the author to confirm:
 - The exact `permissions.deny` rules for `.claude/settings.json` (Step 7), one per line. The author confirms or edits the list before anything is written.
 - **Public repo only** (`visibility` is `PUBLIC`): the `## Public repo` section for `CLAUDE.md` (Step 7). Every skill, the mattpocock-skills included, reads `CLAUDE.md`, so this is where the rules about outsiders' text, security details and made-up data live.
 - The `## Issue workflow` keys to add.
-- Repo settings (Step 9): only removing `risk-guard` from the required checks, if Step 2 found it there.
+- Repo settings (Step 9), repair mode: switching off "Allow auto-merge", turning auto-merge off on the open PRs still queued for it (list them), and removing `risk-guard` from the required checks if Step 2 found it there.
 
 Ask for the values only they know: verify command, preview URL, `Article target` (`<owner>/<repo>`, or "none").
 
@@ -365,7 +365,13 @@ The `issue-status` workflow only runs once it is on the default branch. If the s
 
 ## Step 9 — Required checks
 
-Only when Step 2 found `risk-guard / check` (or `risk-guard`) among the required checks, and the author agreed. First turn off auto-merge on any open PR still queued for it (Leftovers above). Remove just that context and keep every other check and rule; it changes repo settings, so the author does it or approves it. Do it before the upgrade PR (Step 8) is merged: that PR deletes the caller, so it would wait forever on a check that no longer runs:
+Only when Step 2 found `risk-guard / check` (or `risk-guard`) among the required checks, and the author agreed. First switch off "Allow auto-merge" and any queued auto-merges (Leftovers above):
+
+```bash
+gh api -X PATCH repos/<owner>/<repo> -f allow_auto_merge=false        # unless the author said no
+gh pr list --state open --json number,title,autoMergeRequest --jq '.[] | select(.autoMergeRequest) | "#\(.number) \(.title)"'
+gh pr merge <N> --disable-auto                                         # for each one listed
+``` Remove just that context and keep every other check and rule; it changes repo settings, so the author does it or approves it. Do it before the upgrade PR (Step 8) is merged: that PR deletes the caller, so it would wait forever on a check that no longer runs:
 
 ```bash
 gh api repos/<owner>/<repo>/branches/<default>/protection/required_status_checks --jq .contexts
@@ -374,7 +380,7 @@ gh api -X PATCH repos/<owner>/<repo>/branches/<default>/protection/required_stat
 JSON
 ```
 
-Nothing else in branch protection is set up by this skill. The author merges every PR, so required checks are only the repo's own CI, which the author manages.
+Then run the `gh pr list` above once more; turn off any PR it still shows. Nothing else in branch protection is set up by this skill. The author merges every PR, so required checks are only the repo's own CI, which the author manages.
 
 ## Done when
 
