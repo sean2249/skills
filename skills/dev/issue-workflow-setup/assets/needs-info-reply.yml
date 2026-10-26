@@ -6,7 +6,7 @@ on:
   issue_comment:
     types: [created]
   issues:
-    types: [edited]   # the author ticks Pending decisions boxes in the issue body
+    types: [edited]   # the author ticks the boxes of an older issue's Pending decisions
 
 permissions:
   issues: write

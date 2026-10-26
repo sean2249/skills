@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 710" width="960" height="710" role="img" aria-labelledby="title desc">
-<title id="title">How the author runs the workflow</title>
-<desc id="desc">The author's own way of operating the workflow, with the issue-orchestrate skill in a main session. issue-orchestrate has four modes. enhance picks a batch of about three raw issues, small enough to review in a day or two, and starts one child session per issue running issue-enhance. status starts nothing: it reads only GitHub labels and prints a table of what waits for the author. implement picks approved issues, skips blocked ones and ones that already have an open PR, checks that their plans don't change the same files, takes at most three per repo, and starts a child session per issue running issue-implement (or post-write for an article card). article picks merged PRs labelled article-status pending and starts a child session per PR running article-request. The main session handles only what spans several issues and never changes anything on GitHub. Child sessions write plans into issue bodies, with decisions for the author as Pending decisions checkboxes; they never talk to each other, and GitHub issues and labels are the only handoff. Children talk as usual and the author can talk to any of them directly; the first line of each child's final message is a Report line, drawn dotted, which is only a hint for the main session. The main session reads GitHub labels, drawn solid, as the source of truth. The author reviews, ticks the boxes and sets status approved, adding article-status request if the work should become an article. The author looks at each PR and merges; a GitHub Action sets article-status pending. In the article-request child session the AI suggests a post-type with reasons and the author confirms; it opens an article card with a post-type label in the article repo. article-request can also start from any file, such as a notes page, in a session the author opens. The article card goes through the same steps: issue-enhance outline, author approval, post-write in a child session, and the author merges the article.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 856" width="960" height="856" role="img" aria-labelledby="title desc">
+<title id="title">How I run it</title>
+<desc id="desc">How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, and the PR merges when it&#x27;s low risk or the author merges it. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author says 請看 #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.</desc>
 <style>
 svg{--panel:#f6f8fa;--panel-s:#d0d7de;--node:#ffffff;--node-s:#8c959f;--t:#1f2328;--s:#57606a;
---au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--grill:#eef6ff;--grill-s:#a8c7fa;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df;--board:#eefbf1;--board-s:#4ac26b;--board-t:#1a7f37}
+--au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df;--board:#eefbf1;--board-s:#4ac26b;--board-t:#1a7f37}
 @media (prefers-color-scheme: dark){svg{--panel:#161b22;--panel-s:#30363d;--node:#0d1117;--node-s:#6e7681;--t:#e6edf3;--s:#9198a1;
---au:#3b2e0a;--au-s:#e3b341;--halo:#e3b341;--line:#8b949e;--grill:#0c2d6b55;--grill-s:#1f6feb;--acc:#4493f8;--art:#2e1f5e55;--art-s:#a371f7;--board:#0f2d1a88;--board-s:#2ea043;--board-t:#3fb950}}
+--au:#3b2e0a;--au-s:#e3b341;--halo:#e3b341;--line:#8b949e;--acc:#4493f8;--art:#2e1f5e55;--art-s:#a371f7;--board:#0f2d1a88;--board-s:#2ea043;--board-t:#3fb950}}
 text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;text-anchor:middle}
 .panel{fill:var(--panel);stroke:var(--panel-s);stroke-width:1.2}
 .ph{text-anchor:start;font-size:17px;font-weight:700;fill:var(--t)}
@@ -14,8 +14,6 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 .za{fill:var(--art);stroke:var(--art-s);stroke-width:1.2;stroke-dasharray:5 4}
 .zhw{text-anchor:end;font-size:12.5px;font-weight:600;fill:var(--s)}
 .zha{text-anchor:end;font-size:12.5px;font-weight:600;fill:var(--art-s)}
-.grill{fill:var(--grill);stroke:var(--grill-s);stroke-width:1.2;stroke-dasharray:5 4}
-.gh{text-anchor:start;font-size:13.5px;font-weight:600;fill:var(--acc)}
 .node{fill:var(--node);stroke:var(--node-s);stroke-width:1.3}
 .author{fill:var(--au);stroke:var(--au-s);stroke-width:2}
 .halo{fill:none;stroke:var(--halo);stroke-width:3;opacity:.15;animation:pulse 3.6s ease-in-out infinite}
@@ -29,148 +27,89 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 @keyframes pulse{0%,100%{opacity:.12}50%{opacity:.6}}
 @media (prefers-reduced-motion: reduce){.flow,.halo{animation:none}.halo{opacity:.35}}
 .lane{fill:var(--panel);stroke:var(--panel-s);stroke-width:1.1}
-.lane-c{fill:none;stroke:var(--panel-s);stroke-width:1.1;stroke-dasharray:5 4}
-.lane-a{fill:none;stroke:var(--au-s);stroke-width:1.1;stroke-dasharray:3 4}
 .board{fill:var(--board);stroke:var(--board-s);stroke-width:1.4}
 .lh{text-anchor:start;font-size:12.5px;font-weight:700;fill:var(--s)}
-.board-h{fill:var(--board-t)}
-.lane-a-h{fill:var(--au-s)}
-.step{font-size:13px;font-weight:700;fill:var(--acc)}
-.ghost{opacity:.55}
-.hint{fill:none;stroke:var(--acc);stroke-width:1.8;stroke-dasharray:2 4}
-.ahh{fill:var(--acc)}
-.truth{fill:none;stroke:var(--board-t);stroke-width:2.2}
-.aht{fill:var(--board-t)}
-.talk{fill:none;stroke:var(--au-s);stroke-width:1.6;stroke-dasharray:3 4}
-.aha{fill:var(--au-s)}
-.pill{fill:var(--node);stroke:var(--acc);stroke-width:1.3;stroke-dasharray:2 3}
-.lblh{font-size:11.5px;fill:var(--acc);text-anchor:start;font-style:italic}
-.lblt{font-size:11.5px;fill:var(--board-t);text-anchor:start;font-style:italic;font-weight:600}
-.lbla{font-size:11.5px;fill:var(--au-s);text-anchor:start;font-style:italic}
+.bt{fill:var(--board-t)}
+.link{fill:none;stroke:var(--board-s);stroke-width:1.8;stroke-dasharray:2 4}
 </style>
-<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0 0 L10 5 L0 10 z"/></marker><marker id="ahh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahh" d="M0 0 L10 5 L0 10 z"/></marker><marker id="aht" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aht" d="M0 0 L10 5 L0 10 z"/></marker><marker id="aha" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aha" d="M0 0 L10 5 L0 10 z"/></marker></defs>
-<text class="step" x="112" y="34">1 · Enhance in parallel</text>
-<text class="step" x="297" y="34">2 · Status · review</text>
-<text class="step" x="482" y="34">3 · Implement</text>
-<text class="step" x="667" y="34">4 · Merge</text>
-<text class="step" x="852" y="34">5 · Article</text>
-<rect class="lane" x="16" y="48" width="928" height="118" rx="14"/>
-<text class="lh lane-h" x="32" y="67">Main session · issue-orchestrate · cross-issue only, read-only on GitHub</text>
-<rect class="lane-c" x="16" y="178" width="928" height="140" rx="14"/>
-<text class="lh lane-c-h" x="32" y="197">Child sessions · in parallel</text>
-<text class="lh lane-c-h" x="750" y="197" style="text-anchor:end">one per issue or PR · talk as usual · Report: line</text>
-<rect class="board" x="16" y="330" width="928" height="150" rx="14"/>
-<text class="lh board-h" x="32" y="349">GitHub issues &amp; labels · the handoff board</text>
-<rect class="lane-a" x="16" y="492" width="928" height="120" rx="14"/>
-<text class="lh lane-a-h" x="32" y="511">Author</text>
-<rect class="node" x="30.0" y="84.0" width="164" height="64" rx="10"/>
-<text class="t" x="112" y="104">enhance</text>
-<text class="s" x="112" y="121">pick raw · a batch of ~3</text>
-<text class="s" x="112" y="135">start child sessions</text>
-<rect class="node" x="215.0" y="84.0" width="164" height="64" rx="10"/>
-<text class="t" x="297" y="104">status</text>
-<text class="s" x="297" y="121">read labels only</text>
-<text class="s" x="297" y="135">table: what waits for you</text>
-<rect class="node" x="400.0" y="84.0" width="164" height="64" rx="10"/>
-<text class="t" x="482" y="104">implement</text>
-<text class="s" x="482" y="121">approved · skip blocked</text>
-<text class="s" x="482" y="135">file overlap · ≤ 3 per repo</text>
-<rect class="node" x="770.0" y="84.0" width="164" height="64" rx="10"/>
-<text class="t" x="852" y="104">article</text>
-<text class="s" x="852" y="121">merged PRs with</text>
-<text class="s" x="852" y="135">article-status: pending</text>
-<rect class="node ghost" x="40.0" y="234.0" width="164" height="64" rx="10"/>
-<rect class="node ghost" x="35.0" y="229.0" width="164" height="64" rx="10"/>
-<rect class="node" x="30.0" y="224.0" width="164" height="64" rx="10"/>
-<text class="t" x="112" y="244">issue-enhance</text>
-<text class="s" x="112" y="261">plan into the issue body</text>
-<text class="s" x="112" y="275">talk as usual · Report:</text>
-<rect class="pill" x="222" y="238" width="120" height="36" rx="18"/>
-<text class="t" x="282" y="255" style="font-size:13px">Report: …</text>
-<text class="s" x="282" y="268" style="font-size:10.5px">first line, every stop</text>
-<rect class="node ghost" x="405.0" y="229.0" width="164" height="64" rx="10"/>
-<rect class="node" x="400.0" y="224.0" width="164" height="64" rx="10"/>
-<text class="t" x="482" y="244">issue-implement</text>
-<text class="s" x="482" y="261">or post-write · PR · review</text>
-<text class="s" x="482" y="275">talk as usual · Report:</text>
-<rect class="node" x="585.0" y="224.0" width="164" height="64" rx="10"/>
-<text class="t" x="667" y="244">Any file</text>
-<text class="s" x="667" y="261">e.g. a notes page</text>
-<text class="s" x="667" y="275">in a session you open</text>
-<rect class="node" x="770.0" y="224.0" width="164" height="64" rx="10"/>
-<text class="t" x="852" y="244">article-request</text>
-<text class="s" x="852" y="261">AI suggests post-type</text>
-<text class="s" x="852" y="275">you confirm it here</text>
-<rect class="node" x="30.0" y="382.0" width="164" height="64" rx="10"/>
-<text class="t" x="112" y="402">Plan in the body</text>
-<text class="s" x="112" y="419">status: ai-enhanced, or</text>
-<text class="s" x="112" y="433">needs-info + ☐ decisions</text>
-<rect class="node" x="215.0" y="382.0" width="164" height="64" rx="10"/>
-<text class="t" x="297" y="402">status: approved</text>
-<text class="s" x="297" y="419">+ article-status: request</text>
-<text class="s" x="297" y="433">if it should be an article</text>
-<rect class="node" x="400.0" y="382.0" width="164" height="64" rx="10"/>
-<text class="t" x="482" y="407">Pull request</text>
-<text class="s" x="482" y="425">waiting for the author</text>
-<rect class="node" x="585.0" y="382.0" width="164" height="64" rx="10"/>
-<text class="t" x="667" y="402">Merged</text>
-<text class="s" x="667" y="419">Action sets</text>
-<text class="s" x="667" y="433">article-status: pending</text>
-<rect class="node" x="770.0" y="382.0" width="164" height="64" rx="10"/>
-<text class="t" x="852" y="402">Article card</text>
-<text class="s" x="852" y="419">post-type: · article repo</text>
-<text class="s" x="852" y="433">back to step 1 → post-write</text>
-<rect class="halo" x="24.0" y="524.0" width="176" height="68" rx="15"/>
-<rect class="author" x="30.0" y="530.0" width="164" height="56" rx="10"/>
-<text class="t" x="112" y="553">Talk to a child</text>
-<text class="s" x="112" y="571">directly (optional)</text>
-<rect class="halo" x="209.0" y="524.0" width="176" height="68" rx="15"/>
-<rect class="author" x="215.0" y="530.0" width="164" height="56" rx="10"/>
-<text class="t" x="297" y="553">Review · tick · approve</text>
-<text class="s" x="297" y="571">plans and ☐ decisions</text>
-<rect class="halo" x="579.0" y="524.0" width="176" height="68" rx="15"/>
-<rect class="author" x="585.0" y="530.0" width="164" height="56" rx="10"/>
-<text class="t" x="667" y="553">Look at it · merge</text>
-<text class="s" x="667" y="571">screenshots, preview</text>
-<rect class="halo" x="764.0" y="524.0" width="176" height="68" rx="15"/>
-<rect class="author" x="770.0" y="530.0" width="164" height="56" rx="10"/>
-<text class="t" x="852" y="553">Merge the article</text>
-<text class="s" x="852" y="571">after its own steps 1–4</text>
-<path class="flow" d="M112 148.0 V220.0" marker-end="url(#ah)"/>
-<text class="lbl" x="118" y="170.0" style="text-anchor:start">spawn</text>
-<path class="flow" d="M112 298.0 V378.0" marker-end="url(#ah)"/>
-<text class="lbl" x="118" y="318.0" style="text-anchor:start">write</text>
-<path class="flow" d="M112 446.0 V484 H267 V526" marker-end="url(#ah)"/>
-<path class="flow" d="M297 530 V450.0" marker-end="url(#ah)"/>
-<text class="lbl" x="303" y="518" style="text-anchor:start">approve</text>
-<path class="flow" d="M379.0 414 H389.5 V172 H452 V152.0" marker-end="url(#ah)"/>
-<text class="lbl" x="395.5" y="346" style="text-anchor:start">pick</text>
-<path class="flow" d="M482 148.0 V220.0" marker-end="url(#ah)"/>
-<text class="lbl" x="488" y="170.0" style="text-anchor:start">spawn</text>
-<path class="flow" d="M482 293.0 V378.0" marker-end="url(#ah)"/>
-<path class="flow" d="M482 446.0 V484 H637 V526" marker-end="url(#ah)"/>
-<path class="flow" d="M667 530 V450.0" marker-end="url(#ah)"/>
-<text class="lbl" x="673" y="518" style="text-anchor:start">merge</text>
-<path class="flow" d="M749.0 414 H760 V116 H766.0" marker-end="url(#ah)"/>
-<text class="lbl" x="701" y="346" style="text-anchor:start">pending</text>
-<path class="flow" d="M852 148.0 V220.0" marker-end="url(#ah)"/>
-<text class="lbl" x="858" y="170.0" style="text-anchor:start">spawn</text>
-<path class="flow" d="M749.0 256 H766.0" marker-end="url(#ah)"/>
-<text class="lbl" x="673" y="215.0" style="text-anchor:start">or a file</text>
-<path class="flow" d="M852 288.0 V378.0" marker-end="url(#ah)"/>
-<text class="lbl" x="858" y="318.0" style="text-anchor:start">opens</text>
-<path class="flow" d="M852 446.0 V526" marker-end="url(#ah)"/>
-<path class="hint" d="M282 238 V153" marker-end="url(#ahh)"/>
-<text class="lblh" x="232" y="170" style="text-anchor:end">hint</text>
-<path class="truth" d="M360 330 V153" marker-end="url(#aht)"/>
-<text class="lblt" x="354" y="300" style="text-anchor:end">read labels</text>
-<text class="lblt" x="354" y="314" style="text-anchor:end">source of truth</text>
-<path class="talk" d="M194 558 H206 V304" marker-end="url(#aha)"/>
-<text class="lbla" x="200" y="511" style="text-anchor:end">talk directly</text>
-<rect class="author" x="32" y="641" width="34" height="20" rx="6"/><text class="leg" x="76" y="656">Author steps in</text>
-<rect class="node" x="210" y="641" width="34" height="20" rx="6"/><rect class="node ghost" x="215" y="646" width="34" height="20" rx="6"/><text class="leg" x="262" y="656">Parallel child sessions</text>
-<path class="flow" d="M442 651 H490" marker-end="url(#ah)"/><text class="leg" x="502" y="656">Hand-off (via GitHub, not via chat)</text>
-<path class="hint" d="M32 683 H80" marker-end="url(#ahh)"/><text class="leg" x="92" y="688">Report: line (only a hint; GitHub is the source of truth)</text>
-<path class="truth" d="M500 683 H548" marker-end="url(#aht)"/><text class="leg" x="560" y="688">Main session reads labels</text>
-<path class="talk" d="M732 683 H780" marker-end="url(#aha)"/><text class="leg" x="792" y="688">Author talks</text>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0 0 L10 5 L0 10 z"/></marker></defs>
+<path class="board" d="M260 28 A220 10 0 0 1 700 28 V78 A220 10 0 0 1 260 78 Z"/>
+<path class="board" style="fill:none" d="M260 28 A220 10 0 0 0 700 28"/>
+<text class="t bt" x="480" y="62">GitHub issues &amp; labels</text>
+<text class="s" x="480" y="79">shared state</text>
+<rect class="lane" x="16" y="128" width="296" height="566" rx="14"/>
+<text class="lh" x="32" y="150">Small work · one session</text>
+<rect class="lane" x="332" y="128" width="296" height="566" rx="14"/>
+<text class="lh" x="348" y="150">Big work · one session</text>
+<rect class="lane" x="648" y="128" width="296" height="566" rx="14"/>
+<text class="lh" x="664" y="150">Article · one session</text>
+<text class="lh" x="664" y="166">in the article repo</text>
+<path class="link" d="M284 84 V108 H164 V128"/>
+<path class="link" d="M480 88 V128"/>
+<path class="link" d="M676 84 V108 H796 V128"/>
+<rect class="node" x="40" y="180" width="248" height="42" rx="11"/>
+<text class="t" x="164" y="205.7">/triage #N</text>
+<rect class="halo" x="34" y="244" width="260" height="54" rx="16"/>
+<rect class="author" x="40" y="250" width="248" height="42" rx="11"/>
+<text class="t" x="164" y="275.7">Author decides</text>
+<rect class="node" x="40" y="320" width="248" height="42" rx="11"/>
+<text class="t" x="164" y="345.7">/implement #N</text>
+<rect class="node" x="40" y="390" width="248" height="42" rx="11"/>
+<text class="t" x="164" y="415.7">/issue-ship</text>
+<path class="flow" d="M164 222 V246" marker-end="url(#ah)"/>
+<path class="flow" d="M164 292 V316" marker-end="url(#ah)"/>
+<path class="flow" d="M164 362 V386" marker-end="url(#ah)"/>
+<rect class="node" x="356" y="180" width="248" height="42" rx="11"/>
+<text class="t" x="480" y="205.7">/triage #N</text>
+<rect class="node" x="356" y="250" width="248" height="42" rx="11"/>
+<text class="t" x="480" y="275.7">/to-spec → /to-tickets</text>
+<rect class="halo" x="350" y="314" width="260" height="54" rx="16"/>
+<rect class="author" x="356" y="320" width="248" height="42" rx="11"/>
+<text class="t" x="480" y="345.7">Author approves the split</text>
+<rect class="node" x="356" y="390" width="248" height="42" rx="11"/>
+<text class="t" x="480" y="415.7">/implement-spec #S</text>
+<rect class="node" x="356" y="460" width="248" height="42" rx="11"/>
+<text class="t" x="480" y="485.7">/issue-ship</text>
+<path class="flow" d="M480 222 V246" marker-end="url(#ah)"/>
+<path class="flow" d="M480 292 V316" marker-end="url(#ah)"/>
+<path class="flow" d="M480 362 V386" marker-end="url(#ah)"/>
+<path class="flow" d="M480 432 V456" marker-end="url(#ah)"/>
+<rect class="node" x="672" y="180" width="248" height="58" rx="11"/>
+<text class="t" x="796" y="206.2">article-request</text>
+<text class="s" x="796" y="221.9">from merged work or any file</text>
+<rect class="halo" x="666" y="260" width="260" height="54" rx="16"/>
+<rect class="author" x="672" y="266" width="248" height="42" rx="11"/>
+<text class="t" x="796" y="291.7">「請看 #N」</text>
+<rect class="node" x="672" y="336" width="248" height="42" rx="11"/>
+<text class="t" x="796" y="361.7">post-write · outline</text>
+<rect class="halo" x="666" y="400" width="260" height="54" rx="16"/>
+<rect class="author" x="672" y="406" width="248" height="42" rx="11"/>
+<text class="t" x="796" y="431.7">Author confirms</text>
+<rect class="node" x="672" y="476" width="248" height="42" rx="11"/>
+<text class="t" x="796" y="501.7">draft</text>
+<rect class="halo" x="666" y="540" width="260" height="54" rx="16"/>
+<rect class="author" x="672" y="546" width="248" height="42" rx="11"/>
+<text class="t" x="796" y="571.7">Author edits</text>
+<rect class="node" x="672" y="616" width="248" height="42" rx="11"/>
+<text class="t" x="796" y="641.7">PR</text>
+<path class="flow" d="M796 238 V262" marker-end="url(#ah)"/>
+<path class="flow" d="M796 308 V332" marker-end="url(#ah)"/>
+<path class="flow" d="M796 378 V402" marker-end="url(#ah)"/>
+<path class="flow" d="M796 448 V472" marker-end="url(#ah)"/>
+<path class="flow" d="M796 518 V542" marker-end="url(#ah)"/>
+<path class="flow" d="M796 588 V612" marker-end="url(#ah)"/>
+<rect class="halo" x="126" y="718" width="392" height="70" rx="16"/>
+<rect class="author" x="132" y="724" width="380" height="58" rx="11"/>
+<text class="t" x="322" y="750.2">risk: medium / high:</text>
+<text class="s" x="322" y="765.9">author merges</text>
+<rect class="halo" x="666" y="718" width="260" height="70" rx="16"/>
+<rect class="author" x="672" y="724" width="248" height="58" rx="11"/>
+<text class="t" x="796" y="757.7">Author merges the post</text>
+<path class="flow" d="M164 432 V720" marker-end="url(#ah)"/>
+<path class="flow" d="M480 502 V720" marker-end="url(#ah)"/>
+<path class="flow" d="M796 658 V720" marker-end="url(#ah)"/>
+<rect class="author" x="32" y="816" width="34" height="20" rx="6"/><text class="leg" x="76" y="831">Author steps in</text>
+<rect class="node" x="214" y="816" width="34" height="20" rx="6"/><text class="leg" x="258" y="831">Slash command or skill</text>
+<path class="flow" d="M444 826 H492" marker-end="url(#ah)"/><text class="leg" x="504" y="831">Next step</text>
+<path class="link" d="M624 826 H672"/><text class="leg" x="684" y="831">Reads and writes the shared state</text>
 </svg>

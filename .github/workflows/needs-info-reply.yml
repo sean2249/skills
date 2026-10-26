@@ -1,5 +1,5 @@
 # Reusable workflow: move a `status: needs-info` issue back to `status: raw` once the author
-# has answered, so issue-enhance picks it up again. No comment is posted.
+# has answered, so /triage picks it up again. No comment is posted.
 # Called from each repo's .github/workflows/needs-info-reply.yml (written by issue-workflow-setup),
 # on `issue_comment: created` and `issues: edited`.
 #
@@ -35,7 +35,6 @@ jobs:
           python3 - <<'PY'
           import json, os, re, subprocess
 
-          # Same rules as skills/dev/issue-enhance/scripts/pending_decisions.py (all_ticked).
           def all_ticked(body):
               m = re.search(r"^##\s+Pending decisions\s*$", body, re.M)
               if not m:
