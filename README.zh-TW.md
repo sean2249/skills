@@ -49,7 +49,7 @@ claude plugin install kiwi-skills@kiwi-skills
   <img src="docs/workflow.svg" width="960" alt="Issue 工作流程：issue 從 status: raw 開始；/triage 驗證它、需要時 grill、寫出給 agent 的說明，作者在 session 裡決定：needs-info（問題寫在留言，作者回覆後自動回到 raw）、approved 並加上 type label、ready-for-human 或 wontfix；大工作則由 /to-spec 與 /to-tickets 寫出一張 spec issue 和用 blocked-by 串起來的 ticket sub-issue。/implement 以測試先行做一張 ticket 並跑 code-review；/implement-spec 在整合 branch 上平行做完整份 spec。issue-ship 跑 verify、用 pr skill 寫 PR 本文，用 security-audit 與 code-review 審整個 PR 最多 3 輪，結果在 session 裡（第 3 輪若還有單向門後面的 medium 以上問題就交回作者），並依 Door 與審查結果決定 risk label，提醒作者 merge 前要看多仔細；沒有任何東西會自動 merge。標了 article-status: request 的工作卡在 merge 時轉成 pending，再由 article-request 轉成 handoff，並在文章 repo 開一張 post-type: 文章卡；在那裡 post-write 先寫大綱讓作者在 session 裡確認，再寫文章，作者編輯後 merge。">
 </p>
 
-標亮的節點（圖中發光、文字版中為黃色）是作者介入的地方：在 `/triage` 的 session 裡做決定、第 3 輪交回時選新方向、merge `risk: medium` / `high` 的 PR、確認文章大綱，以及編輯並 merge 文章。其餘都由 skills 或 GitHub Actions 完成。圖片會跟著系統的淺色／深色設定切換；如果你在作業系統要求減少動態效果，動畫會停止。
+標亮的節點（圖中發光、文字版中為黃色）是作者介入的地方：在 `/triage` 的 session 裡做決定、第 3 輪交回時選新方向、merge 每個 PR、確認文章大綱，以及編輯並 merge 文章。其餘都由 skills 或 GitHub Actions 完成。圖片會跟著系統的淺色／深色設定切換；如果你在作業系統要求減少動態效果，動畫會停止。
 
 <details>
 <summary>文字版（mermaid）</summary>

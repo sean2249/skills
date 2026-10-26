@@ -74,7 +74,7 @@ Anything you need that isn't in the sources → ask the author; don't go looking
 
 A `wiki:<page>` link already resolves at build time to the post whose `wiki:` front matter holds that page name (see the repo's conventions); a post that isn't published yet makes it pending, and it turns into a real link once that post is out. Keep those as `wiki:` links; don't replace them with paths.
 
-What the resolver can't see, so look for it on the blog before writing, for every vault page the post would link (the outline's `wiki:` links, and any the sources link) that doesn't resolve now:
+What the resolver can't see, so look for it on the blog before writing, for every vault page the post would link (any the sources link, and on a rerun the approved outline's `wiki:` links) that doesn't resolve now:
 
 - **A section inside a post**: a heading in an existing post covers the page. E.g. vault page 真正的樂趣 is the `### 真正的樂趣` section of the 《FUN 的力量》 review → link `/blogs/books/FUN的力量/#真正的樂趣`.
 - **A post that covers the page without listing it** in its `wiki:` front matter (e.g. under another name). Link it by path and tell the author; adding the name to that post's `wiki:` is their call.

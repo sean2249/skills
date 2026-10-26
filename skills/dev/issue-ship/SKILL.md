@@ -87,7 +87,7 @@ Round 3, by Door:
 
 The PR can't be `risk: low` while any `confirmed` or `needs_validation` security finding, or any high code finding, is unfixed.
 
-**Where the results go.** The author makes every decision in the session, so tell them each round's findings and outcomes there in full. The PR keeps the record, which later articles draw on: under **Review**, how many rounds ran, each finding's severity, category, location and outcome (fixed in which commit, or why not), and, when round 3 sent the work back, which direction the author chose. Nothing is posted as a comment.
+**Where the results go.** The author makes every decision in the session, so tell them each round's findings and outcomes there in full. The PR keeps the record, which later articles draw on: under **Review**, how many rounds ran, each finding's severity, category, location and outcome (fixed in which commit, or why not), and, when round 3 sent the work back, which direction the author chose. No review result is posted as a comment.
 
 ## Public repo
 

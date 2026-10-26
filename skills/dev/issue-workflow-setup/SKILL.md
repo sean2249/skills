@@ -65,7 +65,7 @@ Missing → stop and ask the author to run `/setup-matt-pocock-skills` with thes
 | `bug` (category) | `type: bug` |
 | `enhancement` (category) | `type: enhancement` |
 
-The category rows aren't in the setup's template; add them to `triage-labels.md` if they're missing. In `issue-tracker.md`, make **Read an issue** and **List issues** keep only the owner's comments (filter on `authorAssociation` `OWNER`, as in this repo's own `docs/agents/issue-tracker.md`): the template reads everyone's, and on a public repo anyone can post a fake agent brief under an approved issue. GitHub's own default names (`bug`, `enhancement`, `wontfix`) aren't used, since Step 4 deletes them.
+The category rows aren't in the setup's template; add them to `triage-labels.md` if they're missing. In `issue-tracker.md`, make **Read an issue** and **List issues** keep only the owner's comments (filter on `authorAssociation` `OWNER`), and make **List issues** leave out `external` issues, as in this repo's own `docs/agents/issue-tracker.md`. Repair mode adds whichever is missing: the template reads everyone's, and on a public repo anyone can post a fake agent brief under an approved issue. GitHub's own default names (`bug`, `enhancement`, `wontfix`) aren't used, since Step 4 deletes them.
 
 **Where the agent docs live.** When the repo's root holds only structural files, or its whole tree is published (a notes vault, a site generator's source), move `docs/agents/` to `.claude/agent-docs/` and update the paths in `## Agent skills`. Not `.claude/agents/`: Claude Code loads every file there as a subagent definition.
 
@@ -82,7 +82,6 @@ Check what already exists, without changing anything:
 | `.github/workflows/risk-guard.yml` | exists? Retired in v3 (nothing merges automatically any more); repair mode removes it |
 | `.github/workflows/article-pending.yml` | exists? (repos set up before it existed won't have it) |
 | `.github/workflows/needs-info-reply.yml` | exists? (same) |
-| Branch protection contexts | `gh api repos/<owner>/<repo>/branches/<default>/protection --jq '.required_status_checks.contexts'` |
 | Is this the article repo? | `Article target` in `## Issue workflow` equals this repo (new install: ask in Step 3) |
 | `CLAUDE.md` `## Article conventions` (article repo only) | `grep -n '^## Article conventions' CLAUDE.md` |
 | `.github/pull_request_template.md` (also `.github/PULL_REQUEST_TEMPLATE/`, root, `docs/`) | file exists? |
@@ -90,9 +89,9 @@ Check what already exists, without changing anything:
 | `.claude/settings.json` `permissions.deny` | file exists? which secret-file rules are already there (`python3 -c "import json;print(json.load(open('.claude/settings.json')).get('permissions',{}).get('deny',[]))"`) |
 | Secret files this repo actually uses | command below the table |
 | `CLAUDE.md` `## Agent skills`, and the files it points at | exists? `triage-labels.md` maps to the labels in the table above? `issue-tracker.md` has the `## This repo's workflow` section (`assets/agents-issue-tracker.md`)? |
+| `issue-tracker.md` **Read an issue** / **List issues** | keep only the owner's comments (`authorAssociation == "OWNER"`) and leave out `external` issues? The `## This repo's workflow` section promises both, so check the commands, not just the section |
 | `CLAUDE.md` `## Public repo` (public repos only) | exists? |
 | `CLAUDE.md` issue-workflow keys | second command below the table. They may sit in a top-level `## Issue workflow`, or (older installs) inside `## Workflow`, e.g. under `### Issue workflow` |
-| CI **job** names (needed for branch protection) | `jobs:` keys (or each job's `name:`) in `.github/workflows/*.yml` |
 
 ```bash
 # open issues that predate the workflow (no status label yet), with who opened them
@@ -132,7 +131,7 @@ done
 
 **Repair / upgrade mode.** For an already-set-up repo, plan:
 
-- Callers on `@main`, or on an older tag than the latest → bump all four to the latest tag ("Upgrading a repo" above), after showing the author the compare output.
+- Callers on `@main`, or on an older tag than the latest → bump all three to the latest tag ("Upgrading a repo" above), after showing the author the compare output.
 
 - **Leftovers from before the mattpocock-skills** (v1–v2 installs):
   - Open issues with `status: ai-enhanced` → list them in the plan and, on the author's OK, swap them to `status: raw`; then delete the `status: ai-enhanced` and `grill` labels. Both happen in Step 6, in that order: deleting a label first would lose which issues had it.
@@ -140,11 +139,11 @@ done
   - Old descriptions on `status: raw` ("…not yet enhanced by AI"), `risk: low` ("…allowlisted low-risk paths…" or "…may auto-merge"), `risk: medium` ("PR needs author review before merge") and `risk: high` ("Auth, migrations, …" or "…author review required") → update them to Step 5's, on the author's OK. This is the one place a description changes.
   - `## Issue workflow`: replace its first two lines with the asset's, and remove the `Issue assets branch`, `Mockup path`, `Low-risk paths` and `Merge mode` keys (the `issue-assets` branch itself stays).
   - `kiwi-voice` anywhere in `CLAUDE.md` (e.g. `## Article conventions`) → `writing-voice`, the skill's new name.
-  - **The `risk-guard` merge gate is retired** (from v3 the author merges every PR). In this order, since a required check that no longer runs blocks every PR: first remove `risk-guard / check` (or an older `risk-guard`) from the default branch's required checks (Step 9), then delete `.github/workflows/risk-guard.yml` and `.github/low-risk-paths.txt` in the upgrade PR. GitHub's auto-merge setting can stay as it is; nothing turns it on for a PR any more.
+  - **The `risk-guard` merge gate is retired** (from v3 the author merges every PR). In this order, since a required check that no longer runs blocks every PR: delete `.github/workflows/risk-guard.yml` and `.github/low-risk-paths.txt` in the upgrade PR, and remove `risk-guard / check` (or an older `risk-guard`) from the default branch's required checks (Step 9) before that PR is merged. Before removing the check, list open PRs that are still queued for auto-merge (from v2's `risk: low` flow) and, on the author's OK, turn auto-merge off for each: once `risk-guard` stops holding them, they'd merge as soon as the other checks pass. Then offer to switch off the repo's "Allow auto-merge" setting too, since nothing in the workflow uses it.
 - Missing `## Public repo` section on a public repo, or the `## This repo's workflow` section in `issue-tracker.md` → add them (Step 7).
 - Missing `external` label → add it (Step 5); open issues not opened by the owner that already carry a `status:` label (the repair-mode query in Step 1) → list them in the plan, and on the author's OK swap them to `external` (Step 6). Missing secret-file deny rules in `.claude/settings.json` → add them (Step 7).
 - Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it; an existing one without an `issues: types: [edited]` trigger (check: `grep -A3 '^  issues:' .github/workflows/needs-info-reply.yml`) → add that trigger, so ticking the boxes of an older issue's `## Pending decisions` also switches it back. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `post-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: request` / `article-status: pending` labels (Step 5).
-- **Old CLAUDE.md layout.** If the issue-workflow keys (`Verify command`, `Merge mode`, `Article target`, …) sit inside `## Workflow` (e.g. under `### Issue workflow`), **move** them: create a top-level `## Issue workflow` from `assets/claude-md-workflow.md` with the existing values, then delete the old sub-section. Never add a second copy beside it. Leave the rest of `## Workflow` (local dev commands) untouched.
+- **Old CLAUDE.md layout.** If the issue-workflow keys (`Verify command`, `Article target`, …) sit inside `## Workflow` (e.g. under `### Issue workflow`), **move** them: create a top-level `## Issue workflow` from `assets/claude-md-workflow.md` with the existing values (dropping the retired keys listed above), then delete the old sub-section. Never add a second copy beside it. Leave the rest of `## Workflow` (local dev commands) untouched.
 ## Step 2 — Required checks
 
 Read the default branch's required status checks (`gh api repos/<owner>/<repo>/branches/<default>/protection --jq '.required_status_checks.contexts'`; a `403` or `404` means there's no protection to read). If `risk-guard / check` or `risk-guard` is among them, plan to remove it (Step 9). Leave every other check and rule as it is.
@@ -366,7 +365,7 @@ The `issue-status` workflow only runs once it is on the default branch. If the s
 
 ## Step 9 — Required checks
 
-Only when Step 2 found `risk-guard / check` (or `risk-guard`) among the required checks, and the author agreed. Remove just that context and keep every other check and rule; it changes repo settings, so do it before the upgrade PR that deletes the caller, or that PR waits forever on a check that no longer runs:
+Only when Step 2 found `risk-guard / check` (or `risk-guard`) among the required checks, and the author agreed. First turn off auto-merge on any open PR still queued for it (Leftovers above). Remove just that context and keep every other check and rule; it changes repo settings, so the author does it or approves it. Do it before the upgrade PR (Step 8) is merged: that PR deletes the caller, so it would wait forever on a check that no longer runs:
 
 ```bash
 gh api repos/<owner>/<repo>/branches/<default>/protection/required_status_checks --jq .contexts
