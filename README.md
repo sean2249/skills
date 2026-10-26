@@ -119,7 +119,7 @@ flowchart TD
 | Hand work over as an article | `article-request` | this repo |
 | Write the article | `post-write`, with `writing-voice` | this repo |
 
-Every workflow skill above, his and mine, runs only when I type it, so each step starts with a slash command in a session. The one exception is `writing-voice`: `post-write` calls it in the middle of its own run (before handing over the draft, and after my edits), which a typed-only skill can't allow. Their per-repo settings live in `docs/agents/` (`issue-tracker.md`, `triage-labels.md`, `domain.md`), pointed at by `## Agent skills` in `CLAUDE.md`. `triage-labels.md` maps his triage roles to this workflow's `status:` and `type:` labels, so his skills apply the labels below.
+Every workflow skill above, his and mine, runs only when I type it, so each step starts with a slash command in a session. The one exception is `writing-voice`: `post-write` calls it in the middle of its own run (before handing over the draft, and after my edits), which a typed-only skill can't allow. The mattpocock-skills' per-repo settings live in `docs/agents/` (`issue-tracker.md`, `triage-labels.md`, `domain.md`), pointed at by `## Agent skills` in `CLAUDE.md`. `triage-labels.md` maps his triage roles to this workflow's `status:` and `type:` labels, so his skills apply the labels below.
 
 ### Review and risk
 

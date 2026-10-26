@@ -49,8 +49,8 @@ jobs:
           files = [f for f in files if f]
 
           # Never low risk: .github/ (workflows, templates), .claude/ (permission deny rules, hooks,
-          # agent docs moved there), any CLAUDE.md (verify command, workflow keys, public-repo rules),
-          # and docs/agents/ (what every session trusts and which label means approved), at any depth.
+          # agent docs moved there) and any CLAUDE.md (verify command, workflow keys, public-repo rules) at any
+          # depth, and docs/agents/ at the repo root (what every session trusts, which label means approved).
           def protected(f):
               parts = f.split("/")
               return parts[0] == ".github" or ".claude" in parts[:-1] \

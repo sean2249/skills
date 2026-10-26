@@ -164,12 +164,12 @@ Report: <PR #<M> or file <path>> · <article-status, or why you stopped> · next
 
 - At most 300 characters, one line, starting `Report:`.
 - Step 0b, waiting → `waiting for post-type · next: confirm the post type in this session`, with the PR URL (file mode: the permalink).
-- PR mode, after Step 5 → `article-status: handoff · next: run post-write on the new card in the article repo`, with the new card's URL.
-- File mode, after Step 4 → `article card opened · next: run post-write on the new card in the article repo`, with the new card's URL.
+- PR mode, after Step 5 → `article-status: handoff · next: /post-write #<N> in the article repo`, with the new card's URL.
+- File mode, after Step 4 → `article card opened · next: /post-write #<N> in the article repo`, with the new card's URL.
 - Any other stop (Step 0: PR not merged, no `article-status:`, `## 文章素材` missing; Step 1: the target to name, or the private → public OK; Step 2: a card already exists): the status is why you stopped, `next` is what the author does, and the URL is the PR, file or existing card concerned.
 - On a public repo, made-up data rules apply here too.
 
-Example (made-up): `Report: PR #50 · article-status: handoff · next: run post-write on the new card in the article repo · https://github.com/example/blog/issues/12`
+Example (made-up): `Report: PR #50 · article-status: handoff · next: /post-write #12 in the article repo · https://github.com/example/blog/issues/12`
 
 ## Done when
 

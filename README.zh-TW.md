@@ -119,7 +119,7 @@ flowchart TD
 | 把工作交接成文章 | `article-request` | 這個 repo |
 | 寫文章 | `post-write`，搭配 `writing-voice` | 這個 repo |
 
-上面每個流程類 skill，不論是他的還是我的，都只在我自己輸入時才會執行，所以每一步都是在 session 裡下一個 slash 指令開始。唯一的例外是 `writing-voice`：`post-write` 執行到一半會叫它（交出草稿前、我改完稿後各一次），只能手動觸發的 skill 做不到這點。它們在各 repo 的設定放在 `docs/agents/`（`issue-tracker.md`、`triage-labels.md`、`domain.md`），由 `CLAUDE.md` 的 `## Agent skills` 指過去。`triage-labels.md` 把他的分類角色對應到這個工作流程的 `status:` 和 `type:` label，所以他的 skills 貼的就是下面的 labels。
+上面每個流程類 skill，不論是他的還是我的，都只在我自己輸入時才會執行，所以每一步都是在 session 裡下一個 slash 指令開始。唯一的例外是 `writing-voice`：`post-write` 執行到一半會叫它（交出草稿前、我改完稿後各一次），只能手動觸發的 skill 做不到這點。mattpocock-skills 在各 repo 的設定放在 `docs/agents/`（`issue-tracker.md`、`triage-labels.md`、`domain.md`），由 `CLAUDE.md` 的 `## Agent skills` 指過去。`triage-labels.md` 把他的分類角色對應到這個工作流程的 `status:` 和 `type:` label，所以他的 skills 貼的就是下面的 labels。
 
 ### 審查與 risk
 
