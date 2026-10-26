@@ -1,6 +1,6 @@
 {
   "name": "kiwi-skills",
-  "description": "Cross-project Claude Code skills: an AI-assisted GitHub issue workflow (setup, enhance, implement, orchestrate, article request), article writing, and a shared writing voice.",
+  "description": "Cross-project Claude Code skills: an AI-assisted GitHub issue workflow (setup, ship, article request; built on the mattpocock-skills), article writing, and a shared writing voice.",
   "author": { "name": "sean2249" },
   "homepage": "https://github.com/sean2249/skills",
   "repository": "https://github.com/sean2249/skills",

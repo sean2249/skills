@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1130" width="960" height="1130" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1366" width="960" height="1366" role="img" aria-labelledby="title desc">
 <title id="title">Issue workflow</title>
-<desc id="desc">Issue: author opens an issue, status raw, issue-enhance checks code and settles scope, needs-info with the decisions written into the issue body as checkboxes (once the author ticks one box per decision, it switches back to raw automatically), the plan is written; by default it goes straight to status ai-enhanced, and only with the grill label or high-risk paths is it grilled by fresh reviewer subagents, negotiated with the planner, disputes go to the author as A/B decisions with checkboxes in the issue body, then, for every issue, a plan check: one fresh subagent checks the plan against the code once (file:line, call sites, fields and flags, data formats, time zones, boundaries) and the AI fixes what it finds itself, recording any choice as an AI default in Decisions, so the author only gets a decision when a finding clashes with an earlier author decision; then status ai-enhanced and author approval. Implementation: issue-implement, pull request with evidence, code and security review (up to 3 rounds, findings fixed by category; in round 3, low findings are all fixed and not sent for another review, while any medium or higher finding turns the PR into a draft and sends the issue back to the author as needs-info to rethink the approach), risk label; low auto-merges, medium or high is reviewed and merged by the author. Article: a work card in a project repo labelled article-status: request is switched to article-status: pending when its PR merges (article-pending); article-request switches it to article-status: handoff and opens an article card in the article repo labelled post-type: devlog, intro, review or research (post-type exists only in the article repo; article-request can also start from any file); the article card runs the same flow, outline, Grill, plan check, approved; post-write writes it with a source map, and the author merges the article.</desc>
+<desc id="desc">Issue workflow: an issue starts at status: raw; /triage verifies it, grills it if needed and writes an agent brief, and the author decides in the session: needs-info (questions in a comment; the author&#x27;s reply sends it back to raw), approved with a type label, ready-for-human or wontfix, or, for big work, /to-spec and /to-tickets write a spec issue with ticket sub-issues joined by blocked-by edges. /implement builds one ticket test-first and runs code-review; /implement-spec builds a whole spec in parallel on an integration branch. issue-ship verifies, writes the PR body with the pr skill, reviews the whole PR with security-audit and code-review for up to 3 rounds with the results in the session (in round 3, a medium or high finding behind a one-way door goes back to the author), and sets the risk label from the Door and the review, which tells the author how closely to read before they merge; nothing merges automatically. Work cards labelled article-status: request move to pending on merge and to handoff with article-request, which opens a post-type: card in the article repo; there post-write writes an outline the author confirms in the session, then the post, which the author edits and merges.</desc>
 <style>
 svg{--panel:#f6f8fa;--panel-s:#d0d7de;--node:#ffffff;--node-s:#8c959f;--t:#1f2328;--s:#57606a;
---au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--grill:#eef6ff;--grill-s:#a8c7fa;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df}
+--au:#fff4d6;--au-s:#d4a72c;--halo:#f2cc60;--line:#6e7781;--acc:#0969da;--art:#f6f0ff;--art-s:#8250df;--board:#eefbf1;--board-s:#4ac26b;--board-t:#1a7f37}
 @media (prefers-color-scheme: dark){svg{--panel:#161b22;--panel-s:#30363d;--node:#0d1117;--node-s:#6e7681;--t:#e6edf3;--s:#9198a1;
---au:#3b2e0a;--au-s:#e3b341;--halo:#e3b341;--line:#8b949e;--grill:#0c2d6b55;--grill-s:#1f6feb;--acc:#4493f8;--art:#2e1f5e55;--art-s:#a371f7}}
+--au:#3b2e0a;--au-s:#e3b341;--halo:#e3b341;--line:#8b949e;--acc:#4493f8;--art:#2e1f5e55;--art-s:#a371f7;--board:#0f2d1a88;--board-s:#2ea043;--board-t:#3fb950}}
 text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;text-anchor:middle}
 .panel{fill:var(--panel);stroke:var(--panel-s);stroke-width:1.2}
 .ph{text-anchor:start;font-size:17px;font-weight:700;fill:var(--t)}
@@ -14,8 +14,6 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 .za{fill:var(--art);stroke:var(--art-s);stroke-width:1.2;stroke-dasharray:5 4}
 .zhw{text-anchor:end;font-size:12.5px;font-weight:600;fill:var(--s)}
 .zha{text-anchor:end;font-size:12.5px;font-weight:600;fill:var(--art-s)}
-.grill{fill:var(--grill);stroke:var(--grill-s);stroke-width:1.2;stroke-dasharray:5 4}
-.gh{text-anchor:start;font-size:13.5px;font-weight:600;fill:var(--acc)}
 .node{fill:var(--node);stroke:var(--node-s);stroke-width:1.3}
 .author{fill:var(--au);stroke:var(--au-s);stroke-width:2}
 .halo{fill:none;stroke:var(--halo);stroke-width:3;opacity:.15;animation:pulse 3.6s ease-in-out infinite}
@@ -30,132 +28,150 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 @media (prefers-reduced-motion: reduce){.flow,.halo{animation:none}.halo{opacity:.35}}
 </style>
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0 0 L10 5 L0 10 z"/></marker></defs>
-<rect class="panel" x="20" y="20" width="920" height="500" rx="18"/>
-<text class="ph" x="44" y="52"><tspan class="pn">1</tspan>  Issue</text>
-<rect class="halo" x="32.0" y="75.0" width="216" height="70" rx="16"/>
-<rect class="author" x="38.0" y="81.0" width="204" height="58" rx="11"/>
-<text class="t" x="140" y="115">Author opens an issue</text>
-<rect class="node" x="268.0" y="81.0" width="204" height="58" rx="11"/>
-<text class="t" x="370" y="105">status: raw</text>
-<text class="s" x="370" y="124">added by the issue-status Action</text>
-<rect class="node" x="498.0" y="81.0" width="204" height="58" rx="11"/>
-<text class="t" x="600" y="105">issue-enhance</text>
-<text class="s" x="600" y="124">check code · settle scope</text>
-<rect class="node" x="728.0" y="81.0" width="204" height="58" rx="11"/>
-<text class="t" x="830" y="105">Write the plan</text>
-<text class="s" x="830" y="124">approach · criteria · flow</text>
-<path class="flow" d="M242.0 110 H264.0" marker-end="url(#ah)"/>
-<path class="flow" d="M472.0 110 H494.0" marker-end="url(#ah)"/>
-<path class="flow" d="M702.0 110 H724.0" marker-end="url(#ah)"/>
-<rect class="node" x="498.0" y="176.0" width="204" height="58" rx="11"/>
-<text class="t" x="600" y="200">status: needs-info</text>
-<text class="s" x="600" y="219">decisions in the issue body</text>
-<rect class="halo" x="262.0" y="170.0" width="216" height="70" rx="16"/>
-<rect class="author" x="268.0" y="176.0" width="204" height="58" rx="11"/>
-<text class="t" x="370" y="210">Author ticks the boxes</text>
-<path class="flow" d="M600 139.0 V172.0" marker-end="url(#ah)"/>
-<text class="lbl" x="608" y="161.0">missing info</text>
-<path class="flow" d="M498.0 205 H476.0" marker-end="url(#ah)"/>
-<path class="flow" d="M370 176.0 V143.0" marker-end="url(#ah)"/>
-<text class="lbl" x="378" y="161.0">all ticked → auto back to raw</text>
-<rect class="grill" x="44" y="270" width="872" height="150" rx="14"/>
-<text class="gh" style="text-anchor:end" x="884" y="296">Grill (optional: grill label or high-risk paths) · ≤ 3 rounds</text>
-<rect class="node" x="65.0" y="331.0" width="250" height="58" rx="11"/>
-<text class="t" x="190" y="355">Reviewer subagents</text>
-<text class="s" x="190" y="374">2–4 angles · parallel · fresh context</text>
-<rect class="node" x="355.0" y="331.0" width="250" height="58" rx="11"/>
-<text class="t" x="480" y="355">Negotiate with the planner</text>
-<text class="s" x="480" y="374">agree → change · withdraw · for author</text>
-<rect class="halo" x="639.0" y="325.0" width="262" height="70" rx="16"/>
-<rect class="author" x="645.0" y="331.0" width="250" height="58" rx="11"/>
-<text class="t" x="770" y="355">A / B in the issue body</text>
-<text class="s" x="770" y="374">author ticks a box · no recommendation</text>
-<path class="flow" d="M830 139.0 V252 H190 V327.0" marker-end="url(#ah)"/>
-<path class="flow" d="M315.0 360 H351.0" marker-end="url(#ah)"/>
-<path class="flow" d="M605.0 360 H641.0" marker-end="url(#ah)"/>
-<rect class="node" x="498.0" y="441.0" width="204" height="58" rx="11"/>
-<text class="t" x="600" y="465">status: ai-enhanced</text>
-<text class="s" x="600" y="484">plan (+ Risks if grilled)</text>
-<rect class="halo" x="722.0" y="435.0" width="216" height="70" rx="16"/>
-<rect class="author" x="728.0" y="441.0" width="204" height="58" rx="11"/>
-<text class="t" x="830" y="465">Author approves</text>
-<text class="s" x="830" y="484">sets status: approved</text>
-<rect class="node" x="268.0" y="441.0" width="204" height="58" rx="11"/>
-<text class="t" x="370" y="465">Plan check · every issue</text>
-<text class="s" x="370" y="484">1 fresh subagent · AI fixes</text>
-<path class="flow" d="M770 389.0 V420 H370 V437.0" marker-end="url(#ah)"/>
-<path class="flow" d="M928 139.0 V420 H370 V437.0" marker-end="url(#ah)"/>
-<path class="flow" d="M472.0 470 H494.0" marker-end="url(#ah)"/>
-<text class="lbl" x="922" y="262" style="text-anchor:end">default</text>
-<path class="flow" d="M702.0 470 H724.0" marker-end="url(#ah)"/>
-<rect class="panel" x="20" y="540" width="920" height="210" rx="18"/>
-<text class="ph" x="44" y="572"><tspan class="pn">2</tspan>  Implementation</text>
-<rect class="node" x="38.0" y="591.0" width="204" height="58" rx="11"/>
-<text class="t" x="140" y="615">issue-implement</text>
-<text class="s" x="140" y="634">new session · applies mitigations</text>
-<rect class="node" x="268.0" y="591.0" width="204" height="58" rx="11"/>
-<text class="t" x="370" y="615">Pull request</text>
-<text class="s" x="370" y="634">evidence · behaviour summary</text>
-<rect class="node" x="498.0" y="591.0" width="204" height="58" rx="11"/>
-<text class="t" x="600" y="615">Review · ≤ 3 rounds</text>
-<text class="s" x="600" y="634">R3: low → fix all · medium+ → author</text>
-<rect class="node" x="728.0" y="591.0" width="204" height="58" rx="11"/>
-<text class="t" x="830" y="615">risk label?</text>
-<text class="s" x="830" y="634">unfixed security → not low</text>
-<rect class="halo" x="492.0" y="670.0" width="216" height="70" rx="16"/>
-<rect class="author" x="498.0" y="676.0" width="204" height="58" rx="11"/>
-<text class="t" x="600" y="700">Author reviews &amp; merges</text>
-<text class="s" x="600" y="719">risk: medium / high</text>
-<rect class="node" x="728.0" y="676.0" width="204" height="58" rx="11"/>
-<text class="t" x="830" y="700">Auto-merge</text>
-<text class="s" x="830" y="719">risk: low · risk-guard / check</text>
-<path class="flow" d="M830 499.0 V520 H140 V587.0" marker-end="url(#ah)"/>
-<path class="flow" d="M242.0 620 H264.0" marker-end="url(#ah)"/>
-<path class="flow" d="M472.0 620 H494.0" marker-end="url(#ah)"/>
-<path class="flow" d="M702.0 620 H724.0" marker-end="url(#ah)"/>
-<path class="flow" d="M870 649.0 V672.0" marker-end="url(#ah)"/>
-<text class="lbl" x="878" y="667.0">low</text>
-<path class="flow" d="M770 649.0 V663.0 H600 V672.0" marker-end="url(#ah)"/>
-<text class="lbl" x="610" y="659.0">medium / high</text>
-<rect class="panel" x="20" y="770" width="920" height="300" rx="18"/>
-<text class="ph" x="44" y="802"><tspan class="pn">3</tspan>  Article</text>
-<rect class="zw" x="38" y="814" width="444" height="242" rx="12"/>
-<text class="zhw" x="470" y="836">Work card · article-status: (project repo)</text>
-<rect class="za" x="494" y="814" width="444" height="242" rx="12"/>
-<text class="zha" x="926" y="836">Article card · post-type: (article repo only)</text>
-<rect class="node" x="38.0" y="854.0" width="204" height="88" rx="11"/>
-<text class="t" x="140" y="886">article-pending</text>
-<text class="s" x="140" y="904">article-status:</text>
-<text class="s" x="140" y="919">request → pending · reminder</text>
-<rect class="node" x="268.0" y="854.0" width="204" height="88" rx="11"/>
-<text class="t" x="370" y="886">article-request</text>
-<text class="s" x="370" y="904">pending → handoff</text>
-<text class="s" x="370" y="919">opens a post-type: card</text>
-<rect class="node" x="498.0" y="854.0" width="204" height="88" rx="11"/>
-<text class="t" x="600" y="878">Article card</text>
-<text class="s" x="600" y="896">post-type: devlog / intro /</text>
-<text class="s" x="600" y="911">review / research</text>
-<text class="s" x="600" y="926">outline → Grill → check → approved</text>
-<rect class="node" x="728.0" y="854.0" width="204" height="88" rx="11"/>
-<text class="t" x="830" y="886">post-write</text>
-<text class="s" x="830" y="904">devlog · intro · review · research</text>
-<text class="s" x="830" y="919">+ source map</text>
-<rect class="node" x="268.0" y="983.0" width="204" height="58" rx="11"/>
-<text class="t" x="370" y="1007">Any file</text>
-<text class="s" x="370" y="1026">e.g. a notes page</text>
-<rect class="halo" x="722.0" y="977.0" width="216" height="70" rx="16"/>
-<rect class="author" x="728.0" y="983.0" width="204" height="58" rx="11"/>
-<text class="t" x="830" y="1007">Author merges the article</text>
-<text class="s" x="830" y="1026">checks the source map</text>
-<path class="flow" d="M830 734.0 V760 H140 V850.0" marker-end="url(#ah)"/>
-<path class="flow" d="M600 734.0 V760" marker-end="url(#ah)"/>
-<text class="lbl" x="154" y="788">if the work card has article-status: request</text>
-<path class="flow" d="M242.0 898 H264.0" marker-end="url(#ah)"/>
-<path class="flow" d="M472.0 898 H494.0" marker-end="url(#ah)"/>
-<path class="flow" d="M702.0 898 H724.0" marker-end="url(#ah)"/>
-<path class="flow" d="M370 983.0 V946.0" marker-end="url(#ah)"/>
-<path class="flow" d="M830 942.0 V979.0" marker-end="url(#ah)"/>
-<rect class="author" x="44" y="1087" width="34" height="20" rx="6"/><text class="leg" x="88" y="1102">Author steps in</text>
-<rect class="node" x="230" y="1087" width="34" height="20" rx="6"/><text class="leg" x="274" y="1102">Skill or GitHub Action</text>
-<path class="flow" d="M452 1097 H500" marker-end="url(#ah)"/><text class="leg" x="512" y="1102">Direction of work</text>
+<rect class="panel" x="20" y="20" width="920" height="380" rx="18"/>
+<text class="ph" x="44" y="52"><tspan class="pn">1</tspan>  Issue (any repo)</text>
+<rect class="halo" x="32" y="68" width="216" height="78" rx="16"/>
+<rect class="author" x="38" y="74" width="204" height="66" rx="11"/>
+<text class="t" x="140" y="111.7">Author opens an issue</text>
+<rect class="node" x="268" y="74" width="204" height="66" rx="11"/>
+<text class="t" x="370" y="96.7">status: raw</text>
+<text class="s" x="370" y="112.4">added by the</text>
+<text class="s" x="370" y="127.4">issue-status Action</text>
+<rect class="node" x="498" y="74" width="204" height="66" rx="11"/>
+<text class="t" x="600" y="96.7">/triage</text>
+<text class="s" x="600" y="112.4">verify · grill if needed</text>
+<text class="s" x="600" y="127.4">agent brief</text>
+<rect class="halo" x="722" y="68" width="216" height="78" rx="16"/>
+<rect class="author" x="728" y="74" width="204" height="66" rx="11"/>
+<text class="t" x="830" y="104.2">Author decides</text>
+<text class="s" x="830" y="119.9">in the session</text>
+<path class="flow" d="M242 107 H264" marker-end="url(#ah)"/>
+<path class="flow" d="M472 107 H494" marker-end="url(#ah)"/>
+<path class="flow" d="M702 107 H724" marker-end="url(#ah)"/>
+<rect class="node" x="268" y="196" width="204" height="58" rx="11"/>
+<text class="t" x="370" y="222.2">status: needs-info</text>
+<text class="s" x="370" y="237.9">questions in a comment</text>
+<path class="flow" d="M760 140 V225 H476" marker-end="url(#ah)"/>
+<text class="lbl" x="752" y="218" style="text-anchor:end">missing info</text>
+<path class="flow" d="M370 196 V144" marker-end="url(#ah)"/>
+<text class="lbl" x="362" y="160" style="text-anchor:end">author replies → auto back to raw</text>
+<text class="lbl" x="362" y="174" style="text-anchor:end">(needs-info-reply)</text>
+<rect class="node" x="38" y="306" width="204" height="72" rx="11"/>
+<text class="t" x="140" y="339.2">status: approved</text>
+<text class="s" x="140" y="354.9">+ type: bug / enhancement</text>
+<rect class="node" x="268" y="306" width="204" height="72" rx="11"/>
+<text class="t" x="370" y="331.7">/to-spec → /to-tickets</text>
+<text class="s" x="370" y="347.4">spec issue · ticket sub-issues</text>
+<text class="s" x="370" y="362.4">blocked-by edges · approved</text>
+<rect class="node" x="728" y="306" width="204" height="72" rx="11"/>
+<text class="t" x="830" y="339.2">status: ready-for-human</text>
+<text class="s" x="830" y="354.9">or status: wontfix</text>
+<path class="flow" d="M806 140 V272 H140 V302" marker-end="url(#ah)"/>
+<path class="flow" d="M370 272 V302" marker-end="url(#ah)"/>
+<text class="lbl" x="148" y="292">ready</text>
+<text class="lbl" x="378" y="292">big work</text>
+<path class="flow" d="M890 140 V302" marker-end="url(#ah)"/>
+<text class="lbl" x="882" y="292" style="text-anchor:end">not for an agent</text>
+<rect class="panel" x="20" y="420" width="920" height="344" rx="18"/>
+<text class="ph" x="44" y="452"><tspan class="pn">2</tspan>  Implementation</text>
+<rect class="node" x="38" y="462" width="204" height="72" rx="11"/>
+<text class="t" x="140" y="487.7">/implement</text>
+<text class="s" x="140" y="503.4">test-first · code-review</text>
+<text class="s" x="140" y="518.4">commit</text>
+<rect class="node" x="268" y="462" width="204" height="72" rx="11"/>
+<text class="t" x="370" y="487.7">/implement-spec</text>
+<text class="s" x="370" y="503.4">tickets in parallel</text>
+<text class="s" x="370" y="518.4">integration branch</text>
+<path class="flow" d="M210 378 V458" marker-end="url(#ah)"/>
+<path class="flow" d="M370 378 V458" marker-end="url(#ah)"/>
+<rect class="node" x="38" y="570" width="204" height="72" rx="11"/>
+<text class="t" x="140" y="603.2">issue-ship</text>
+<text class="s" x="140" y="618.9">verify · PR body with pr</text>
+<rect class="node" x="268" y="570" width="204" height="72" rx="11"/>
+<text class="t" x="370" y="595.7">Review · ≤ 3 rounds</text>
+<text class="s" x="370" y="611.4">security-audit + code-review</text>
+<text class="s" x="370" y="626.4">results in the session</text>
+<rect class="node" x="498" y="570" width="204" height="72" rx="11"/>
+<text class="t" x="600" y="595.7">risk label</text>
+<text class="s" x="600" y="611.4">Door + review</text>
+<text class="s" x="600" y="626.4">how closely to read</text>
+<path class="flow" d="M140 534 V566" marker-end="url(#ah)"/>
+<path class="flow" d="M310 534 V552 H200 V566" marker-end="url(#ah)"/>
+<path class="flow" d="M242 606 H264" marker-end="url(#ah)"/>
+<path class="flow" d="M472 606 H494" marker-end="url(#ah)"/>
+<rect class="halo" x="262" y="674" width="216" height="84" rx="16"/>
+<rect class="author" x="268" y="680" width="204" height="72" rx="11"/>
+<text class="t" x="370" y="711.7">Author picks</text>
+<text class="t" x="370" y="729.7">a new direction</text>
+<rect class="halo" x="492" y="674" width="216" height="84" rx="16"/>
+<rect class="author" x="498" y="680" width="204" height="72" rx="11"/>
+<text class="t" x="600" y="704.2">Author reviews</text>
+<text class="t" x="600" y="722.2">and merges</text>
+<text class="s" x="600" y="737.9">every PR</text>
+<path class="flow" d="M370 642 V676" marker-end="url(#ah)"/>
+<text class="lbl" x="378" y="656">round 3: medium+</text>
+<text class="lbl" x="378" y="670">behind a one-way door</text>
+<path class="flow" d="M600 642 V676" marker-end="url(#ah)"/>
+<rect class="panel" x="20" y="792" width="920" height="514" rx="18"/>
+<text class="ph" x="44" y="824"><tspan class="pn">3</tspan>  Article</text>
+<rect class="node" x="498" y="818" width="204" height="62" rx="11"/>
+<text class="t" x="600" y="846.2">Work card has</text>
+<text class="s" x="600" y="861.9">article-status: request?</text>
+<rect class="node" x="728" y="818" width="204" height="62" rx="11"/>
+<text class="t" x="830" y="853.7">Done</text>
+<path class="flow" d="M600 752 V814" marker-end="url(#ah)"/>
+<path class="flow" d="M702 849 H724" marker-end="url(#ah)"/>
+<text class="lbl" x="710" y="842">no</text>
+<rect class="zw" x="38" y="900" width="884" height="132" rx="12"/>
+<text class="zhw" x="908" y="922">Work card · article-status: (project repo)</text>
+<rect class="node" x="38" y="938" width="204" height="76" rx="11"/>
+<text class="t" x="140" y="973.2">Any file</text>
+<text class="s" x="140" y="988.9">e.g. a notes page</text>
+<rect class="node" x="268" y="938" width="204" height="76" rx="11"/>
+<text class="t" x="370" y="965.7">article-request</text>
+<text class="s" x="370" y="981.4">pending → handoff</text>
+<text class="s" x="370" y="996.4">opens a post-type: card</text>
+<rect class="node" x="498" y="938" width="204" height="76" rx="11"/>
+<text class="t" x="600" y="965.7">article-pending</text>
+<text class="s" x="600" y="981.4">article-status: request →</text>
+<text class="s" x="600" y="996.4">pending · reminder</text>
+<path class="flow" d="M600 880 V934" marker-end="url(#ah)"/>
+<text class="lbl" x="608" y="896">yes</text>
+<path class="flow" d="M242 976 H264" marker-end="url(#ah)"/>
+<path class="flow" d="M498 976 H476" marker-end="url(#ah)"/>
+<rect class="za" x="38" y="1064" width="884" height="222" rx="12"/>
+<text class="zha" x="908" y="1086">Article card · post-type: (article repo only)</text>
+<rect class="node" x="38" y="1100" width="204" height="76" rx="11"/>
+<text class="t" x="140" y="1127.7">post-write</text>
+<text class="s" x="140" y="1143.4">outline · checked once</text>
+<text class="s" x="140" y="1158.4">by a fresh subagent</text>
+<rect class="halo" x="262" y="1094" width="216" height="88" rx="16"/>
+<rect class="author" x="268" y="1100" width="204" height="76" rx="11"/>
+<text class="t" x="370" y="1126.2">Author confirms</text>
+<text class="t" x="370" y="1144.2">the outline</text>
+<text class="s" x="370" y="1159.9">in the session → approved</text>
+<rect class="node" x="498" y="1100" width="204" height="76" rx="11"/>
+<text class="t" x="600" y="1127.7">post-write</text>
+<text class="s" x="600" y="1143.4">draft + source map</text>
+<text class="s" x="600" y="1158.4">writing-voice 套用</text>
+<rect class="halo" x="722" y="1094" width="216" height="88" rx="16"/>
+<rect class="author" x="728" y="1100" width="204" height="76" rx="11"/>
+<text class="t" x="830" y="1133.7">Author edits</text>
+<text class="t" x="830" y="1151.7">the draft</text>
+<path class="flow" d="M370 1014 V1045 H140 V1096" marker-end="url(#ah)"/>
+<path class="flow" d="M242 1138 H264" marker-end="url(#ah)"/>
+<path class="flow" d="M472 1138 H494" marker-end="url(#ah)"/>
+<path class="flow" d="M702 1138 H724" marker-end="url(#ah)"/>
+<rect class="node" x="728" y="1204" width="204" height="62" rx="11"/>
+<text class="t" x="830" y="1232.2">post-write</text>
+<text class="s" x="830" y="1247.9">writing-voice 收納 · PR</text>
+<rect class="halo" x="492" y="1198" width="216" height="74" rx="16"/>
+<rect class="author" x="498" y="1204" width="204" height="62" rx="11"/>
+<text class="t" x="600" y="1230.7">Author merges</text>
+<text class="t" x="600" y="1248.7">the article</text>
+<path class="flow" d="M830 1176 V1200" marker-end="url(#ah)"/>
+<path class="flow" d="M728 1235 H706" marker-end="url(#ah)"/>
+<rect class="author" x="44" y="1326" width="34" height="20" rx="6"/><text class="leg" x="88" y="1341">Author steps in</text>
+<rect class="node" x="230" y="1326" width="34" height="20" rx="6"/><text class="leg" x="274" y="1341">Skill or GitHub Action</text>
+<path class="flow" d="M452 1336 H500" marker-end="url(#ah)"/><text class="leg" x="512" y="1341">Direction of work</text>
 </svg>

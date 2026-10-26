@@ -1,13 +1,14 @@
 ---
 name: article-request
 description: Use when work should become an article in the repo where articles are written — either a merged PR labelled `article-status: pending` (its `## 文章素材` section is handed over), or a file in any repo, such as a notes page to turn into an article. Opens an issue in the `Article target` repo labelled `status: raw` and one `post-type:` (`devlog`, `intro`, `review`, or `research`) that it suggests from the source with reasons and the author confirms, then marks the source PR and the issues it closes `article-status: handoff`, with permalinks to the sources and instructions for reading them. Uses the local `gh` login; no PAT needed.
+disable-model-invocation: true
 ---
 
 # article-request
 
-Hands material to the article repo as a raw issue. There, `issue-enhance` drafts an outline, the author approves it, and `post-write` writes the article.
+Hands material to the article repo as a raw issue. There, `post-write` drafts an outline, the author confirms it in the session, and `post-write` writes the article.
 
-Article progress in a project repo is one label, `article-status:`: **request** (the work should become an article; the author adds it to the issue, `issue-implement` copies it to the PR) → **pending** (the PR merged; set by the `article-pending` workflow) → **handoff** (this skill opened the article issue; done on this side). In the article repo, an article issue carries only a `post-type:` label.
+Article progress in a project repo is one label, `article-status:`: **request** (the work should become an article; the author adds it to the issue, `issue-ship` copies it to the PR) → **pending** (the PR merged; set by the `article-pending` workflow) → **handoff** (this skill opened the article issue; done on this side). In the article repo, an article issue carries only a `post-type:` label.
 
 Runs from any repo's session. Every comment or body you write starts with `🤖 AI <YYYY-MM-DD>`. The AI posts with the author's `gh` login, so the author field can't tell AI from author; only this marker can.
 
@@ -97,7 +98,7 @@ Create only the missing ones. Don't use `--force`, which would overwrite the tar
 
 ```bash
 gh label list -R <target> --limit 200 --json name --jq '.[].name'
-gh label create "status: raw"     -R <target> --color ededed --description "New issue, not yet enhanced by AI"
+gh label create "status: raw"     -R <target> --color ededed --description "New issue, not yet triaged"
 gh label create "post-type: devlog" -R <target> --color d4c5f9 --description "Article reconstructs a decision path"
 gh label create "post-type: intro"  -R <target> --color c5def5 --description "Article introduces a tool, concept or site"
 gh label create "post-type: review"   -R <target> --color f9d0c4 --description "Article reviews a work: the author's take"
@@ -123,7 +124,7 @@ Read only these sources. Don't search the source repos for other files.
 Why: <the reasons from Step 0b, with their evidence>
 ````
 
-Keep only the source lines that apply. `## 文章素材` stays in the PR and isn't copied here: `issue-enhance` and `post-write` read it from the PR through `## Sources`, and a copy could carry a private PR's contents into a public repo. On a public target, the evidence under `## Post type` follows the same rule: for a private source, give the section names it rests on, not quoted sentences.
+Keep only the source lines that apply. `## 文章素材` stays in the PR and isn't copied here: `post-write` reads it from the PR through `## Sources`, and a copy could carry a private PR's contents into a public repo. On a public target, the evidence under `## Post type` follows the same rule: for a private source, give the section names it rests on, not quoted sentences.
 
 ```bash
 gh issue create -R <target> --title "Article: <PR title or file title; the article's topic if Step 1 says so>" --body-file <body.md> \
@@ -155,7 +156,7 @@ Public PR, private target (Step 1): the comment's last line is `Article request 
 
 ## Report back
 
-Every time you stop and hand back to the author (waiting for the post type, the card opened, a duplicate found, or any other stop), the **first line** of your final message is a `Report:` line. If the host has its own end-of-turn summary field, it starts with the same line. A main session running `issue-orchestrate` may scan it; GitHub labels stay the source of truth. From the second line on, write as usual and leave nothing out: the author may be talking to you in this session directly, and answers here stay complete.
+Every time you stop and hand back to the author (waiting for the post type, the card opened, a duplicate found, or any other stop), the **first line** of your final message is a `Report:` line. If the host has its own end-of-turn summary field, it starts with the same line. From the second line on, write as usual and leave nothing out: the author may be talking to you in this session directly, and answers here stay complete.
 
 ```
 Report: <PR #<M> or file <path>> · <article-status, or why you stopped> · next: <what the author does> · <url>
@@ -163,12 +164,12 @@ Report: <PR #<M> or file <path>> · <article-status, or why you stopped> · next
 
 - At most 300 characters, one line, starting `Report:`.
 - Step 0b, waiting → `waiting for post-type · next: confirm the post type in this session`, with the PR URL (file mode: the permalink).
-- PR mode, after Step 5 → `article-status: handoff · next: enhance the new card in the article repo`, with the new card's URL.
-- File mode, after Step 4 → `article card opened · next: enhance the new card in the article repo`, with the new card's URL.
+- PR mode, after Step 5 → `article-status: handoff · next: /post-write #<N> in the article repo`, with the new card's URL.
+- File mode, after Step 4 → `article card opened · next: /post-write #<N> in the article repo`, with the new card's URL.
 - Any other stop (Step 0: PR not merged, no `article-status:`, `## 文章素材` missing; Step 1: the target to name, or the private → public OK; Step 2: a card already exists): the status is why you stopped, `next` is what the author does, and the URL is the PR, file or existing card concerned.
 - On a public repo, made-up data rules apply here too.
 
-Example (made-up): `Report: PR #50 · article-status: handoff · next: enhance the new card in the article repo · https://github.com/example/blog/issues/12`
+Example (made-up): `Report: PR #50 · article-status: handoff · next: /post-write #12 in the article repo · https://github.com/example/blog/issues/12`
 
 ## Done when
 
