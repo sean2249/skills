@@ -13,4 +13,4 @@ permissions:
 
 jobs:
   issue-status:
-    uses: sean2249/skills/.github/workflows/issue-status.yml@v3
+    uses: sean2249/skills/.github/workflows/issue-status.yml@v4
