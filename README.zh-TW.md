@@ -147,7 +147,7 @@ Door 是 AI 的判斷，寫在 PR 裡讓我核對。決定工作流程怎麼跑�
    - 沒有任何東西會自動 merge，而且改到 `.github/`、`.claude/`（deny 規則、hooks）、`CLAUDE.md` 或 agent 設定檔的 PR 一律不能是 `risk: low`。
    - 不要替 issue 範本設預設的 `status:` label：外部 issue 會因此直接進入流程（Action 會拿掉它，但不要只靠這一層）。
 2. **在修好之前就公開了漏洞。** 資安問題留在 session 裡；公開的地方只出現數量，commit 訊息也保持中性。已經在預設 branch 上的弱點完全不在公開 branch 上修，因為修正的 diff 會指出漏洞在哪裡：它從一開始就在 security advisory 的私有 fork 上修。
-3. **輸出裡的個人資料。** 執行輸出、截圖、範例、證據和 `## 文章素材` 都用假資料：不放帳號 ID、email、token、內部網址、本機路徑或私人 repo 的名稱。`issue-ship` 在貼出前會檢查。
+3. **輸出裡的個人資料。** 執行輸出、截圖、範例、證據和 `## 文章素材` 都用假資料：不放帳號 ID、email、token、內部網址、本機路徑或私人 repo 的名稱。`issue-ship` 和 `article-request` 在貼出前會檢查。
 
 **把私人 repo 改成公開之前**，先檢查工作流程在它還是私人時寫下的東西：舊 PR 的 `## Review` 表（帶 `file:line` 的資安問題）、issue 和 PR 的留言，以及改用 mattpocock-skills 之前設定的 repo 裡 `issue-assets` branch 上的圖片（它的歷史也保留了刪掉的圖）。
 

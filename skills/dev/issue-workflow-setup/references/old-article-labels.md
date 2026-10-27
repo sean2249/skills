@@ -8,10 +8,16 @@ From v4 there are no article **progress** labels: an article starts when the aut
 
 `article`, `article: pending`, `article: requested`, `article-status: request`, `article-status: pending`, `article-status: handoff`.
 
-1. List the open issues and PRs, and the merged PRs, that still carry `article-status: request` / `pending` (or `article` / `article: pending`). Those are articles the author wanted and hasn't handed over yet. Put them in the Step 3 plan, so the author can run `/article-request <PR>` for any they still want.
+1. List the open issues and PRs, and the merged PRs, that still carry `article-status: request` / `pending` (or `article` / `article: pending`). Those are articles the author wanted and hasn't handed over yet. Put them in the Step 3 plan, so the author can still hand over any they want: a merged PR with `/article-request <PR>`; open work by running `/article-request` in the session that finishes it.
+   ```bash
+   for l in "article-status: request" "article-status: pending" article "article: pending"; do
+     gh issue list --state all --label "$l" --json number,title,state --jq '.[] | "issue #\(.number) \(.state) \(.title)"'
+     gh pr list --state all --label "$l" --json number,title,state --jq '.[] | "PR #\(.number) \(.state) \(.title)"'
+   done
+   ```
 2. After the author confirms, delete the labels (`gh label delete "<label>" --yes`). Deleting a label removes it from every issue and PR.
 
-In the article repo, an `article` label on an issue that already has a `post-type:` label is only an "this is an article issue" marker: deleting it loses nothing.
+In the article repo, an `article` label on an issue that already has a `post-type:` label is only a "this is an article issue" marker: deleting it loses nothing.
 
 ## Type labels: rename in the article repo, delete elsewhere
 

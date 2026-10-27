@@ -81,7 +81,7 @@ Check what already exists, without changing anything:
 | `.github/workflows/issue-status.yml` | exists? caller or old full copy? (see "Recognising an old full copy" below) |
 | `.github/workflows/risk-guard.yml` | exists? Retired in v3 (nothing merges automatically any more); repair mode removes it |
 | `.github/workflows/article-pending.yml` | exists? Retired in v4 (articles start with `/article-request`); repair mode removes it |
-| `.github/workflows/needs-info-reply.yml` | exists? (same) |
+| `.github/workflows/needs-info-reply.yml` | exists? (repos set up before it existed won't have it) |
 | Is this the article repo? | `Article target` in `## Issue workflow` equals this repo (new install: ask in Step 3) |
 | `CLAUDE.md` `## Article conventions` (article repo only) | `grep -n '^## Article conventions' CLAUDE.md` |
 | `.github/pull_request_template.md` (also `.github/PULL_REQUEST_TEMPLATE/`, root, `docs/`) | file exists? |

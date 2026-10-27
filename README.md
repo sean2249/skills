@@ -147,7 +147,7 @@ On a public repo anyone can open an issue or comment, and everything the skills 
    - Nothing merges automatically, and a PR touching `.github/`, `.claude/` (deny rules, hooks), a `CLAUDE.md` or the agent docs is never `risk: low`.
    - Don't give issue templates a default `status:` label: an outside issue would start in the flow (the Action strips it, but don't rely on that alone).
 2. **Announcing a vulnerability before it's fixed.** Security findings stay in the session; publicly only their count appears, with neutral commit messages. A weakness that's already on the default branch isn't fixed on a public branch at all, since the fix's diff points at the hole: it's fixed from the start on a security advisory's private fork.
-3. **Personal data in output.** Run output, screenshots, examples, evidence and `## 文章素材` use made-up data: no account IDs, emails, tokens, internal URLs, local paths, or names of private repos. `issue-ship` checks before posting.
+3. **Personal data in output.** Run output, screenshots, examples, evidence and `## 文章素材` use made-up data: no account IDs, emails, tokens, internal URLs, local paths, or names of private repos. `issue-ship` and `article-request` check before posting.
 
 **Before making a private repo public**, go through what the workflow wrote while it was private: old PR `## Review` tables (security findings with `file:line`), issue and PR comments, and the images on the `issue-assets` branch of repos set up before the mattpocock-skills (its history keeps deleted images too).
 
@@ -245,6 +245,6 @@ Releasing:
    ```bash
    gh release create v<N> --target main --title v<N> --notes-file <notes.md>
    ```
-3. In each repo, run `issue-workflow-setup` in repair mode. It shows `gh api repos/<owner>/skills/compare/v<old>...v<N>` for review, then opens one PR bumping all three callers to `v<N>` (`risk: high`, merged by me).
+3. In each repo, run `issue-workflow-setup` in repair mode. It shows `gh api repos/<owner>/skills/compare/v<old>...v<N>` for review, then opens one PR bumping both callers to `v<N>` (`risk: high`, merged by me).
 
 The first tag, `v1`, is created by hand after the change that introduced tags is merged (the command in step 2). Until it exists, `issue-workflow-setup` stops instead of writing callers. Repos whose callers still say `@main` move to the latest tag the next time repair mode runs.
