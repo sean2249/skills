@@ -12,7 +12,7 @@ From v4 there are no article **progress** labels: an article starts when the aut
    ```bash
    for l in "article-status: request" "article-status: pending" article "article: pending"; do
      gh issue list --state open --limit 200 --label "$l" --json number,title,labels \
-       --jq '.[] | select([.labels[].name | startswith("post-type: ")] | any | not) | "issue #\(.number) \(.title)"'
+       --jq '.[] | select([.labels[].name | test("^(post-type|article-type): |^article: (devlog|intro|review|research)$")] | any | not) | "issue #\(.number) \(.title)"'
      gh pr list --state open --limit 200 --label "$l" --json number,title --jq '.[] | "open PR #\(.number) \(.title)"'
      gh pr list --state merged --limit 200 --label "$l" --json number,title --jq '.[] | "merged PR #\(.number) \(.title)"'
    done
