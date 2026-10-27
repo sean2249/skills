@@ -59,11 +59,11 @@ git switch -c post-<N>-<slug> origin/<default-branch>
 
 ## Step 2 — Read the sources
 
-Use the issue body: the `## Sources` list (from `article-request`), and the outline once there is one (Step 2c). Read each source exactly as named:
+Use the issue body: the `## Sources` list and the `## 文章素材` section (both from `article-request`), and the outline once there is one (Step 2c). `## 文章素材` was written in the session where the work happened, so it stands in for that conversation. Read each source exactly as named:
 
 | Source | How to read |
 |---|---|
-| PR | `gh pr view <url>` and `gh pr diff <url>`. The PR body's `## 文章素材` section stands in for the conversation, which you can't see |
+| PR | `gh pr view <url>` and `gh pr diff <url>`. An older PR may carry its own `## 文章素材` section |
 | Issue | `gh issue view <url> --json title,body --jq '.title, .body'`, plus its comments filtered to `<trusted>` as in Step 0 |
 | File permalink `https://github.com/<o>/<r>/blob/<sha>/<path>` | `gh api -H "Accept: application/vnd.github.raw+json" "repos/<o>/<r>/contents/<path>?ref=<sha>"`. If a local clone of `<o>/<r>` exists, `git -C <clone> show <sha>:<path>` instead |
 | Web URL | fetch that page only |

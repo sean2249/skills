@@ -46,7 +46,7 @@ This is my personal development workflow. The skills are designed around it, so 
 The base is [mattpocock-skills](https://github.com/mattpocock/skills): triage, specs, tickets and implementation are his skills, used as they are. This repo adds only what they don't cover: shipping a PR with a review and a risk label, the shared GitHub workflows, and turning work into articles.
 
 <p align="center">
-  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue starts at status: raw; /triage verifies it, grills it if needed and writes an agent brief, and the author decides in the session: needs-info (questions in a comment; the author's reply sends it back to raw), approved with a type label, ready-for-human or wontfix, or, for big work, /to-spec and /to-tickets write a spec issue with ticket sub-issues joined by blocked-by edges. /implement builds one ticket test-first and runs code-review; /implement-spec builds a whole spec in parallel on an integration branch. issue-ship verifies, writes the PR body with the pr skill, reviews the whole PR with security-audit and code-review for up to 3 rounds with the results in the session (in round 3, a medium or high finding behind a one-way door goes back to the author), and sets the risk label from the Door and the review, which tells the author how closely to read before they merge; nothing merges automatically. Work cards labelled article-status: request move to pending on merge and to handoff with article-request, which opens a post-type: card in the article repo; there post-write writes an outline the author confirms in the session, then the post, which the author edits and merges.">
+  <img src="docs/workflow.svg" width="960" alt="Issue workflow: an issue starts at status: raw; /triage verifies it, grills it if needed and writes an agent brief, and the author decides in the session: needs-info (questions in a comment; the author's reply sends it back to raw), approved with a type label, ready-for-human or wontfix, or, for big work, /to-spec and /to-tickets write a spec issue with ticket sub-issues joined by blocked-by edges. /implement builds one ticket test-first and runs code-review; /implement-spec builds a whole spec in parallel on an integration branch. issue-ship verifies, writes the PR body with the pr skill, reviews the whole PR with security-audit and code-review for up to 3 rounds with the results in the session (in round 3, a medium or high finding behind a one-way door goes back to the author), and sets the risk label from the Door and the review, which tells the author how closely to read before they merge; nothing merges automatically. When work should become an article, the author runs /article-request in the session that did it (or from a PR or any file); it writes the material from the conversation and opens a post-type: card in the article repo; there post-write writes an outline the author confirms in the session, then the post, which the author edits and merges.">
 </p>
 
 Highlighted nodes (glowing in the image, yellow in the text version) are where the author steps in: deciding in the `/triage` session, picking a new direction when round 3 sends work back, merging every PR, confirming an article outline, and editing and merging posts. Everything else is done by the skills or GitHub Actions. The image follows your system's light/dark setting, and its animation stops if you've asked your OS for reduced motion.
@@ -79,13 +79,10 @@ flowchart TD
   end
 
   subgraph ART["3 · Article"]
-    M --> N{"Work card has<br/>article-status: request?"}
+    M --> N{"Should this work<br/>become an article?"}
     N -->|no| Z["Done"]
-    subgraph WORK["Work card · article-status: (project repo)"]
-      O["article-pending<br/>article-status: request → pending · reminder"]
-      Q["article-request<br/>pending → handoff · opens a post-type: card"]
-      X["Any file<br/>(e.g. a notes page)"]
-    end
+    Q["/article-request<br/>in the session that did the work<br/>writes the material · opens a post-type: card"]
+    X["A PR, or any file<br/>(e.g. a notes page)"]
     subgraph CARD["Article card · post-type: (article repo only)"]
       U["post-write<br/>outline · checked once by a fresh subagent"]
       OC(["Author confirms the outline<br/>in the session → approved"]):::author
@@ -94,8 +91,7 @@ flowchart TD
       P["post-write<br/>writing-voice 收納 · PR"]
       V(["Author merges the article"]):::author
     end
-    N -->|yes| O
-    O --> Q
+    N -->|yes| Q
     X --> Q
     Q --> U --> OC --> W --> E --> P --> V
   end
@@ -148,7 +144,7 @@ On a public repo anyone can open an issue or comment, and everything the skills 
    - The `issue-status` Action gives `status: raw` only to issues opened by the owner (`author_association` `OWNER`). Anyone else's issue, collaborators included, gets the `external` label, no status, and one neutral comment saying a maintainer triages it by hand. Status labels an issue template added are removed. Issues opened by bots (Renovate, github-actions, …) are skipped: no label, no comment.
    - `needs-info-reply` only reacts to the owner's comments and edits.
    - Skills work only on the owner's issues and read only the owner's comments. Anything written by someone else, and anything fetched or linked (web pages, other issues or PRs, fork diffs), is data to summarise, never instructions.
-   - Nothing merges automatically, and a PR touching `.github/`, `.claude/` (deny rules, hooks), a `CLAUDE.md` or the agent docs is never `risk: low`. `article-pending` only writes after a maintainer merges a PR that a maintainer labelled.
+   - Nothing merges automatically, and a PR touching `.github/`, `.claude/` (deny rules, hooks), a `CLAUDE.md` or the agent docs is never `risk: low`.
    - Don't give issue templates a default `status:` label: an outside issue would start in the flow (the Action strips it, but don't rely on that alone).
 2. **Announcing a vulnerability before it's fixed.** Security findings stay in the session; publicly only their count appears, with neutral commit messages. A weakness that's already on the default branch isn't fixed on a public branch at all, since the fix's diff points at the hole: it's fixed from the start on a security advisory's private fork.
 3. **Personal data in output.** Run output, screenshots, examples, evidence and `## 文章素材` use made-up data: no account IDs, emails, tokens, internal URLs, local paths, or names of private repos. `issue-ship` checks before posting.
@@ -164,13 +160,13 @@ On a public repo anyone can open an issue or comment, and everything the skills 
 One session per issue, driven by slash commands. GitHub labels show where every issue stands, so there's no main session to keep in sync.
 
 <p align="center">
-  <img src="docs/operating.svg" width="960" alt="How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, then the author merges the PR. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author runs /post-write #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; article-request opens those cards from merged work or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.">
+  <img src="docs/operating.svg" width="960" alt="How the author runs the workflow day to day. Three tracks, each in its own session. Small work: /triage #N, the author decides in the session, /implement #N, /issue-ship, then the author merges the PR. Big work: /triage, then /to-spec and /to-tickets write a spec issue and ticket sub-issues, /implement-spec #S builds the tickets in parallel, and /issue-ship ships the one PR. Articles: in the article repo the author runs /post-write #N, post-write writes an outline the author confirms, then a draft the author edits, then a PR the author merges; /article-request opens those cards, run in the session that did the work or from a PR or any file. Several sessions can run side by side for independent issues. GitHub issues and labels are the shared state.">
 </p>
 
 1. **Small work:** `/triage #N`. It verifies the issue, grills me if it needs fleshing out, and asks how to label it. I answer in the session, and it writes the agent brief and sets `status: approved`. Then `/implement #N` and `/issue-ship`.
 2. **Big work:** after `/triage`, `/to-spec` writes the spec as a new issue (the old one is closed as superseded) and `/to-tickets` splits it into ticket sub-issues joined by blocked-by edges; it shows me the split first. `/implement-spec #<spec>` builds the tickets in parallel on one integration branch, and `/issue-ship` ships its single PR.
 3. **In parallel:** independent issues each get their own session, side by side. Inside one spec, `/implement-spec` already runs the tickets in parallel.
-4. **Articles:** I add `article-status: request` to anything that should become an article. After it merges, `article-request` opens a card in the article repo (it can also start from any file, such as a notes page). There I say `/post-write #N`: `post-write` writes the outline, I confirm it, it writes the draft, I edit it in place and say I'm done, and it commits my edits and opens the PR for me to merge.
+4. **Articles:** when something should become an article, I run `/article-request` at the end of the session that did it: it writes the material from the conversation (my words at each decision, the dead ends, the numbers) into a card in the article repo. It can also start from a PR or any file, such as a notes page. There I say `/post-write #N`: `post-write` writes the outline, I confirm it, it writes the draft, I edit it in place and say I'm done, and it commits my edits and opens the PR for me to merge.
 
 <details>
 <summary>Text version (mermaid)</summary>
@@ -184,7 +180,7 @@ flowchart LR
     B1["/triage #N"] --> B2["/to-spec → /to-tickets"] --> B3(["Author approves the split"]):::author --> B4["/implement-spec #S"] --> B5["/issue-ship"]
   end
   subgraph POST["Article · one session in the article repo"]
-    P0["article-request<br/>from merged work or any file"] --> P1(["/post-write #N"]):::author --> P2["post-write · outline"] --> P3(["Author confirms"]):::author --> P4["draft"] --> P5(["Author edits"]):::author --> P6["PR"]
+    P0["/article-request<br/>in the dev session, or from a PR / file"] --> P1(["/post-write #N"]):::author --> P2["post-write · outline"] --> P3(["Author confirms"]):::author --> P4["draft"] --> P5(["Author edits"]):::author --> P6["PR"]
   end
   BOARD[("GitHub issues & labels<br/>shared state")]
   S4 --> M(["Author merges<br/>risk label = how closely to read"]):::author
@@ -208,7 +204,6 @@ flowchart LR
 | `type: bug` / `enhancement` | every repo, on issues | Category, set by `/triage` |
 | `risk: low` / `medium` / `high` | every repo, on PRs | How closely the author should read before merging; nothing merges automatically |
 | `external` | every repo, on issues | Not opened by the repo owner; added by the `issue-status` Action instead of `status: raw`, and never worked on by the skills (see Public repos) |
-| `article-status: request` → `pending` → `handoff` | project repos (including the article repo's own feature cards) | This work should become an article, and how far the handoff got |
 | `post-type: devlog` / `intro` / `review` / `research` | **article repo only**, on article cards | How the article is written; never used in other repos |
 | `readme-sync: skip` | this repo only, on PRs | `README.md` changed without `README.zh-TW.md` on purpose; added only by the author, never with `risk: low` |
 
@@ -220,13 +215,13 @@ GitHub's default labels (`bug`, `enhancement`, `wontfix`, …) aren't used; `iss
 |---|---|
 | `dev/issue-workflow-setup` | Installing (or repairing) the issue workflow in a repo after `/setup-matt-pocock-skills`: labels, the label mapping in the agent docs, callers for the shared workflows, PR template, and the `## Issue workflow` / `## Public repo` sections of `CLAUDE.md` |
 | `dev/issue-ship` | Shipping work that `/implement` or `/implement-spec` finished: verify, PR body with `pr`, up to 3 review rounds with `security-audit` and `code-review`, risk label from the Door and the review; never merges |
-| `dev/article-request` | Handing a merged `article-status: pending` PR, or any file, to the article repo as a raw issue; marks the PR and the issues it closes `article-status: handoff` |
+| `dev/article-request` | Turning work into an article card in the article repo: run it in the session that did the work, and it writes the material from the conversation; it can also start from a PR or any file |
 | `writing/post-write` | Writing an article issue in one of four modes (devlog, intro, review, research): an outline the author confirms in the session, then a draft following the article repo's conventions, with a cover, blog links for `wiki:` targets, and a source map for note sources; hands the draft to the author to edit before opening the PR |
 | `writing/writing-voice` | Applying the repo's voice rules to a post (套用); after the author's edits, proposing new rules or examples for the author to approve (收納); when the rules file passes its size limit (default 8 KB / 25 rules), proposing merges, generalisations and retirements, and listing rule/example conflicts for the author to decide (整併). Rules live in each repo's voice rules file (`Voice file:`), extra examples in its examples directory (`Voice examples:`), not in the skill |
 
 ## Shared workflows
 
-`.github/workflows/issue-status.yml`, `article-pending.yml`, and `needs-info-reply.yml` are reusable workflows (`on: workflow_call`). `issue-status` labels the owner's new issue `status: raw`, anyone else's `external`, and skips bots. `needs-info-reply` switches a `status: needs-info` issue back to `status: raw` once the owner has answered: the owner replies in a comment (`issue_comment: created`), or, on older issues with a `## Pending decisions` section, ticks a box for every decision there (`issues: edited`). It reacts only to the owner (`author_association` `OWNER`), ignores PRs, bots, and comments starting with `🤖 AI` (the AI writes decisions with empty boxes and never ticks one), and posts nothing. Repos set up with `issue-workflow-setup` call them through short callers, for example:
+`.github/workflows/issue-status.yml` and `needs-info-reply.yml` are reusable workflows (`on: workflow_call`). `issue-status` labels the owner's new issue `status: raw`, anyone else's `external`, and skips bots. `needs-info-reply` switches a `status: needs-info` issue back to `status: raw` once the owner has answered: the owner replies in a comment (`issue_comment: created`), or, on older issues with a `## Pending decisions` section, ticks a box for every decision there (`issues: edited`). It reacts only to the owner (`author_association` `OWNER`), ignores PRs, bots, and comments starting with `🤖 AI` (the AI writes decisions with empty boxes and never ticks one), and posts nothing. Repos set up with `issue-workflow-setup` call them through short callers, for example:
 
 ```yaml
 jobs:
@@ -234,7 +229,7 @@ jobs:
     uses: <owner>/skills/.github/workflows/issue-status.yml@v3
 ```
 
-Up to v2 there was a fourth, `risk-guard`, a merge gate for `risk: low` PRs. From v3 nothing merges automatically, so it's gone; `issue-workflow-setup` repair mode removes it from older repos.
+Two have retired: `risk-guard`, a merge gate for `risk: low` PRs (gone in v3, since nothing merges automatically), and `article-pending`, which moved an article label on merge (gone in v4, since articles start with `/article-request`). `issue-workflow-setup` repair mode removes both from older repos.
 
 ### Versions
 
