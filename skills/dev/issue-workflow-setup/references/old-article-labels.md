@@ -8,11 +8,12 @@ From v4 there are no article **progress** labels: an article starts when the aut
 
 `article`, `article: pending`, `article: requested`, `article-status: request`, `article-status: pending`, `article-status: handoff`.
 
-1. List the open issues and PRs, and the merged PRs, that still carry `article-status: request` / `pending` (or `article` / `article: pending`). Those are articles the author wanted and hasn't handed over yet. Put them in the Step 3 plan, so the author can still hand over any they want: a merged PR with `/article-request <PR>`; open work by running `/article-request` in the session that finishes it.
+1. List the issues (open or closed), the open PRs and the merged PRs that still carry `article-status: request` / `pending` (or `article` / `article: pending`). Those are articles the author wanted and hasn't handed over yet. An issue closed by a merged PR often keeps the label while the PR has none. Put them in the Step 3 plan, so the author can still hand over any they want: a merged PR, or a closed issue through the PR that closed it, with `/article-request <PR>`; open work by running `/article-request` in the session that finishes it.
    ```bash
    for l in "article-status: request" "article-status: pending" article "article: pending"; do
-     gh issue list --state open --limit 200 --label "$l" --json number,title,labels \
-       --jq '.[] | select([.labels[].name | test("^(post-type|article-type): |^article: (devlog|intro|review|research)$")] | any | not) | "issue #\(.number) \(.title)"'
+     gh issue list --state all --limit 200 --label "$l" --json number,title,state,labels,closedByPullRequestsReferences \
+       --jq '.[] | select([.labels[].name | test("^(post-type|article-type): |^article: (devlog|intro|review|research)$")] | any | not)
+             | "\(.state | ascii_downcase) issue #\(.number) \(.title)\(if .closedByPullRequestsReferences | length > 0 then " (closed by PR #\(.closedByPullRequestsReferences | map(.number | tostring) | join(", #")))" else "" end)"'
      gh pr list --state open --limit 200 --label "$l" --json number,title --jq '.[] | "open PR #\(.number) \(.title)"'
      gh pr list --state merged --limit 200 --label "$l" --json number,title --jq '.[] | "merged PR #\(.number) \(.title)"'
    done
