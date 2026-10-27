@@ -11,8 +11,10 @@ From v4 there are no article **progress** labels: an article starts when the aut
 1. List the open issues and PRs, and the merged PRs, that still carry `article-status: request` / `pending` (or `article` / `article: pending`). Those are articles the author wanted and hasn't handed over yet. Put them in the Step 3 plan, so the author can still hand over any they want: a merged PR with `/article-request <PR>`; open work by running `/article-request` in the session that finishes it.
    ```bash
    for l in "article-status: request" "article-status: pending" article "article: pending"; do
-     gh issue list --state all --label "$l" --json number,title,state --jq '.[] | "issue #\(.number) \(.state) \(.title)"'
-     gh pr list --state all --label "$l" --json number,title,state --jq '.[] | "PR #\(.number) \(.state) \(.title)"'
+     gh issue list --state open --limit 200 --label "$l" --json number,title,labels \
+       --jq '.[] | select([.labels[].name | startswith("post-type: ")] | any | not) | "issue #\(.number) \(.title)"'
+     gh pr list --state open --limit 200 --label "$l" --json number,title --jq '.[] | "open PR #\(.number) \(.title)"'
+     gh pr list --state merged --limit 200 --label "$l" --json number,title --jq '.[] | "merged PR #\(.number) \(.title)"'
    done
    ```
 2. After the author confirms, delete the labels (`gh label delete "<label>" --yes`). Deleting a label removes it from every issue and PR.
