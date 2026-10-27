@@ -6,9 +6,9 @@ disable-model-invocation: true
 
 # issue-workflow-setup
 
-One-time install of the issue workflow. Triage, specs, tickets and implementation come from the mattpocock-skills (`/triage`, `/to-spec`, `/to-tickets`, `/implement`, `/implement-spec`); this skill adds what they don't cover, for `issue-ship`, `article-request` and `post-write`: the shared GitHub workflows, risk and article labels, the PR template, and the `CLAUDE.md` sections.
+One-time install of the issue workflow. Triage, specs, tickets and implementation come from the mattpocock-skills (`/triage`, `/to-spec`, `/to-tickets`, `/implement`, `/implement-spec`); this skill adds what they don't cover, for `issue-ship`, `article-request` and `post-write`: the shared GitHub workflows, risk labels, the PR template, and the `CLAUDE.md` sections.
 
-The workflow logic lives once, as reusable workflows in the skills repo (`.github/workflows/issue-status.yml`, `article-pending.yml`, and `needs-info-reply.yml`, all `on: workflow_call`). Each repo gets only short callers. `<skills-repo>` below is the `<owner>/<repo>` hosting those reusable workflows: the repo this skill came from, or the author's fork. Ask if unsure, and write it into the callers.
+The workflow logic lives once, as reusable workflows in the skills repo (`.github/workflows/issue-status.yml` and `needs-info-reply.yml`, both `on: workflow_call`). Each repo gets only short callers. `<skills-repo>` below is the `<owner>/<repo>` hosting those reusable workflows: the repo this skill came from, or the author's fork. Ask if unsure, and write it into the callers.
 
 **Callers pin a release tag, never `@main`.** These workflows can write issues, labels and PR comments, so a repo only runs a version the author chose. Release tags are `v1`, `v2`, `v3`, … (a plain whole number, one per release) and are never moved or re-pushed once published. `<tag>` in the callers is the latest one:
 
@@ -20,13 +20,13 @@ No tag yet → stop and tell the author to tag a release in the skills repo firs
 
 This only pins the reusable workflows. The skills themselves (the plugin) still update from the skills repo's `main`.
 
-**Upgrading a repo** (repair / upgrade mode): read what changed (`gh api repos/<skills-repo>/compare/<old tag>...<new tag> --jq '.commits[].commit.message'`, and the release notes), then bump the ref in all three callers in one PR (it touches `.github/workflows`, so `risk: high`):
+**Upgrading a repo** (repair / upgrade mode): read what changed (`gh api repos/<skills-repo>/compare/<old tag>...<new tag> --jq '.commits[].commit.message'`, and the release notes), then bump the ref in both callers in one PR (it touches `.github/workflows`, so `risk: high`):
 
 ```bash
-for f in .github/workflows/{issue-status,article-pending,needs-info-reply}.yml; do
+for f in .github/workflows/{issue-status,needs-info-reply}.yml; do
   [ -f "$f" ] && sed -i.bak -E 's#(uses: *[^ ]+/\.github/workflows/[a-z-]+\.yml)@[^ ]+#\1@<new tag>#' "$f" && rm "$f.bak"
 done
-grep -n 'uses:' .github/workflows/{issue-status,article-pending,needs-info-reply}.yml   # all three on <new tag>
+grep -n 'uses:' .github/workflows/{issue-status,needs-info-reply}.yml   # both on <new tag>
 ```
 
 A caller still on `@main` (repos set up before tags) is upgraded the same way, to the latest tag.
@@ -80,8 +80,8 @@ Check what already exists, without changing anything:
 | Open issues with no `status: ` label | command below the table |
 | `.github/workflows/issue-status.yml` | exists? caller or old full copy? (see "Recognising an old full copy" below) |
 | `.github/workflows/risk-guard.yml` | exists? Retired in v3 (nothing merges automatically any more); repair mode removes it |
-| `.github/workflows/article-pending.yml` | exists? (repos set up before it existed won't have it) |
-| `.github/workflows/needs-info-reply.yml` | exists? (same) |
+| `.github/workflows/article-pending.yml` | exists? Retired in v4 (articles start with `/article-request`); repair mode removes it |
+| `.github/workflows/needs-info-reply.yml` | exists? (repos set up before it existed won't have it) |
 | Is this the article repo? | `Article target` in `## Issue workflow` equals this repo (new install: ask in Step 3) |
 | `CLAUDE.md` `## Article conventions` (article repo only) | `grep -n '^## Article conventions' CLAUDE.md` |
 | `.github/pull_request_template.md` (also `.github/PULL_REQUEST_TEMPLATE/`, root, `docs/`) | file exists? |
@@ -121,7 +121,7 @@ The section is `## Issue workflow`, not `## Workflow`: many repos already use `#
 **Recognising an old full copy.** Judge by content, not by diffing against an old template (old asset paths no longer exist). A workflow file is an old full copy when it has `runs-on:` / `steps:` and no `uses: <anything>/skills/.github/workflows/` line (or `uses: <skills-repo>/.github/workflows/`). A thin caller has a `uses:` line pointing at the skills repo and no `steps:`. If an old copy has obvious local edits (extra steps, changed triggers), show them to the author and ask before replacing.
 
 ```bash
-for f in .github/workflows/{issue-status,article-pending,needs-info-reply}.yml; do
+for f in .github/workflows/{issue-status,needs-info-reply}.yml; do
   [ -f "$f" ] || { echo "missing  $f"; continue; }
   if grep -qE 'uses: *[^ ]+/\.github/workflows/' "$f" && ! grep -q 'steps:' "$f"; then echo "caller   $f"
   elif grep -q 'runs-on:' "$f"; then echo "OLD COPY $f"
@@ -131,7 +131,7 @@ done
 
 **Repair / upgrade mode.** For an already-set-up repo, plan:
 
-- Callers on `@main`, or on an older tag than the latest → bump all three to the latest tag ("Upgrading a repo" above), after showing the author the compare output.
+- Callers on `@main`, or on an older tag than the latest → bump both to the latest tag ("Upgrading a repo" above), after showing the author the compare output.
 
 - **Leftovers from before the mattpocock-skills** (v1–v2 installs):
   - Open issues with `status: ai-enhanced` → list them in the plan and, on the author's OK, swap them to `status: raw`; then delete the `status: ai-enhanced` and `grill` labels. Both happen in Step 6, in that order: deleting a label first would lose which issues had it.
@@ -140,9 +140,10 @@ done
   - `## Issue workflow`: replace its first two lines with the asset's, and remove the `Issue assets branch`, `Mockup path`, `Low-risk paths` and `Merge mode` keys (the `issue-assets` branch itself stays).
   - `kiwi-voice` anywhere in `CLAUDE.md` (e.g. `## Article conventions`) → `writing-voice`, the skill's new name.
   - **The `risk-guard` merge gate is retired** (from v3 the author merges every PR). In this order, since a required check that no longer runs blocks every PR: delete `.github/workflows/risk-guard.yml` and `.github/low-risk-paths.txt` in the upgrade PR, and remove `risk-guard / check` (or an older `risk-guard`) from the default branch's required checks (Step 9) before that PR is merged. In Step 9, whether or not the check is required: switch off the repo's "Allow auto-merge" setting (skip only if the author says no: an older skill version still installed somewhere could otherwise queue a merge once nothing gates it), and turn auto-merge off on every open PR still queued for it (from v2's `risk: low` flow).
+  - **The `article-pending` workflow and the `article-status:` labels are retired** (from v4 an article starts with `/article-request`). Delete the caller in the upgrade PR, and the labels in Step 4 after listing the items that still carry `article-status: request` / `pending` (`references/old-article-labels.md`). In `CLAUDE.md`, replace any sentence that describes `article-status:` labels, `article-pending`, or a `## 文章素材` section written into PRs with the new flow (the author runs `/article-request` in the session that did the work); keep `Article target`, which `/article-request` reads.
 - Missing `## Public repo` section on a public repo, or the `## This repo's workflow` section in `issue-tracker.md` → add them (Step 7).
 - Missing `external` label → add it (Step 5); open issues not opened by the owner that already carry a `status:` label (the repair-mode query in Step 1) → list them in the plan, and on the author's OK swap them to `external` (Step 6). Missing secret-file deny rules in `.claude/settings.json` → add them (Step 7).
-- Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it; an existing one without an `issues: types: [edited]` trigger (check: `grep -A3 '^  issues:' .github/workflows/needs-info-reply.yml`) → add that trigger, so ticking the boxes of an older issue's `## Pending decisions` also switches it back. Old article labels (`article`, `article: pending`, `article: devlog`, …) → migrate them to `article-status:` / `post-type:` (Step 4, before Step 5). Missing `article-pending.yml` → add it, plus the `article-status: request` / `article-status: pending` labels (Step 5).
+- Old full-copy workflows → replace with callers (Step 7). Missing `needs-info-reply.yml` → add it; an existing one without an `issues: types: [edited]` trigger (check: `grep -A3 '^  issues:' .github/workflows/needs-info-reply.yml`) → add that trigger, so ticking the boxes of an older issue's `## Pending decisions` also switches it back. Old article labels (`article`, `article: pending`, `article-status: *`, `article: devlog`, …) → delete or migrate them (Step 4, before Step 5).
 - **Old CLAUDE.md layout.** If the issue-workflow keys (`Verify command`, `Article target`, …) sit inside `## Workflow` (e.g. under `### Issue workflow`), **move** them: create a top-level `## Issue workflow` from `assets/claude-md-workflow.md` with the existing values (dropping the retired keys listed above), then delete the old sub-section. Never add a second copy beside it. Leave the rest of `## Workflow` (local dev commands) untouched.
 ## Step 2 — Required checks
 
@@ -153,7 +154,7 @@ Read the default branch's required status checks (`gh api repos/<owner>/<repo>/b
 List, and ask the author to confirm:
 
 - Every label to create (only the missing ones; existing labels keep their color and description).
-- Old-name article labels to rename (`references/old-article-labels.md`), with how many issues/PRs carry each.
+- Old article labels to delete or rename (`references/old-article-labels.md`), with how many issues/PRs carry each, and the items still waiting for an article.
 - GitHub's default labels to delete (Step 4): unused ones are simply listed; for ones in use, list the affected issues/PRs.
 - Each overlapping existing label, with a choice per label: **keep** (leave as is), **rename** into one of the workflow labels (keeps its issues), or **delete**.
 - The open issues that will get `status: raw` (Step 6): only ones opened by the owner (`author_association` `OWNER`). The author may exclude some. Issues by anyone else, collaborators included, get `external` instead.
@@ -169,7 +170,7 @@ Ask for the values only they know: verify command, preview URL, `Article target`
 
 Do this **before** Step 5. Renaming into a name that Step 5 has already created fails because the name is taken.
 
-**Old article labels** (repo set up with an earlier version, e.g. `article`, `article: pending`, `article-type: devlog`): migrate them as `references/old-article-labels.md` says. Article progress is now one label, `article-status: request` → `pending` → `handoff`, and `post-type:` labels exist only in the article repo.
+**Old article labels** (repo set up with an earlier version, e.g. `article`, `article: pending`, `article-type: devlog`): delete or migrate them as `references/old-article-labels.md` says. There are no article progress labels any more, and `post-type:` labels exist only in the article repo.
 
 **Overlapping labels** (the author's keep / rename / delete choice from Step 3):
 
@@ -215,15 +216,12 @@ mk "type: enhancement"   a2eeef "New feature or improvement"
 mk "risk: low"           c2e0c6 "Two-way door and a clean review; a light read before merging"
 mk "risk: medium"        fef2c0 "Read the change before merging"
 mk "risk: high"          b60205 "One-way door or cross-repo blast radius; read closely before merging"
-mk "article-status: request"   5319e7 "Write an article about this after it ships"
-mk "article-status: pending"   fbca04 "Merged; waiting for article-request"
-mk "article-status: handoff"   0e8a16 "Handed to the article repo; done here"
 mk "external"                  d4c5f9 "Not opened by the repo owner; the owner triages it by hand"
 ```
 
 `external` is added by the `issue-status` workflow to issues opened by anyone whose `author_association` isn't `OWNER` (collaborators included; bots are skipped entirely). That is why the skill only installs into a repo owned by a personal account (Preconditions). Those issues get no `status:` label, and the `## Public repo` section in `CLAUDE.md` keeps every skill off them. To act on one, the author opens their own issue in their own words and links the outside one. Don't put `status:` labels in issue templates: the workflow strips them from outside issues anyway.
 
-Article progress is one label: the author adds `article-status: request` to an issue (`issue-ship` copies it to the PR); `article-pending` swaps it to `article-status: pending` when the PR merges; `article-request` swaps that to `article-status: handoff`. There is no separate `article` label.
+There are no article progress labels: an article starts when the author runs `/article-request`, best in the session where the work happened.
 
 **Article repo only** (its `Article target` is itself), also. Never create `post-type:` labels in any other repo:
 
@@ -266,7 +264,6 @@ Source files live in this skill's `assets/` directory.
 | Asset | Target | If target exists |
 |---|---|---|
 | `assets/issue-status.yml` (caller) | `.github/workflows/issue-status.yml` | Old full copy → replace with the caller (repair mode). Already a caller → keep; fix `<skills-repo>` if wrong; `@main` or an older tag → the latest tag |
-| `assets/article-pending.yml` (caller) | `.github/workflows/article-pending.yml` | Missing → add. Already a caller → keep; fix `<skills-repo>` if wrong; `@main` or an older tag → the latest tag |
 | `assets/needs-info-reply.yml` (caller) | `.github/workflows/needs-info-reply.yml` | Same; also make sure it has both triggers (`issue_comment: created` and `issues: edited`). Switches a `status: needs-info` issue back to `status: raw` (no comment) when the author replies, or ticks a box for every decision in the body's `## Pending decisions` |
 | `assets/pull_request_template.md` | `.github/pull_request_template.md` (or the existing template's location) | Append only the sections it lacks. Repair mode: replace the retired sections (`## Behaviour summary`, `## Deviations from the approved plan`, and the old `## Review` comment that names `issue-implement`) with the asset's, in the asset's order |
 | `assets/claude-md-workflow.md` | `CLAUDE.md` | Top-level `## Issue workflow` exists → add only missing keys. Keys only inside `## Workflow` → move them into a new top-level `## Issue workflow` and delete the old sub-section (repair mode). Neither → append the section. No `CLAUDE.md` → create it with just this section |
@@ -276,7 +273,7 @@ Source files live in this skill's `assets/` directory.
 | `assets/claude-md-article-conventions.md` (article repo only) | `CLAUDE.md` | No `## Article conventions` → append with `<fill in>` values, then ask the author to fill them (`post-write` won't run until they do). Exists → leave it |
 | Secret-file deny rules (below) | `.claude/settings.json` | Merge into `permissions.deny`; keep every other key and existing rule. No file → create it with just these rules |
 
-In all three callers, replace `<skills-repo>` with the real `<owner>/<repo>` and `<tag>` with the latest release tag (top of this file).
+In both callers, replace `<skills-repo>` with the real `<owner>/<repo>` and `<tag>` with the latest release tag (top of this file).
 
 **Secret-file deny rules.** Stop Claude Code from reading secret files in this repo, so a session working on an issue can't leak them into an issue, PR or screenshot. Start from this set, then fit it to what the Step 1 `find` turned up: add a rule for any other secret file it found, and drop ones the repo has no use for. Show the final list in the Step 3 plan and write only what the author confirmed.
 
@@ -342,7 +339,6 @@ Validate every YAML file you wrote or edited:
 
 ```bash
 python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/issue-status.yml
-python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/article-pending.yml
 python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" .github/workflows/needs-info-reply.yml
 ```
 
@@ -394,14 +390,14 @@ Nothing else in branch protection is set up by this skill. The author merges eve
 - [ ] GitHub's default labels are gone (in-use ones only after the author confirmed the affected issues/PRs); bot labels such as `dependencies` are kept.
 - [ ] No existing label's color or description was changed (no `--force`).
 - [ ] No old article labels remain (`article`, `article: pending`, … migrated per `references/old-article-labels.md`; article-repo markers removed).
-- [ ] All 14 workflow labels exist (`gh label list`): five `status:`, two `type:`, three `risk:`, three `article-status:`, and `external`; no `article`, `status: ai-enhanced` or `grill` label.
+- [ ] All 11 workflow labels exist (`gh label list`): five `status:`, two `type:`, three `risk:`, and `external`; no `article`, `article-status:`, `status: ai-enhanced` or `grill` label.
 - [ ] Every confirmed pre-existing open issue by the owner has `status: raw`, and every one by anyone else has `external` and no `status:` label (checked with `--json`, not `--label`).
 - [ ] `.claude/settings.json` has the secret-file `permissions.deny` rules the author confirmed, merged with whatever was there before.
 - [ ] The mattpocock-skills setup ran first: `## Agent skills` points at the agent docs, `triage-labels.md` maps to this workflow's labels (category rows included), and `issue-tracker.md` has `## This repo's workflow`.
 - [ ] Public repo: `CLAUDE.md` has `## Public repo`.
 - [ ] `needs-info-reply.yml` triggers on both `issue_comment: created` and `issues: edited`.
-- [ ] The `.github` files exist, all three workflows (issue-status, article-pending, needs-info-reply) are thin callers with the real `<skills-repo>` on the latest release tag (no `@main`), and their YAML parses.
-- [ ] No `risk-guard` left: not in the required checks (removed first), and no caller or `.github/low-risk-paths.txt`.
+- [ ] The `.github` files exist, both workflows (issue-status, needs-info-reply) are thin callers with the real `<skills-repo>` on the latest release tag (no `@main`), and their YAML parses.
+- [ ] No `risk-guard` left: not in the required checks (removed first), and no caller or `.github/low-risk-paths.txt`. No `article-pending` caller.
 - [ ] Non-article repo: no `post-type:` / `article-type:` / `article: <type>` labels left (deleted, in-use ones after confirmation).
 - [ ] Article repo: the four mode labels (`post-type: devlog` / `intro` / `review` / `research`) exist and `## Article conventions` is in `CLAUDE.md`.
 - [ ] `CLAUDE.md` has `## Issue workflow` with the author's values (or `<fill in>` placeholders), and no `Merge mode` key.

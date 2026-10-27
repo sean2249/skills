@@ -45,7 +45,6 @@ Run the `pr` skill for **Summary**, **Evidence** and **Merge Danger**. Then add 
 - **Risk**: the level and the reason (Step 3).
 - **Review**: filled in by Step 4.
 - **Verification commands**: the verify command and anything else you ran (Step 1).
-- **`## 文章素材`**, when an issue has `article-status: request`: the article-writing session can't see this conversation, so write it now — why the work happened, the author's own words at each decision point (quoted), the approach, the pitfalls and how they were solved, and before/after numbers where there are any. The PR gets the `article-status: request` label too.
 
 ## Step 3 — Risk
 
@@ -109,9 +108,9 @@ Open it only for finished work: verified, and reviewed straight after. The only 
 
 Stop there and tell the author the PR is ready, with its risk label: the author merges every PR. Nothing in this skill merges or turns on auto-merge.
 
-## After merge, and changes
+## Articles, and changes
 
-- When a PR with `article-status: request` merges, the `article-pending` workflow marks it pending and reminds the author; tell them `/article-request` hands it to the article repo.
+- If the work should become an article, the author runs `/article-request` in this session, while the conversation is still here to write the material from.
 - When the author asks for changes: same branch, a 🤖 comment saying what changed and why, updated evidence, and the risk checked again. Review the new changes as in Step 4.
 
 ## Report back
@@ -129,5 +128,4 @@ When you stop, start your final message with one line: `Report: #<N> · <PR #<M>
 - [ ] The author got every finding in the session; the PR's Review records them (on a public repo, security findings as a count only).
 - [ ] No `risk: low` with an unfixed `confirmed` or `needs_validation` security finding, or an unfixed high code finding.
 - [ ] Public repo: only made-up data in anything posted.
-- [ ] `article-status: request` issues: the PR has `## 文章素材` and the label.
 - [ ] Nothing was merged or queued for auto-merge; the author merges.
