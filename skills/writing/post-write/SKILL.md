@@ -130,7 +130,7 @@ For note-like sources, list **every** source section in the source map, so the a
 
 **2. Check it once with a fresh subagent.** Give it only the issue and these instructions: read only the sources under `## Sources` and the repo's `## Article conventions`; check that every section of each note-like source has a source-map row pointing at a real outline section or a reason, that what each section cites exists in the sources and says what the outline claims, that the frontmatter and cover follow the conventions, and that each acceptance criterion can be checked by a reader; change nothing and report only what it confirmed. Check each finding yourself, fix the outline, and record the count under `## Outline check`. One round: nothing is sent for another check.
 
-**3. Ask the author to confirm it in the session.** Show the main thread, the sections, the "not writing" list and anything the source map drops. Revise the body until they confirm. Then update the header line to `Confirmed by the author on <YYYY-MM-DD>`, set `status: approved` (removing any other `status:` label), and post a 🤖 comment saying the outline was confirmed.
+**3. Ask the author to confirm it in the session.** Show the main thread, the sections, the "not writing" list and anything the source map drops. Every open question (unconfirmed AI content, a choice the sources leave open) goes out in one message, each with the source's exact words, a line on why it matters to the post, and lettered options that each say what changes in the post, so the author can answer in one line (「1A 2C」); a bare yes/no question makes the author come back for the context. Revise the body until they confirm. Then update the header line to `Confirmed by the author on <YYYY-MM-DD>`, set `status: approved` (removing any other `status:` label), and post a 🤖 comment saying the outline was confirmed.
 
 ## Step 3 — Write
 
@@ -160,7 +160,7 @@ Write in the issue's language. Apply the repo's conventions to path, frontmatter
 
 **Title.** Pick one title for the draft (the outline's, if it has one). Three title options come later, from the final text (Step 6).
 
-**Cover: every post has at least one.** Use an image from the sources when there is one. When there isn't, draw a diagram from the post's own content (only what the post says, nothing new) the way the repo's conventions say; typically a small HTML page in the site's colours, screenshotted at 2×. "No cover" is not an option, whatever the outline says.
+**Cover: every post has at least one.** Use an image from the sources when there is one. When there isn't, draw a diagram from the post's own content (only what the post says, nothing new) the way the repo's conventions say; typically a small HTML page in the site's colours, screenshotted at 2×. "No cover" is not an option, whatever the outline says. The author may ask to settle the cover after reading the draft; then hand over without one, say so, and draw it with them before Step 7. The PR never opens without a cover.
 
 ## Step 3b — Source map (note sources)
 
@@ -218,10 +218,12 @@ git commit -m "<title>"
 2. **Recheck the source map** against the edited post. Label each author change in the map: `作者編修刪除` (they removed it), `作者編修改寫` (they rewrote it), `作者新增` (new, not from the source).
 3. **Acceptance criteria.** If an author edit breaks a criterion from the issue (e.g. they removed a caveat the criterion asked for), keep the author's version. The criterion stays unticked in the PR with "author's decision". Never revert.
 4. **`writing-voice` 收納.** Run it on this round's author diff. It drafts rule and example proposals; only the ones the author approves are written to the voice files, as a `voice: 收納 <post>` commit in a voice PR of its own (`writing-voice` says how), not on this branch. If the voice rules file is over its size limit, `writing-voice` first proposes a 整併 (consolidation), which the author also approves item by item and which lands as its own `voice: 整併` commit before the 收納 one, in the same voice PR.
-5. **Titles.** Recommend three titles drawn from the final text, following the voice file's 標題 rule, and let the author pick (they can keep the draft's). A changed title is an AI commit of its own.
-6. Make any follow-up fixes the author asked for (separate commits), then rerun Step 5.
+5. **Titles.** Always recommend three titles drawn from the final text, following the voice file's 標題 rule, even when the author already changed the title by hand: their edit is one more option, not the end of the question. The author picks (their own title, the draft's, or one of the three); their pick wins over the 標題 rule. A changed title is an AI commit of its own.
+6. **Summary and other derived front matter.** The author's edits usually move the post's point, so regenerate `summary` (and any field that describes the body, such as a cover `alt` that quotes it) from the final text, and show it next to the titles. Never keep the draft's summary just because the author didn't touch it.
+7. **What the author left unfinished.** Scan the author's diff for placeholders (`(((…)))`, `TODO`, `XXX`, an empty link) and likely typos. List each with a proposed fix (for a placeholder link, the post you think it means); change only what the author approves, in a commit of its own.
+8. Make any follow-up fixes the author asked for (separate commits), then rerun Step 5.
 
-Ask 4 and 5 in one message, so the author answers once.
+Ask 4–7 in one message, so the author answers once.
 
 ## Step 7 — Open the PR
 
@@ -276,6 +278,6 @@ Example (made-up): `Report: #46 · draft ready · next: edit the draft · https:
 - [ ] Source map rechecked after the voice pass and after the author's edits, with author changes labelled.
 - [ ] Verify passed, including 375px and dark mode, after the last table/image; back-links from published posts checked.
 - [ ] The author's edits are one `edit: 作者編修` commit, named in the PR; no AI change is mixed into it or reverts it.
-- [ ] Three titles were offered from the final text.
+- [ ] Three titles were offered from the final text (also when the author retitled the post), and `summary` was regenerated from it.
 - [ ] PR's risk label matches its files (`risk: low` only when it changes just the post and its images), fills the template (review table from a fresh-context reviewer, security-review "not applicable (content only)", acceptance evidence), and is left for the author to merge.
 - [ ] Every stop's final message starts with the `Report:` line (`## Report back`, ≤ 300 characters); everything after it is as complete as before.
